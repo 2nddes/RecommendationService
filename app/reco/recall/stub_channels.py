@@ -16,16 +16,6 @@ class CollaborativeFilteringRecall(Recaller):
         return []
 
 
-class TagRecall(Recaller):
-    @property
-    def name(self) -> str:
-        return "tag"
-
-    def recall(self, ctx: RequestContext) -> List[Candidate]:
-        # TODO: 这里接入 标签/类型/主题 等内容召回
-        return []
-
-
 class TwoTowerRecall(Recaller):
     @property
     def name(self) -> str:

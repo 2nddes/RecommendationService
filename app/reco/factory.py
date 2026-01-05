@@ -15,15 +15,8 @@ def build_pipeline(settings: Settings) -> RecommendationPipeline:
     # 确保所有组件都已注册
     bootstrap_components()
 
-    recallers: List[Recaller] = [recall_registry.get(name)() for name in settings.recall_channels]
-    ranker: Ranker = ranking_registry.get(settings.ranking_method)()
-
-    # 对需要额外参数的组件做一次装配层注入
-    if settings.reranking_method == "random_shuffle":
-        from app.reco.reranking.random_shuffle import RandomShuffleReranker
-
-        reranker = RandomShuffleReranker(seed=settings.reranking_seed)
-    else:
-        reranker: Reranker = reranking_registry.get(settings.reranking_method)()
+    recallers: List[Recaller] = [recall_registry.build(name, settings) for name in settings.recall_channels]
+    ranker: Ranker = ranking_registry.build(settings.ranking_method, settings)
+    reranker: Reranker = reranking_registry.build(settings.reranking_method, settings)
 
     return RecommendationPipeline(recallers=recallers, ranker=ranker, reranker=reranker)

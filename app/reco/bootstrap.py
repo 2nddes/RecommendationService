@@ -5,7 +5,6 @@ from __future__ import annotations
 from app.reco.registry import register_ranker, register_recaller, register_reranker
 from app.reco.recall.stub_channels import (
     CollaborativeFilteringRecall,
-    TagRecall,
     TwoTowerRecall,
 )
 from app.reco.recall.mysql_channels import (
@@ -30,24 +29,22 @@ def bootstrap_components() -> None:
         return
 
     # Recall channels
-    register_recaller("cf", lambda: CollaborativeFilteringRecall())
-    register_recaller("tag", lambda: TagRecall())
-    register_recaller("two_tower", lambda: TwoTowerRecall())
+    register_recaller("cf", lambda _s: CollaborativeFilteringRecall())
+    register_recaller("two_tower", lambda _s: TwoTowerRecall())
 
     # MySQL-backed recall channels
-    register_recaller("user_collection", lambda: UserCollectionRecall())
-    register_recaller("user_high_rating_similar", lambda: UserHighRatingSimilarRecall())
-    register_recaller("user_interest_tag", lambda: UserInterestTagRecall())
+    register_recaller("user_collection", lambda _s: UserCollectionRecall())
+    register_recaller("user_high_rating_similar", lambda _s: UserHighRatingSimilarRecall())
+    register_recaller("user_interest_tag", lambda _s: UserInterestTagRecall())
     # for /recommend/item fallback when you want content-based similar
-    register_recaller("item_similar_by_tags", lambda: ItemSimilarByTagsRecall())
+    register_recaller("item_similar_by_tags", lambda _s: ItemSimilarByTagsRecall())
 
     # Ranking methods
-    register_ranker("cf", lambda: CollaborativeFilteringRanker())
-    register_ranker("tag", lambda: TagRanker())
-    register_ranker("nn", lambda: NeuralNetRanker())
+    register_ranker("cf", lambda _s: CollaborativeFilteringRanker())
+    register_ranker("tag", lambda _s: TagRanker())
+    register_ranker("nn", lambda _s: NeuralNetRanker())
 
     # Reranking methods
-    # seed 在 factory 中可被覆盖（通过 Settings.reranking_seed）
-    register_reranker("random_shuffle", lambda: RandomShuffleReranker())
+    register_reranker("random_shuffle", lambda s: RandomShuffleReranker(seed=s.reranking_seed))
 
     _bootstrapped = True

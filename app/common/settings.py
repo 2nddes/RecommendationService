@@ -31,5 +31,5 @@ class Settings:
             ranking_method=os.getenv("RANKING_METHOD") or "cf",
             reranking_method=os.getenv("RERANKING_METHOD") or "random_shuffle",
             reranking_seed=reranking_seed,
-            mysql_dsn=os.getenv("MYSQL_DSN") or None,
+            mysql_dsn="mysql+pymysql://root:admin@localhost:3306/movie_recommend"
         )

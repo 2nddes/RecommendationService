@@ -22,6 +22,7 @@ class RecommendationPipeline:
         return [x.item_id for x in reranked[: max(ctx.n, 0)]]
 
     def _recall(self, ctx: RequestContext) -> List[Candidate]:
+        # 由movie_id映射到Candidate的字典，方便去重和合并
         merged: dict[int, Candidate] = {}
 
         for recaller in self.recallers:
