@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import os
 from typing import Iterable, List, Sequence
 
 from sqlalchemy import Engine, create_engine, text
@@ -11,24 +10,23 @@ from app.reco.recall.base import Recaller
 from app.reco.types import Candidate, RequestContext
 
 
-def _get_mysql_dsn() -> str | None:
-    # Example: mysql+pymysql://user:pass@127.0.0.1:3306/movie_recommend?charset=utf8mb4
-    return os.getenv("MYSQL_DSN") or None
+_engine_by_dsn: dict[str, Engine] = {}
 
 
-_engine: Engine | None = None
-
-
-def _get_engine() -> Engine | None:
-    global _engine
-    dsn = _get_mysql_dsn()
+def _get_engine(mysql_dsn: str | None) -> Engine | None:
+    if not mysql_dsn:
+        return None
+    dsn = str(mysql_dsn).strip()
     if not dsn:
         return None
-
-    if _engine is None:
-        # pool_pre_ping: avoid stale connections
-        _engine = create_engine(dsn, pool_pre_ping=True)
-    return _engine
+    cached = _engine_by_dsn.get(dsn)
+    if cached is not None:
+        return cached
+    try:
+        _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
+        return _engine_by_dsn[dsn]
+    except Exception:
+        return None
 
 
 def _rows_to_candidates(rows: Iterable[dict], source: str, id_key: str, score_key: str) -> List[Candidate]:
@@ -43,8 +41,8 @@ def _rows_to_candidates(rows: Iterable[dict], source: str, id_key: str, score_ke
     return out
 
 
-def _execute(sql: str, params: dict) -> List[dict]:
-    engine = _get_engine()
+def _execute(mysql_dsn: str | None, sql: str, params: dict) -> List[dict]:
+    engine = _get_engine(mysql_dsn)
     if engine is None:
         return []
 
@@ -68,6 +66,7 @@ class UserCollectionRecall(Recaller):
     依赖表：user_collection, rec_similarity
     """
 
+    mysql_dsn: str | None = None
     topk: int = 200
     per_seed_topk: int = 50
 
@@ -79,11 +78,8 @@ class UserCollectionRecall(Recaller):
         if ctx.user_id is None:
             return []
 
-        topk = _clamp_positive(int(os.getenv("RECALL_TOPK_USER_COLLECTION") or self.topk), self.topk)
-        per_seed_topk = _clamp_positive(
-            int(os.getenv("RECALL_PER_SEED_TOPK_USER_COLLECTION") or self.per_seed_topk),
-            self.per_seed_topk,
-        )
+        topk = _clamp_positive(int(self.topk), 200)
+        per_seed_topk = _clamp_positive(int(self.per_seed_topk), 50)
 
         # 取最近收藏的若干部作为种子
         seed_sql = """
@@ -93,7 +89,7 @@ class UserCollectionRecall(Recaller):
         ORDER BY uc.id DESC
         LIMIT 50
         """
-        seeds = _execute(seed_sql, {"user_id": ctx.user_id})
+        seeds = _execute(self.mysql_dsn, seed_sql, {"user_id": ctx.user_id})
         seed_ids = [int(x["movie_id"]) for x in seeds if x.get("movie_id") is not None]
         if not seed_ids:
             return []
@@ -119,6 +115,7 @@ class UserCollectionRecall(Recaller):
         """
 
         rows = _execute(
+            self.mysql_dsn,
             sim_sql,
             {
                 "seed_ids": tuple(seed_ids),
@@ -135,7 +132,7 @@ class UserCollectionRecall(Recaller):
           SELECT movie_id FROM user_action WHERE user_id = :user_id
         ) x
         """
-        exclude_rows = _execute(exclude_sql, {"user_id": ctx.user_id})
+        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
         excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
 
         # 合并同一 item 的最高相似度
@@ -164,6 +161,7 @@ class UserHighRatingSimilarRecall(Recaller):
     依赖表：user_action, rec_similarity
     """
 
+    mysql_dsn: str | None = None
     rating_threshold: int = 8
     topk: int = 300
 
@@ -175,8 +173,8 @@ class UserHighRatingSimilarRecall(Recaller):
         if ctx.user_id is None:
             return []
 
-        topk = _clamp_positive(int(os.getenv("RECALL_TOPK_USER_HIGH_RATING") or self.topk), self.topk)
-        thr = int(os.getenv("RECALL_RATING_THRESHOLD") or self.rating_threshold)
+        topk = _clamp_positive(int(self.topk), 300)
+        thr = int(self.rating_threshold)
 
         seed_sql = """
         SELECT ua.movie_id
@@ -188,7 +186,7 @@ class UserHighRatingSimilarRecall(Recaller):
         ORDER BY ua.id DESC
         LIMIT 100
         """
-        seeds = _execute(seed_sql, {"user_id": ctx.user_id, "thr": thr})
+        seeds = _execute(self.mysql_dsn, seed_sql, {"user_id": ctx.user_id, "thr": thr})
         seed_ids = [int(x["movie_id"]) for x in seeds if x.get("movie_id") is not None]
         if not seed_ids:
             return []
@@ -210,7 +208,7 @@ class UserHighRatingSimilarRecall(Recaller):
           LIMIT :limit
         )
         """
-        rows = _execute(sim_sql, {"seed_ids": tuple(seed_ids), "limit": 1000})
+        rows = _execute(self.mysql_dsn, sim_sql, {"seed_ids": tuple(seed_ids), "limit": 1000})
 
         exclude_sql = """
         SELECT DISTINCT x.movie_id
@@ -220,7 +218,7 @@ class UserHighRatingSimilarRecall(Recaller):
           SELECT movie_id FROM user_action WHERE user_id = :user_id
         ) x
         """
-        exclude_rows = _execute(exclude_sql, {"user_id": ctx.user_id})
+        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
         excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
 
         best: dict[int, float] = {}
@@ -253,6 +251,7 @@ class UserInterestTagRecall(Recaller):
       - is_static=0 -> tag_dynamic_dict.id，关联 movie_tag_dynamic.tag_id（通常要求 tag_dynamic_dict.status='approved'）
     """
 
+    mysql_dsn: str | None = None
     topk: int = 300
 
     @property
@@ -263,7 +262,7 @@ class UserInterestTagRecall(Recaller):
         if ctx.user_id is None:
             return []
 
-        topk = _clamp_positive(int(os.getenv("RECALL_TOPK_USER_INTEREST_TAG") or self.topk), self.topk)
+        topk = _clamp_positive(int(self.topk), 300)
 
         # 静态标签召回：按兴趣权重累加
         static_sql = """
@@ -289,8 +288,8 @@ class UserInterestTagRecall(Recaller):
         LIMIT :limit
         """
 
-        static_rows = _execute(static_sql, {"user_id": ctx.user_id, "limit": topk})
-        dynamic_rows = _execute(dynamic_sql, {"user_id": ctx.user_id, "limit": topk})
+        static_rows = _execute(self.mysql_dsn, static_sql, {"user_id": ctx.user_id, "limit": topk})
+        dynamic_rows = _execute(self.mysql_dsn, dynamic_sql, {"user_id": ctx.user_id, "limit": topk})
 
         # 排除已交互内容
         exclude_sql = """
@@ -301,7 +300,7 @@ class UserInterestTagRecall(Recaller):
           SELECT movie_id FROM user_action WHERE user_id = :user_id
         ) x
         """
-        exclude_rows = _execute(exclude_sql, {"user_id": ctx.user_id})
+        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
         excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
 
         merged: dict[int, float] = {}
@@ -327,6 +326,7 @@ class ItemSimilarByTagsRecall(Recaller):
     依赖表：movie_tag_static, movie_tag_dynamic
     """
 
+    mysql_dsn: str | None = None
     topk: int = 200
 
     @property
@@ -337,7 +337,7 @@ class ItemSimilarByTagsRecall(Recaller):
         if ctx.movie_id is None:
             return []
 
-        topk = _clamp_positive(int(os.getenv("RECALL_TOPK_ITEM_SIMILAR_TAG") or self.topk), self.topk)
+        topk = _clamp_positive(int(self.topk), 200)
 
         # 静态标签交集
         sql_static = """
@@ -361,8 +361,8 @@ class ItemSimilarByTagsRecall(Recaller):
         LIMIT :limit
         """
 
-        rows = _execute(sql_static, {"movie_id": ctx.movie_id, "limit": topk})
-        rows2 = _execute(sql_dynamic, {"movie_id": ctx.movie_id, "limit": topk})
+        rows = _execute(self.mysql_dsn, sql_static, {"movie_id": ctx.movie_id, "limit": topk})
+        rows2 = _execute(self.mysql_dsn, sql_dynamic, {"movie_id": ctx.movie_id, "limit": topk})
 
         merged: dict[int, float] = {}
         for r in list(rows) + list(rows2):

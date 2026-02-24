@@ -9,7 +9,7 @@ from app.common.settings import Settings
 
 
 def create_app(settings: Settings | None = None) -> Flask:
-    settings = settings or Settings.from_env()
+    settings = settings or Settings.from_config()
 
     app = Flask(__name__)
     app.config["JSON_AS_ASCII"] = False

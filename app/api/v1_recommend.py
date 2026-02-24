@@ -31,7 +31,7 @@ def recommend_user():
     strategy = request.args.get("strategy", "hybrid")
 
     # 召回/排序/重排：由 pipeline 统一编排。
-    settings = Settings.from_env()
+    settings = Settings.from_config()
     pipeline = build_pipeline(settings)
     ctx = RequestContext(user_id=user_id, n=n, strategy=strategy)
     items = pipeline.recommend(ctx)
@@ -59,7 +59,7 @@ def recommend_item():
 
     # 这里复用 pipeline：只要 recall channels 支持 ctx.movie_id 即可。
     # 默认 Settings 走 user_* 通道时可能为空；需要时可配置 RECALL_CHANNELS=item_similar_by_tags,...
-    settings = Settings.from_env()
+    settings = Settings.from_config()
     pipeline = build_pipeline(settings)
     ctx = RequestContext(movie_id=movie_id, n=n, strategy="item")
     items = pipeline.recommend(ctx)
