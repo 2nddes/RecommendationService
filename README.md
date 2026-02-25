@@ -14,6 +14,14 @@ JSON{
   "data": { ... }       // 具体业务数据，出错时为 null
 }
 
+错误场景也使用同一结构，HTTP 状态码与 `code` 保持一致，例如参数错误：
+
+JSON{
+  "code": 400,
+  "message": "invalid 'user_id', expected integer",
+  "data": null
+}
+
 ## 核心推荐接口 (Recommendation APIs)
 这些接口主要服务于 C 端用户体验，由 Spring Boot 获取 ID 列表后，查询数据库组装电影详情返回给 Vue。
 
@@ -28,7 +36,6 @@ Method: GET
 |---|---|---|---|---|
 |user_id|Integer|是|-|用户的唯一标识|
 |n|Integer|否|10|返回推荐的数量|
-|strategy|String|否|hybrid|策略: cf(协同), content(内容), hybrid(混合)|
 
 响应示例:
 
@@ -37,7 +44,6 @@ JSON{
   "message": "success",
   "data": {
     "user_id": 1001,
-    "strategy": "hybrid",
     "items": [1024, 8848, 3096, 5201, 1234]  // 电影 ID 列表
   }
 }
@@ -138,6 +144,13 @@ JSON{
   }
 }
 
+实现说明（当前版本）：
+
+- 数据来源：`movie` + `user_action`
+- 时间窗：`daily` / `weekly` / `monthly` / `all_time`
+- 排序分：评分均值、评分人数、窗口内行为数加权组合
+- 返回值：热门电影 ID 列表（由 Java 侧再查详情）
+
 ## 搜索服务接口 (Search APIs)
 虽然简单的 SQL LIKE 查询可以在 Java 端做，但 Python 端可以利用 NLP 技术做语义搜索 (Semantic Search)。
 
@@ -179,6 +192,17 @@ URL: /api/v1/admin/train
 Method: POST
 描述: 强制 Python 服务从数据库重新拉取全量数据，重新构建相似度矩阵或训练神经网络模型。此过程可能耗时。
 
+请求体字段（可选）:
+- mode: full | incremental（默认 full）
+- component（或 module）: recall | ranking
+- model: two_tower | xgb
+
+说明:
+- 不传 component/module 和 model：按当前配置训练已启用模型（保持原行为）
+- 只传 component：训练该模块下支持的模型（当前 recall=two_tower, ranking=xgb）
+- 只传 model：按模型名定向训练（two_tower 或 xgb）
+- 同时传 component + model：训练指定模块中的指定模型（若不匹配将返回 400）
+
 响应示例:
 
 JSON{
@@ -187,6 +211,49 @@ JSON{
   "data": {
     "task_id": "task_20231027_001",
     "estimated_time": "30s"
+  }
+}
+
+### 查询任务列表
+URL: /api/v1/admin/tasks
+Method: GET
+描述: 查询后台任务列表（支持内存任务与数据库训练任务聚合查询）。
+
+查询参数（可选）:
+- source: all | memory | db（默认 all）
+- status: pending | running | succeeded | failed
+- limit: 正整数（默认 20）
+- offset: 非负整数（默认 0）
+
+响应示例:
+
+JSON{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "id": "2",
+        "name": "train_job",
+        "status": "succeeded",
+        "source": "db",
+        "created_at": "2026-02-25T12:40:26",
+        "started_at": null,
+        "finished_at": "2026-02-25T12:41:13",
+        "error": null,
+        "result": {
+          "train_job_id": 2,
+          "mode": "full",
+          "status": "completed",
+          "metrics": {}
+        }
+      }
+    ],
+    "total": 1,
+    "limit": 20,
+    "offset": 0,
+    "source": "all",
+    "status": null
   }
 }
 

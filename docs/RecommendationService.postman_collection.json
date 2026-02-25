@@ -1,0 +1,916 @@
+{
+    "info": {
+        "name": "RecommendationService API",
+        "description": "Python Recommendation Service API Collection\n\n统一返回结构：\n{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {...}\n}\n\n说明：\n1. 默认 base_url 为 http://127.0.0.1:5000\n2. 若服务启用了 INTERNAL_SECRET，请在 collection 变量 internal_secret 中配置，并保留请求头 X-Internal-Secret\n3. /api/v1/admin/tasks/{task_id} 依赖前置训练/刷新/应用接口返回的 task_id",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_postman_id": "dbca9e87-9faf-4df5-9693-83eb6db1f87f"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:5000",
+            "type": "string"
+        },
+        {
+            "key": "internal_secret",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "movie_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "task_id",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "服务健康检查。\n\n成功返回：\n- code: 200\n- data.status: ok"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/health",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "health"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"status\": \"ok\"\n  }\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Recommendation",
+            "item": [
+                {
+                    "name": "Recommend - User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/recommend/user?user_id={{user_id}}&n=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "recommend",
+                                "user"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{user_id}}",
+                                    "description": "用户ID（必填，int）"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "10",
+                                    "description": "返回数量（可选，默认10）"
+                                }
+                            ]
+                        },
+                        "description": "个性化推荐（猜你喜欢）。\n\n参数：\n- user_id: int, required\n- n: int, optional\n"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/recommend/user?user_id=1&n=10",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "recommend",
+                                        "user"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "user_id",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "n",
+                                            "value": "10"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"user_id\": 1,\n    \"items\": [1024, 8848, 3096],\n    \"n\": 10\n  }\n}"
+                        },
+                        {
+                            "name": "400 Missing user_id",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/recommend/user?n=10",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "recommend",
+                                        "user"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "n",
+                                            "value": "10"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 400,\n  \"message\": \"missing 'user_id'\",\n  \"data\": null\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Recommend - Item",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/recommend/item?movie_id={{movie_id}}&n=8",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "recommend",
+                                "item"
+                            ],
+                            "query": [
+                                {
+                                    "key": "movie_id",
+                                    "value": "{{movie_id}}",
+                                    "description": "电影ID（必填，int）"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "8",
+                                    "description": "返回数量（可选，默认8）"
+                                }
+                            ]
+                        },
+                        "description": "相似电影推荐（看了又看）。"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/recommend/item?movie_id=1&n=8",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "recommend",
+                                        "item"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "movie_id",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "key": "n",
+                                            "value": "8"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"source_id\": 1,\n    \"items\": [2, 3, 4],\n    \"n\": 8\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Recommend - Trending",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/recommend/trending?window=weekly&n=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "recommend",
+                                "trending"
+                            ],
+                            "query": [
+                                {
+                                    "key": "window",
+                                    "value": "weekly",
+                                    "description": "时间窗：daily|weekly|monthly|all_time（默认 weekly）"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "10",
+                                    "description": "返回数量（默认10）"
+                                }
+                            ]
+                        },
+                        "description": "热门榜单推荐。\n\n当前逻辑：按评分统计 + 时间窗内行为数加权排序。"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/recommend/trending?window=weekly&n=10",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "recommend",
+                                        "trending"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "window",
+                                            "value": "weekly"
+                                        },
+                                        {
+                                            "key": "n",
+                                            "value": "10"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"window\": \"weekly\",\n    \"items\": [101, 102, 103],\n    \"n\": 10\n  }\n}"
+                        },
+                        {
+                            "name": "400 Invalid window",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/recommend/trending?window=yearly&n=10",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "recommend",
+                                        "trending"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "window",
+                                            "value": "yearly"
+                                        },
+                                        {
+                                            "key": "n",
+                                            "value": "10"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'window', expected one of: daily, weekly, monthly, all_time\",\n  \"data\": null\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Search",
+            "item": [
+                {
+                    "name": "Hybrid Search",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"科幻 诺兰 时间旅行\",\n  \"n\": 20,\n  \"filters\": {\n    \"year_min\": 2010,\n    \"genre\": \"Sci-Fi\"\n  }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/search",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "search"
+                            ]
+                        },
+                        "description": "混合搜索接口（当前返回占位结果）。\n\nBody:\n- query: string, required\n- n: int, optional\n- filters: object, optional"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"query\": \"科幻 诺兰 时间旅行\",\n  \"n\": 20,\n  \"filters\": {\n    \"year_min\": 2010\n  }\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/search",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "search"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"query\": \"科幻 诺兰 时间旅行\",\n    \"n\": 20,\n    \"filters\": {\n      \"year_min\": 2010\n    },\n    \"total\": 0,\n    \"results\": []\n  }\n}"
+                        },
+                        {
+                            "name": "400 Missing query",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"n\": 20\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/search",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "search"
+                                    ]
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 400,\n  \"message\": \"missing 'query'\",\n  \"data\": null\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "Admin - Train",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const jsonData = pm.response.json();",
+                                    "if (jsonData && jsonData.data && jsonData.data.task_id) {",
+                                    "  pm.collectionVariables.set('task_id', jsonData.data.task_id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"mode\": \"full\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/train",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "train"
+                            ]
+                        },
+                        "description": "触发模型训练任务。\n\nBody:\n- mode: full|incremental"
+                    },
+                    "response": [
+                        {
+                            "name": "200 Task Started",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"mode\": \"full\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/train",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "train"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"Training task started\",\n  \"data\": {\n    \"task_id\": \"task_20260224_abcdef\",\n    \"estimated_time\": \"unknown\"\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Admin - Refresh",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const jsonData = pm.response.json();",
+                                    "if (jsonData && jsonData.data && jsonData.data.task_id) {",
+                                    "  pm.collectionVariables.set('task_id', jsonData.data.task_id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/refresh",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "refresh"
+                            ]
+                        },
+                        "description": "触发增量刷新任务。"
+                    },
+                    "response": [
+                        {
+                            "name": "200 Task Started",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/refresh",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "refresh"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"Refresh task started\",\n  \"data\": {\n    \"task_id\": \"task_20260224_abcdef\",\n    \"estimated_time\": \"unknown\"\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Admin - Apply",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const jsonData = pm.response.json();",
+                                    "if (jsonData && jsonData.data && jsonData.data.task_id) {",
+                                    "  pm.collectionVariables.set('task_id', jsonData.data.task_id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/apply",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "apply"
+                            ]
+                        },
+                        "description": "应用最新训练产物到当前配置路径。"
+                    },
+                    "response": [
+                        {
+                            "name": "200 Task Started",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/apply",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "apply"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"Apply task started\",\n  \"data\": {\n    \"task_id\": \"task_20260224_abcdef\",\n    \"estimated_time\": \"unknown\"\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Admin - Task Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/tasks/{{task_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "tasks",
+                                "{{task_id}}"
+                            ]
+                        },
+                        "description": "查询异步任务状态。\n\n依赖变量：task_id（可由 train/refresh/apply 的 tests 脚本自动写入）"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/tasks/{{task_id}}",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "tasks",
+                                        "{{task_id}}"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": \"task_20260224_abcdef\",\n    \"name\": \"train\",\n    \"status\": \"running\",\n    \"created_at\": \"2026-02-24T10:00:00Z\"\n  }\n}"
+                        },
+                        {
+                            "name": "400 Unknown task",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/tasks/not_exists",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "tasks",
+                                        "not_exists"
+                                    ]
+                                }
+                            },
+                            "status": "Bad Request",
+                            "code": 400,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 400,\n  \"message\": \"unknown task_id\",\n  \"data\": null\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Admin - Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-Internal-Secret",
+                                "value": "{{internal_secret}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/admin/status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "admin",
+                                "status"
+                            ]
+                        },
+                        "description": "查看当前配置与产物状态。"
+                    },
+                    "response": [
+                        {
+                            "name": "200 OK",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/admin/status",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "admin",
+                                        "status"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"config\": {},\n    \"artifacts\": {}\n  }\n}"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

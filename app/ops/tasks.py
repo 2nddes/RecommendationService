@@ -47,6 +47,10 @@ class TaskManager:
         with self._lock:
             return self._tasks.get(task_id)
 
+    def list(self) -> list[Task]:
+        with self._lock:
+            return list(self._tasks.values())
+
     def start(self, *, task_id: str, name: str, fn: TaskFn) -> Task:
         t = self.create(task_id=task_id, name=name)
 

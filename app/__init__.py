@@ -6,6 +6,7 @@ from app.api.v1 import v1_bp
 from app.common.errors import register_error_handlers
 from app.common.health import health_bp
 from app.common.settings import Settings
+from app.reco.startup import start_startup_jobs
 
 
 def create_app(settings: Settings | None = None) -> Flask:
@@ -18,6 +19,7 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(v1_bp, url_prefix="/api/v1")
 
     register_error_handlers(app)
+    start_startup_jobs(settings)
 
     @app.before_request
     def _internal_auth_guard():

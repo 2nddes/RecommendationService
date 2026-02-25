@@ -2,6 +2,7 @@
     "INTERNAL_SECRET": null,
     "MYSQL_DSN": "mysql+pymysql://root:admin@localhost:3306/movie_recommend",
     "RECALL_CHANNELS": [
+        "two_tower",
         "user_collection",
         "user_high_rating_similar",
         "user_interest_tag"
@@ -31,5 +32,16 @@
     "RECALL_TOPK_TWO_TOWER": 300,
     "TWO_TOWER_SPACE": "cosine",
     "TWO_TOWER_RELOAD_INTERVAL_S": 2.0,
-    "TWO_TOWER_INDEX_PATH": "data/two_tower_items.hnsw"
+    "TWO_TOWER_INDEX_PATH": "data/two_tower_items.hnsw",
+    "TWO_TOWER_VECTOR_DB_PATH": "data/two_tower_vectors.db",
+    "TWO_TOWER_MODEL_PATH": "data/models/two_tower_latest.pt",
+    "TWO_TOWER_TRAIN_EPOCHS": 6,
+    "TWO_TOWER_TRAIN_BATCH_SIZE": 2048,
+    "TWO_TOWER_TRAIN_LR": 0.03,
+    "TWO_TOWER_TRAIN_REG": 0.0001,
+    "TWO_TOWER_TRAIN_NEGATIVES": 2,
+    "TWO_TOWER_TRAIN_LIMIT": 300000,
+    "TWO_TOWER_STARTUP_BUILD": true,
+    "TWO_TOWER_DAILY_UPDATE_INTERVAL_HOURS": 24,
+    "STARTUP_PREWARM_CF": true
 }

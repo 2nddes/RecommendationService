@@ -2,35 +2,53 @@ from __future__ import annotations
 
 from flask import Blueprint, request
 
-from app.common.responses import ok
+from app.common.responses import ok, fail
 from app.common.settings import Settings
-from app.common.validation import ParamError, as_str
-from app.ops.admin_service import get_admin_status, get_task, start_apply_task, start_refresh_task, start_train_task
+from app.common.validation import ParamError, as_int, as_str
+from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_refresh_task, start_train_task
 
 admin_bp = Blueprint("admin", __name__)
 
 
 @admin_bp.post("/admin/train")
 def admin_train():
-    """触发模型重训练（全量）
+    """触发模型重训练
 
     文档: POST /api/v1/admin/train
     """
 
     body = request.get_json(silent=True) or {}
-    mode = body.get("mode") or "full"
-    if mode not in {"full", "incremental"}:
-        raise ParamError("invalid 'mode', expected 'full' or 'incremental'")
+
+    component = body.get("component")
+    model = body.get("model")
+    if component is None or model is None:
+        print("未指定 component 或 model")
+        return fail(message="Please specify 'component' and 'model' in the request body")
+
+    component = as_str(component, name="component")
+    model = as_str(model, name="model")
+
+    if component not in {"ranking", "recall"}:
+        return fail(message=f"Invalid component '{component}', expected one of: ranking, recall")
+    if model not in {"xgb", "two_tower"}:
+        return fail(message=f"Invalid model '{model}', expected one of: xgb, two_tower")
 
     settings = Settings.from_config()
-    data = start_train_task(settings, mode=as_str(mode, name="mode"))
+    try:
+        data = start_train_task(
+            settings,
+            component=component,
+            model=model,
+        )
+    except Exception as e:  # noqa: BLE001
+        return fail(message=f"Failed to start training task: {type(e).__name__}: {e}")
     data["estimated_time"] = "unknown"
     return ok(data, message="Training task started")
 
 
 @admin_bp.post("/admin/refresh")
 def admin_refresh():
-    """刷新缓存/增量更新
+    """重新加载权重
 
     文档: POST /api/v1/admin/refresh
     """
@@ -41,21 +59,6 @@ def admin_refresh():
     return ok(data, message="Refresh task started")
 
 
-@admin_bp.post("/admin/apply")
-def admin_apply():
-    """应用最新训练产物到线上配置指定的路径。
-
-    说明：模型选择依旧由配置(env)决定，这里只负责“把最新产物发布到配置指定位置”。
-
-    文档: POST /api/v1/admin/apply
-    """
-
-    settings = Settings.from_config()
-    data = start_apply_task(settings)
-    data["estimated_time"] = "unknown"
-    return ok(data, message="Apply task started")
-
-
 @admin_bp.get("/admin/tasks/<task_id>")
 def admin_task(task_id: str):
     """查询后台任务状态。
@@ -63,10 +66,45 @@ def admin_task(task_id: str):
     文档: GET /api/v1/admin/tasks/<task_id>
     """
 
-    t = get_task(task_id)
+    settings = Settings.from_config()
+    t = get_task(settings, task_id)
     if t is None:
-        raise ParamError("unknown task_id")
+        return fail(message=f"Task not found: {task_id}")
     return ok(t)
+
+
+@admin_bp.get("/admin/tasks")
+def admin_tasks():
+    """查询后台任务列表。
+
+    文档: GET /api/v1/admin/tasks
+    query params:
+      - source: all|memory|db (optional, default all)
+      - status: pending|running|succeeded|failed (optional)
+      - limit: int (optional, default 20)
+      - offset: int (optional, default 0)
+    """
+
+    source = (request.args.get("source", "all") or "all").strip().lower()
+    if source not in {"all", "memory", "db"}:
+        return fail(message="invalid 'source', expected one of: all, memory, db")
+
+    status = request.args.get("status")
+    if status is not None:
+        status = status.strip().lower()
+        if status not in {"pending", "running", "succeeded", "failed"}:
+            return fail(message="invalid 'status', expected one of: pending, running, succeeded, failed")
+
+    limit = as_int(request.args.get("limit", 20), name="limit")
+    offset = as_int(request.args.get("offset", 0), name="offset")
+    if limit <= 0:
+        return fail(message="invalid 'limit', expected positive integer")
+    if offset < 0:
+        return fail(message="invalid 'offset', expected non-negative integer")
+
+    settings = Settings.from_config()
+    data = get_tasks(settings, source=source, status=status, limit=limit, offset=offset)
+    return ok(data)
 
 
 @admin_bp.get("/admin/status")

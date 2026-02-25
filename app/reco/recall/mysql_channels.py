@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
+from typing import Any, Iterable, List, Mapping, Sequence
 
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Engine, bindparam, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.reco.recall.base import Recaller
@@ -29,29 +29,19 @@ def _get_engine(mysql_dsn: str | None) -> Engine | None:
         return None
 
 
-def _rows_to_candidates(rows: Iterable[dict], source: str, id_key: str, score_key: str) -> List[Candidate]:
-    out: List[Candidate] = []
-    for r in rows:
-        try:
-            item_id = int(r[id_key])
-            score = float(r.get(score_key) or 0.0)
-        except Exception:
-            continue
-        out.append(Candidate(item_id=item_id, score=score, source=source))
-    return out
-
-
-def _execute(mysql_dsn: str | None, sql: str, params: dict) -> List[dict]:
+def _execute(mysql_dsn: str | None, sql: str, params: Mapping[str, Any], *, expanding: Sequence[str] = ()) -> List[dict]:
     engine = _get_engine(mysql_dsn)
     if engine is None:
         return []
 
     try:
         with engine.connect() as conn:
-            rs = conn.execute(text(sql), params)
+            stmt = text(sql)
+            for key in expanding:
+                stmt = stmt.bindparams(bindparam(key, expanding=True))
+            rs = conn.execute(stmt, dict(params))
             return [dict(row._mapping) for row in rs]
     except SQLAlchemyError:
-        # 召回阶段不应把服务打挂：失败则本通道返回空
         return []
 
 
@@ -59,11 +49,93 @@ def _clamp_positive(value: int, default: int) -> int:
     return value if value > 0 else default
 
 
+def _as_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except Exception:
+        return default
+
+
+def _as_int(value: Any, default: int = 0) -> int:
+    try:
+        if value is None:
+            return default
+        return int(value)
+    except Exception:
+        return default
+
+
+def _collect_user_exclusions(mysql_dsn: str | None, user_id: int) -> set[int]:
+    sql = """
+    SELECT DISTINCT x.movie_id
+    FROM (
+      SELECT movie_id FROM user_collect_movie WHERE user_id = :user_id
+      UNION ALL
+      SELECT movie_id FROM rating WHERE user_id = :user_id
+      UNION ALL
+      SELECT movie_id FROM user_action WHERE user_id = :user_id
+    ) x
+    """
+    rows = _execute(mysql_dsn, sql, {"user_id": int(user_id)})
+    return {_as_int(r.get("movie_id")) for r in rows if r.get("movie_id") is not None}
+
+
+def _user_exists(mysql_dsn: str | None, user_id: int) -> bool:
+    sql = """
+    SELECT 1 AS ok
+    FROM user u
+    WHERE u.user_id = :user_id
+    LIMIT 1
+    """
+    rows = _execute(mysql_dsn, sql, {"user_id": int(user_id)})
+    return bool(rows)
+
+
+def _trending_candidates(mysql_dsn: str | None, *, topk: int, source: str) -> List[Candidate]:
+    sql = """
+    SELECT
+      m.movie_id AS item_id,
+      (
+        (COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)) * LOG10(COALESCE(m.rating_count, 0) + 1)
+      ) AS score
+    FROM movie m
+    WHERE m.status = 'published'
+    ORDER BY score DESC, m.rating_count DESC, m.movie_id DESC
+    LIMIT :limit
+    """
+    rows = _execute(mysql_dsn, sql, {"limit": int(topk)})
+    out: List[Candidate] = []
+    for row in rows:
+        mid = _as_int(row.get("item_id"))
+        if mid <= 0:
+            continue
+        out.append(Candidate(item_id=mid, score=_as_float(row.get("score")), source=source))
+    return out
+
+
+def _merge_best(rows: Iterable[Mapping[str, Any]], *, source: str, excluded: set[int]) -> List[Candidate]:
+    best: dict[int, float] = {}
+    for r in rows:
+        mid = _as_int(r.get("item_id"))
+        if mid <= 0 or mid in excluded:
+            continue
+        score = _as_float(r.get("score"))
+        prev = best.get(mid)
+        if prev is None or score > prev:
+            best[mid] = score
+
+    out = [Candidate(item_id=item_id, score=score, source=source) for item_id, score in best.items()]
+    out.sort(key=lambda x: x.score, reverse=True)
+    return out
+
+
 @dataclass(frozen=True)
 class UserCollectionRecall(Recaller):
-    """从用户收藏的影片出发，召回相似影片。
+    """基于用户历史正反馈种子的内容召回（movie_tag）。
 
-    依赖表：user_collection, rec_similarity
+    依赖表：user_collect_movie, rating, movie_tag, movie
     """
 
     mysql_dsn: str | None = None
@@ -78,87 +150,63 @@ class UserCollectionRecall(Recaller):
         if ctx.user_id is None:
             return []
 
+        if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
+            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+
         topk = _clamp_positive(int(self.topk), 200)
-        per_seed_topk = _clamp_positive(int(self.per_seed_topk), 50)
 
-        # 取最近收藏的若干部作为种子
         seed_sql = """
-        SELECT uc.movie_id
-        FROM user_collection uc
-        WHERE uc.user_id = :user_id
-        ORDER BY uc.id DESC
-        LIMIT 50
+        SELECT movie_id
+        FROM (
+          SELECT ucm.movie_id AS movie_id, ucm.created_at AS ts
+          FROM user_collect_movie ucm
+          WHERE ucm.user_id = :user_id
+          UNION ALL
+          SELECT r.movie_id AS movie_id, r.updated_at AS ts
+          FROM rating r
+          WHERE r.user_id = :user_id AND r.rating >= 7
+        ) s
+        ORDER BY ts DESC
+        LIMIT 80
         """
-        seeds = _execute(self.mysql_dsn, seed_sql, {"user_id": ctx.user_id})
-        seed_ids = [int(x["movie_id"]) for x in seeds if x.get("movie_id") is not None]
+        seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id)})
+        seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            return []
+            return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
 
-        # 用 rec_similarity 做 item-based 召回（包含正反向）
-        # 注意：这里假设 rec_similarity 存的是 movie 表的主键 id。
         sim_sql = """
-        (
-          SELECT rs.movie_b_id AS item_id, rs.similarity AS score
-          FROM rec_similarity rs
-          WHERE rs.movie_a_id IN :seed_ids
-          ORDER BY rs.similarity DESC
-          LIMIT :limit
-        )
-        UNION ALL
-        (
-          SELECT rs.movie_a_id AS item_id, rs.similarity AS score
-          FROM rec_similarity rs
-          WHERE rs.movie_b_id IN :seed_ids
-          ORDER BY rs.similarity DESC
-          LIMIT :limit
-        )
+        SELECT
+          mt2.movie_id AS item_id,
+          SUM((COALESCE(mt1.weight, 1.0) * COALESCE(mt2.weight, 1.0)) + 0.05 * COALESCE(mt2.hot_score, 0)) AS score
+        FROM movie_tag mt1
+        JOIN movie_tag mt2 ON mt2.tag_id = mt1.tag_id
+        JOIN movie m ON m.movie_id = mt2.movie_id
+        WHERE mt1.movie_id IN :seed_ids
+          AND mt2.movie_id NOT IN :seed_ids
+          AND m.status = 'published'
+        GROUP BY mt2.movie_id
+        ORDER BY score DESC
+        LIMIT :limit
         """
-
         rows = _execute(
             self.mysql_dsn,
             sim_sql,
-            {
-                "seed_ids": tuple(seed_ids),
-                "limit": per_seed_topk,
-            },
+            {"seed_ids": list(seed_ids), "limit": int(max(topk, self.per_seed_topk * max(len(seed_ids), 1)))},
+            expanding=("seed_ids",),
         )
 
-        # 排除用户自己已收藏/已评分过的电影
-        exclude_sql = """
-        SELECT DISTINCT x.movie_id
-        FROM (
-          SELECT movie_id FROM user_collection WHERE user_id = :user_id
-          UNION ALL
-          SELECT movie_id FROM user_action WHERE user_id = :user_id
-        ) x
-        """
-        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
-        excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
-
-        # 合并同一 item 的最高相似度
-        best: dict[int, float] = {}
-        for r in rows:
-            try:
-                mid = int(r["item_id"])
-                if mid in excluded:
-                    continue
-                sc = float(r.get("score") or 0.0)
-            except Exception:
-                continue
-            prev = best.get(mid)
-            if prev is None or sc > prev:
-                best[mid] = sc
-
-        candidates = [Candidate(item_id=k, score=v, source=self.name) for k, v in best.items()]
-        candidates.sort(key=lambda x: x.score, reverse=True)
-        return candidates[:topk]
+        excluded = _collect_user_exclusions(self.mysql_dsn, int(ctx.user_id))
+        candidates = _merge_best(rows, source=self.name, excluded=excluded)
+        if candidates:
+            return candidates[:topk]
+        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
 
 
 @dataclass(frozen=True)
 class UserHighRatingSimilarRecall(Recaller):
-    """从用户高评分影片出发，召回相似影片。
+    """基于评分数据的用户协同召回。 
 
-    依赖表：user_action, rec_similarity
+    依赖表：rating, movie
     """
 
     mysql_dsn: str | None = None
@@ -173,82 +221,59 @@ class UserHighRatingSimilarRecall(Recaller):
         if ctx.user_id is None:
             return []
 
+        if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
+            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+
         topk = _clamp_positive(int(self.topk), 300)
         thr = int(self.rating_threshold)
 
         seed_sql = """
-        SELECT ua.movie_id
-        FROM user_action ua
-        WHERE ua.user_id = :user_id
-          AND ua.action_type = 'rate'
-          AND ua.rating IS NOT NULL
-          AND ua.rating >= :thr
-        ORDER BY ua.id DESC
-        LIMIT 100
+        SELECT r.movie_id
+        FROM rating r
+        WHERE r.user_id = :user_id AND r.rating >= :thr
+        ORDER BY r.updated_at DESC
+        LIMIT 60
         """
-        seeds = _execute(self.mysql_dsn, seed_sql, {"user_id": ctx.user_id, "thr": thr})
-        seed_ids = [int(x["movie_id"]) for x in seeds if x.get("movie_id") is not None]
+        seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id), "thr": thr})
+        seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            return []
+            return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
 
-        sim_sql = """
-        (
-          SELECT rs.movie_b_id AS item_id, rs.similarity AS score
-          FROM rec_similarity rs
-          WHERE rs.movie_a_id IN :seed_ids
-          ORDER BY rs.similarity DESC
-          LIMIT :limit
-        )
-        UNION ALL
-        (
-          SELECT rs.movie_a_id AS item_id, rs.similarity AS score
-          FROM rec_similarity rs
-          WHERE rs.movie_b_id IN :seed_ids
-          ORDER BY rs.similarity DESC
-          LIMIT :limit
-        )
+        cf_sql = """
+        SELECT
+          r2.movie_id AS item_id,
+          AVG(r2.rating) * LOG10(COUNT(*) + 1) AS score
+        FROM rating r1
+        JOIN rating r2 ON r2.user_id = r1.user_id
+        JOIN movie m ON m.movie_id = r2.movie_id
+        WHERE r1.movie_id IN :seed_ids
+          AND r1.rating >= :thr
+          AND r2.rating >= :thr
+          AND r2.movie_id NOT IN :seed_ids
+          AND m.status = 'published'
+        GROUP BY r2.movie_id
+        ORDER BY score DESC
+        LIMIT :limit
         """
-        rows = _execute(self.mysql_dsn, sim_sql, {"seed_ids": tuple(seed_ids), "limit": 1000})
+        rows = _execute(
+            self.mysql_dsn,
+            cf_sql,
+            {"seed_ids": list(seed_ids), "thr": thr, "limit": int(topk * 3)},
+            expanding=("seed_ids",),
+        )
 
-        exclude_sql = """
-        SELECT DISTINCT x.movie_id
-        FROM (
-          SELECT movie_id FROM user_collection WHERE user_id = :user_id
-          UNION ALL
-          SELECT movie_id FROM user_action WHERE user_id = :user_id
-        ) x
-        """
-        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
-        excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
-
-        best: dict[int, float] = {}
-        for r in rows:
-            try:
-                mid = int(r["item_id"])
-                if mid in excluded:
-                    continue
-                sc = float(r.get("score") or 0.0)
-            except Exception:
-                continue
-            prev = best.get(mid)
-            if prev is None or sc > prev:
-                best[mid] = sc
-
-        candidates = [Candidate(item_id=k, score=v, source=self.name) for k, v in best.items()]
-        candidates.sort(key=lambda x: x.score, reverse=True)
-        return candidates[:topk]
+        excluded = _collect_user_exclusions(self.mysql_dsn, int(ctx.user_id))
+        candidates = _merge_best(rows, source=self.name, excluded=excluded)
+        if candidates:
+            return candidates[:topk]
+        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
 
 
 @dataclass(frozen=True)
 class UserInterestTagRecall(Recaller):
-    """基于用户兴趣标签召回（静态/动态标签）。
+    """基于用户兴趣标签召回。
 
-    依赖表：user_interest_tag, movie_tag_static, movie_tag_dynamic
-
-    备注：
-    - user_interest_tag.tag_id 的含义由 is_static 决定：
-      - is_static=1 -> tag_static_dict.id，关联 movie_tag_static.tag_id
-      - is_static=0 -> tag_dynamic_dict.id，关联 movie_tag_dynamic.tag_id（通常要求 tag_dynamic_dict.status='approved'）
+    依赖表：user_collect_tag, movie_tag, movie
     """
 
     mysql_dsn: str | None = None
@@ -262,69 +287,37 @@ class UserInterestTagRecall(Recaller):
         if ctx.user_id is None:
             return []
 
+        if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
+            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+
         topk = _clamp_positive(int(self.topk), 300)
 
-        # 静态标签召回：按兴趣权重累加
-        static_sql = """
-        SELECT mts.movie_id AS item_id, SUM(uit.weight) AS score
-        FROM user_interest_tag uit
-        JOIN movie_tag_static mts ON mts.tag_id = uit.tag_id
-        WHERE uit.user_id = :user_id AND uit.is_static = 1
-        GROUP BY mts.movie_id
+        sql = """
+        SELECT
+          mt.movie_id AS item_id,
+          SUM((1.0 + COALESCE(mt.weight, 1.0)) * (1.0 + 0.01 * COALESCE(mt.hot_score, 0))) AS score
+        FROM user_collect_tag uct
+        JOIN movie_tag mt ON mt.tag_id = uct.tag_id
+        JOIN movie m ON m.movie_id = mt.movie_id
+        WHERE uct.user_id = :user_id
+          AND m.status = 'published'
+        GROUP BY mt.movie_id
         ORDER BY score DESC
         LIMIT :limit
         """
 
-        # 动态标签召回：兴趣权重 * 影片动态标签权重
-        dynamic_sql = """
-        SELECT mtd.movie_id AS item_id, SUM(uit.weight * COALESCE(mtd.weight, 1.0)) AS score
-        FROM user_interest_tag uit
-        JOIN tag_dynamic_dict tdd ON tdd.id = uit.tag_id
-        JOIN movie_tag_dynamic mtd ON mtd.tag_id = uit.tag_id
-        WHERE uit.user_id = :user_id AND uit.is_static = 0
-          AND tdd.status = 'approved'
-        GROUP BY mtd.movie_id
-        ORDER BY score DESC
-        LIMIT :limit
-        """
+        rows = _execute(self.mysql_dsn, sql, {"user_id": int(ctx.user_id), "limit": int(topk * 2)})
+        excluded = _collect_user_exclusions(self.mysql_dsn, int(ctx.user_id))
+        candidates = _merge_best(rows, source=self.name, excluded=excluded)
 
-        static_rows = _execute(self.mysql_dsn, static_sql, {"user_id": ctx.user_id, "limit": topk})
-        dynamic_rows = _execute(self.mysql_dsn, dynamic_sql, {"user_id": ctx.user_id, "limit": topk})
-
-        # 排除已交互内容
-        exclude_sql = """
-        SELECT DISTINCT x.movie_id
-        FROM (
-          SELECT movie_id FROM user_collection WHERE user_id = :user_id
-          UNION ALL
-          SELECT movie_id FROM user_action WHERE user_id = :user_id
-        ) x
-        """
-        exclude_rows = _execute(self.mysql_dsn, exclude_sql, {"user_id": ctx.user_id})
-        excluded = {int(r["movie_id"]) for r in exclude_rows if r.get("movie_id") is not None}
-
-        merged: dict[int, float] = {}
-        for r in list(static_rows) + list(dynamic_rows):
-            try:
-                mid = int(r["item_id"])
-                if mid in excluded:
-                    continue
-                sc = float(r.get("score") or 0.0)
-            except Exception:
-                continue
-            merged[mid] = merged.get(mid, 0.0) + sc
-
-        candidates = [Candidate(item_id=k, score=v, source=self.name) for k, v in merged.items()]
-        candidates.sort(key=lambda x: x.score, reverse=True)
-        return candidates[:topk]
+        if candidates:
+            return candidates[:topk]
+        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
 
 
 @dataclass(frozen=True)
 class ItemSimilarByTagsRecall(Recaller):
-    """给 /recommend/item 用的内容相似召回：按标签交集数量召回。
-
-    依赖表：movie_tag_static, movie_tag_dynamic
-    """
+    """给 `/recommend/item` 用的内容相似召回：按标签重叠强度召回。"""
 
     mysql_dsn: str | None = None
     topk: int = 200
@@ -339,40 +332,23 @@ class ItemSimilarByTagsRecall(Recaller):
 
         topk = _clamp_positive(int(self.topk), 200)
 
-        # 静态标签交集
-        sql_static = """
-        SELECT mts2.movie_id AS item_id, COUNT(*) AS score
-        FROM movie_tag_static mts1
-        JOIN movie_tag_static mts2 ON mts2.tag_id = mts1.tag_id
-        WHERE mts1.movie_id = :movie_id AND mts2.movie_id <> :movie_id
-        GROUP BY mts2.movie_id
+        sql = """
+        SELECT
+          mt2.movie_id AS item_id,
+          SUM(COALESCE(mt1.weight, 1.0) * COALESCE(mt2.weight, 1.0)) AS score
+        FROM movie_tag mt1
+        JOIN movie_tag mt2 ON mt2.tag_id = mt1.tag_id
+        JOIN movie m ON m.movie_id = mt2.movie_id
+        WHERE mt1.movie_id = :movie_id
+          AND mt2.movie_id <> :movie_id
+          AND m.status = 'published'
+        GROUP BY mt2.movie_id
         ORDER BY score DESC
         LIMIT :limit
         """
+        rows = _execute(self.mysql_dsn, sql, {"movie_id": int(ctx.movie_id), "limit": int(topk)})
 
-        # 动态标签交集（只按 tag_id 交集计数；也可改为加权）
-        sql_dynamic = """
-        SELECT mtd2.movie_id AS item_id, SUM(LEAST(COALESCE(mtd1.weight, 1.0), COALESCE(mtd2.weight, 1.0))) AS score
-        FROM movie_tag_dynamic mtd1
-        JOIN movie_tag_dynamic mtd2 ON mtd2.tag_id = mtd1.tag_id
-        WHERE mtd1.movie_id = :movie_id AND mtd2.movie_id <> :movie_id
-        GROUP BY mtd2.movie_id
-        ORDER BY score DESC
-        LIMIT :limit
-        """
-
-        rows = _execute(self.mysql_dsn, sql_static, {"movie_id": ctx.movie_id, "limit": topk})
-        rows2 = _execute(self.mysql_dsn, sql_dynamic, {"movie_id": ctx.movie_id, "limit": topk})
-
-        merged: dict[int, float] = {}
-        for r in list(rows) + list(rows2):
-            try:
-                mid = int(r["item_id"])
-                sc = float(r.get("score") or 0.0)
-            except Exception:
-                continue
-            merged[mid] = merged.get(mid, 0.0) + sc
-
-        candidates = [Candidate(item_id=k, score=v, source=self.name) for k, v in merged.items()]
-        candidates.sort(key=lambda x: x.score, reverse=True)
-        return candidates[:topk]
+        candidates = _merge_best(rows, source=self.name, excluded=set())
+        if candidates:
+            return candidates[:topk]
+        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")

@@ -1,0 +1,6 @@
+{
+  "recall.two_tower.latest_model_artifact_path": "data\\artifacts\\two_tower\\two_tower_20260225_124150.pt",
+  "recall.two_tower.latest_index_artifact_path": "data\\artifacts\\two_tower\\two_tower_20260225_124150.hnsw",
+  "recall.two_tower.latest_vector_db_artifact_path": "data\\artifacts\\two_tower\\two_tower_20260225_124150.db",
+  "recall.two_tower.latest_trained_at": "20260225_124150"
+}

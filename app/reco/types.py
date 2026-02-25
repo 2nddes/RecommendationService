@@ -9,7 +9,6 @@ class RequestContext:
     user_id: int | None = None
     movie_id: int | None = None
     n: int = 10
-    strategy: str = "hybrid"
     window: str = "weekly"
     query: str | None = None
     filters: Mapping[str, Any] = field(default_factory=dict)

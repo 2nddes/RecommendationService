@@ -43,6 +43,17 @@ class Settings:
     recall_topk_two_tower: int = 300
     two_tower_space: str = "cosine"
     two_tower_reload_interval_s: float = 2.0
+    two_tower_vector_db_path: str = "data/two_tower_vectors.db"
+    two_tower_model_path: str = "data/models/two_tower_latest.pt"
+    two_tower_train_epochs: int = 6
+    two_tower_train_batch_size: int = 2048
+    two_tower_train_lr: float = 0.03
+    two_tower_train_reg: float = 0.0001
+    two_tower_train_negatives: int = 2
+    two_tower_train_limit: int = 300000
+    two_tower_startup_build: bool = True
+    two_tower_daily_update_interval_hours: float = 24.0
+    startup_prewarm_cf: bool = True
 
     @staticmethod
     def from_config() -> "Settings":
@@ -91,6 +102,19 @@ class Settings:
             recall_topk_two_tower=config.get_int("RECALL_TOPK_TWO_TOWER", 300),
             two_tower_space=config.get_str("TWO_TOWER_SPACE", "cosine") or "cosine",
             two_tower_reload_interval_s=config.get_float("TWO_TOWER_RELOAD_INTERVAL_S", 2.0),
+            two_tower_vector_db_path=config.get_str("TWO_TOWER_VECTOR_DB_PATH", "data/two_tower_vectors.db")
+            or "data/two_tower_vectors.db",
+            two_tower_model_path=config.get_str("TWO_TOWER_MODEL_PATH", "data/models/two_tower_latest.pt")
+            or "data/models/two_tower_latest.pt",
+            two_tower_train_epochs=config.get_int("TWO_TOWER_TRAIN_EPOCHS", 6),
+            two_tower_train_batch_size=config.get_int("TWO_TOWER_TRAIN_BATCH_SIZE", 2048),
+            two_tower_train_lr=config.get_float("TWO_TOWER_TRAIN_LR", 0.03),
+            two_tower_train_reg=config.get_float("TWO_TOWER_TRAIN_REG", 0.0001),
+            two_tower_train_negatives=config.get_int("TWO_TOWER_TRAIN_NEGATIVES", 2),
+            two_tower_train_limit=config.get_int("TWO_TOWER_TRAIN_LIMIT", 300000),
+            two_tower_startup_build=config.get_bool("TWO_TOWER_STARTUP_BUILD", True),
+            two_tower_daily_update_interval_hours=config.get_float("TWO_TOWER_DAILY_UPDATE_INTERVAL_HOURS", 24.0),
+            startup_prewarm_cf=config.get_bool("STARTUP_PREWARM_CF", True),
         )
 
     @staticmethod

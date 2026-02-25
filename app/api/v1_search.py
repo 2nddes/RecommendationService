@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from flask import Blueprint, request
 
-from app.common.responses import ok
-from app.common.validation import ParamError, as_int, as_str
+from app.common.responses import ok, fail
+from app.common.validation import as_int, as_str
 
 search_bp = Blueprint("search", __name__)
 
@@ -22,7 +22,7 @@ def search():
     payload = request.get_json(silent=True) or {}
 
     if "query" not in payload:
-        raise ParamError("missing 'query'")
+        return fail(message="Missing required parameter: query")
 
     query = as_str(payload.get("query"), name="query")
     n = as_int(payload.get("n", 20), name="n")

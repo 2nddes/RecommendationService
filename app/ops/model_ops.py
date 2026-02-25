@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import datetime
+import json
 import os
-import shutil
 from typing import Any, Dict, List, Tuple
 
 from sqlalchemy import Engine, create_engine, text
@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
+
 
 
 @dataclass(frozen=True)
@@ -25,54 +26,62 @@ class TrainOutcome:
         return asdict(self)
 
 
-def train_current_models(settings: Settings, *, mode: str) -> Dict[str, Any]:
+def train_current_models(
+    settings: Settings,
+    *,
+    component: str | None = None,
+    model: str | None = None,
+    train_job_id: int | None = None,
+) -> Dict[str, Any]:
     """Train (or rebuild) artifacts for models that are enabled by config.
 
     This does NOT change which model is selected; config remains the source of truth.
     It only produces artifacts and records their paths.
     """
 
-    outcomes: List[TrainOutcome] = []
+    if train_job_id is not None:
+        update_model_train_job(
+            mysql_dsn=settings.mysql_dsn,
+            job_id=int(train_job_id),
+            status="processing",
+        )
 
-    # TODO: add more models here
-    # Ranking
-    if settings.ranking_method == "xgb":
-        outcomes.append(_train_xgb(settings, mode=mode))
+    try:
+        if component == "ranking" and model == "xgb":
+            outcome = _train_xgb(settings)
+            result = {"train_outcome": outcome.to_dict()}
+        elif component == "recall" and model == "two_tower":
+            outcome = _train_two_tower_index(settings)
+            result = {"train_outcome": outcome.to_dict()}
+        else:
+            raise ValueError(f"Unknown component/model combination: {component}/{model}")
 
-    # Recall
-    if "two_tower" in (settings.recall_channels or []):
-        outcomes.append(_train_two_tower_index(settings, mode=mode))
-
-    return {
-        "mode": mode,
-        "trained": [o.to_dict() for o in outcomes],
-    }
-
-
-def apply_current_models(settings: Settings) -> Dict[str, Any]:
-    """Apply latest trained artifacts to active paths defined by config/env."""
-
-    store = get_artifact_store()
-    applied: List[Dict[str, Any]] = []
-
-    # Ranking
-    if settings.ranking_method == "xgb":
-        applied.append(_apply_xgb(settings, store))
-
-    # Recall
-    if "two_tower" in (settings.recall_channels or []):
-        applied.append(_apply_two_tower(settings, store))
-
-    return {"applied": applied}
+        if train_job_id is not None:
+            update_model_train_job(
+                mysql_dsn=settings.mysql_dsn,
+                job_id=int(train_job_id),
+                status="completed",
+                metrics=result,
+                set_finished_at=True,
+            )
+        return result
+    except Exception as e:  # noqa: BLE001
+        if train_job_id is not None:
+            update_model_train_job(
+                mysql_dsn=settings.mysql_dsn,
+                job_id=int(train_job_id),
+                status="failed",
+                metrics={"error": f"{type(e).__name__}: {e}"},
+                set_finished_at=True,
+            )
+        raise
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    """Incremental refresh hook.
+    # 重新加载权重
+    # TODO
+    return {"refreshed": True}
 
-    For now, this maps to nearline rebuild for components that support it.
-    """
-
-    return train_current_models(settings, mode="incremental")
 
 
 # ----------------------------
@@ -130,7 +139,7 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
         return []
 
 
-def _train_xgb(settings: Settings, *, mode: str) -> TrainOutcome:
+def _train_xgb(settings: Settings) -> TrainOutcome:
     store = get_artifact_store()
 
     # Decide output location (staging)
@@ -190,7 +199,7 @@ def _train_xgb(settings: Settings, *, mode: str) -> TrainOutcome:
     builder = ManualFeatureBuilder(config=ManualFeatureConfig(include_mysql_movie_features=settings.xgb_use_mysql_features))
 
     # We build per-user contexts. For simplicity, use a single ctx with has_user=1.
-    ctx = RequestContext(user_id=int(rows[0][0]), n=10, strategy="admin_train")
+    ctx = RequestContext(user_id=int(rows[0][0]), n=10)
     feat_rows = builder.build_rows(ctx, candidates, movie_features)
     X = np.asarray(builder.to_matrix(feat_rows), dtype=float)
     y = np.asarray(labels, dtype=float)
@@ -220,42 +229,8 @@ def _train_xgb(settings: Settings, *, mode: str) -> TrainOutcome:
         name="xgb",
         artifact_path=artifact_path,
         trained=True,
-        details={"rows": len(rows), "mode": mode, "feature_count": int(X.shape[1])},
+        details={"rows": len(rows), "feature_count": int(X.shape[1])},
     )
-
-
-def _apply_xgb(settings: Settings, store) -> Dict[str, Any]:
-    active_path = settings.xgb_model_path
-    artifact_path = store.get("ranking.xgb.latest_artifact_path")
-
-    if not active_path:
-        return {
-            "component": "ranking",
-            "name": "xgb",
-            "applied": False,
-            "reason": "XGB_MODEL_PATH is not set in config",
-        }
-
-    if not artifact_path or not os.path.exists(str(artifact_path)):
-        return {
-            "component": "ranking",
-            "name": "xgb",
-            "applied": False,
-            "reason": "no_latest_artifact_to_apply",
-        }
-
-    os.makedirs(os.path.dirname(active_path) or ".", exist_ok=True)
-    tmp = active_path + ".tmp"
-    shutil.copyfile(str(artifact_path), tmp)
-    os.replace(tmp, active_path)
-
-    return {
-        "component": "ranking",
-        "name": "xgb",
-        "applied": True,
-        "active_path": active_path,
-        "artifact_path": artifact_path,
-    }
 
 
 # ----------------------------
@@ -267,16 +242,23 @@ def _two_tower_active_index_path(settings: Settings) -> str:
     return settings.two_tower_index_path or os.path.join("data", "two_tower_items.hnsw")
 
 
-def _train_two_tower_index(settings: Settings, *, mode: str) -> TrainOutcome:
+def _train_two_tower_index(settings: Settings) -> TrainOutcome:
     store = get_artifact_store()
 
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     out_dir = os.path.join("data", "artifacts", "two_tower")
     os.makedirs(out_dir, exist_ok=True)
-    artifact_path = os.path.join(out_dir, f"two_tower_{ts}.hnsw")
+    artifact_model_path = os.path.join(out_dir, f"two_tower_{ts}.pt")
+    artifact_index_path = os.path.join(out_dir, f"two_tower_{ts}.hnsw")
+    artifact_vector_db_path = os.path.join(out_dir, f"two_tower_{ts}.db")
 
     try:
-        from app.reco.recall.two_tower import build_hnsw_index, load_config_from_settings
+        from app.reco.recall.two_tower import (
+            load_config_from_settings,
+            materialize_item_vectors_from_model,
+            save_model_weights,
+            train_two_tower_model,
+        )
     except Exception as e:  # noqa: BLE001
         return TrainOutcome(
             component="recall",
@@ -289,7 +271,14 @@ def _train_two_tower_index(settings: Settings, *, mode: str) -> TrainOutcome:
     cfg = load_config_from_settings(settings)
 
     try:
-        count = build_hnsw_index(index_path=artifact_path, cfg=cfg, mysql_dsn=settings.mysql_dsn)
+        model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.mysql_dsn)
+        save_model_weights(model, artifact_model_path)
+        count = materialize_item_vectors_from_model(
+            cfg=cfg,
+            model_path=artifact_model_path,
+            vector_db_path=artifact_vector_db_path,
+            index_path=artifact_index_path,
+        )
     except Exception as e:  # noqa: BLE001
         return TrainOutcome(
             component="recall",
@@ -299,47 +288,173 @@ def _train_two_tower_index(settings: Settings, *, mode: str) -> TrainOutcome:
             details={"failed": True, "reason": f"{type(e).__name__}: {e}"},
         )
 
-    store.set("recall.two_tower.latest_artifact_path", artifact_path)
+    store.set("recall.two_tower.latest_model_artifact_path", artifact_model_path)
+    store.set("recall.two_tower.latest_index_artifact_path", artifact_index_path)
+    store.set("recall.two_tower.latest_vector_db_artifact_path", artifact_vector_db_path)
     store.set("recall.two_tower.latest_trained_at", ts)
 
     return TrainOutcome(
         component="recall",
         name="two_tower",
-        artifact_path=artifact_path,
+        artifact_path=artifact_model_path,
         trained=True,
-        details={"items_indexed": int(count), "mode": mode},
+        details={
+            "items_indexed": int(count),
+            "model_path": artifact_model_path,
+            "index_path": artifact_index_path,
+            "vector_db_path": artifact_vector_db_path,
+            **train_metrics,
+        },
     )
 
 
-def _apply_two_tower(settings: Settings, store) -> Dict[str, Any]:
-    active_path = _two_tower_active_index_path(settings)
-    artifact_path = store.get("recall.two_tower.latest_artifact_path")
+def create_model_train_job(*, mysql_dsn: str | None, mode: str = "full") -> int:
+    engine = _get_mysql_engine(mysql_dsn)
+    if engine is None:
+        raise RuntimeError("mysql_not_configured_for_model_train_job")
 
-    if not artifact_path or not os.path.exists(str(artifact_path)):
-        return {
-            "component": "recall",
-            "name": "two_tower",
-            "applied": False,
-            "reason": "no_latest_artifact_to_apply",
-        }
-
-    os.makedirs(os.path.dirname(active_path) or ".", exist_ok=True)
-    tmp = active_path + ".tmp"
-    shutil.copyfile(str(artifact_path), tmp)
-    os.replace(tmp, active_path)
-
-    # Invalidate in-memory cache so it picks up the new file ASAP.
+    sql = """
+    INSERT INTO model_train_job(mode, status)
+    VALUES (:mode, 'pending')
+    """
     try:
-        from app.reco.recall.two_tower import invalidate_index_cache
+        with engine.begin() as conn:
+            rs = conn.execute(text(sql), {"mode": str(mode)})
+            new_id = rs.lastrowid
+    except SQLAlchemyError as e:
+        raise RuntimeError(f"create_model_train_job_failed: {e}") from e
 
-        invalidate_index_cache()
-    except Exception:
-        pass
+    if new_id is None:
+        raise RuntimeError("create_model_train_job_failed: empty_insert_id")
+    return int(new_id)
+
+
+def update_model_train_job(
+    *,
+    mysql_dsn: str | None,
+    job_id: int,
+    status: str,
+    metrics: Dict[str, Any] | None = None,
+    set_finished_at: bool = False,
+) -> None:
+    engine = _get_mysql_engine(mysql_dsn)
+    if engine is None:
+        raise RuntimeError("mysql_not_configured_for_model_train_job")
+
+    updates = ["status = :status"]
+    params: Dict[str, Any] = {"status": str(status), "job_id": int(job_id)}
+
+    if metrics is not None:
+        updates.append("metrics = CAST(:metrics AS JSON)")
+        params["metrics"] = json.dumps(metrics, ensure_ascii=False)
+    if set_finished_at:
+        updates.append("finished_at = CURRENT_TIMESTAMP")
+
+    sql = f"UPDATE model_train_job SET {', '.join(updates)} WHERE id = :job_id"
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(sql), params)
+    except SQLAlchemyError as e:
+        raise RuntimeError(f"update_model_train_job_failed: {e}") from e
+
+
+def get_model_train_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any] | None:
+    engine = _get_mysql_engine(mysql_dsn)
+    if engine is None:
+        return None
+
+    sql = """
+    SELECT id, mode, status, metrics, created_at, finished_at
+    FROM model_train_job
+    WHERE id = :job_id
+    LIMIT 1
+    """
+
+    try:
+        with engine.connect() as conn:
+            row = conn.execute(text(sql), {"job_id": int(job_id)}).mappings().first()
+    except SQLAlchemyError:
+        return None
+
+    if row is None:
+        return None
+
+    created_at = row.get("created_at")
+    finished_at = row.get("finished_at")
+    metrics = row.get("metrics") or {}
+    if isinstance(metrics, str):
+        try:
+            metrics = json.loads(metrics)
+        except Exception:
+            metrics = {"raw": metrics}
 
     return {
-        "component": "recall",
-        "name": "two_tower",
-        "applied": True,
-        "active_path": active_path,
-        "artifact_path": artifact_path,
+        "id": int(row.get("id")),
+        "mode": row.get("mode"),
+        "status": row.get("status"),
+        "metrics": metrics,
+        "created_at": created_at.isoformat() if created_at is not None else None,
+        "finished_at": finished_at.isoformat() if finished_at is not None else None,
     }
+
+
+def list_model_train_jobs(
+    *,
+    mysql_dsn: str | None,
+    limit: int = 50,
+    offset: int = 0,
+    status: str | None = None,
+) -> List[Dict[str, Any]]:
+    engine = _get_mysql_engine(mysql_dsn)
+    if engine is None:
+        return []
+
+    clauses = []
+    params: Dict[str, Any] = {
+        "limit": max(int(limit), 0),
+        "offset": max(int(offset), 0),
+    }
+
+    if status:
+        clauses.append("status = :status")
+        params["status"] = str(status)
+
+    where_sql = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    sql = f"""
+    SELECT id, mode, status, metrics, created_at, finished_at
+    FROM model_train_job
+    {where_sql}
+    ORDER BY id DESC
+    LIMIT :limit OFFSET :offset
+    """
+
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(text(sql), params).mappings().all()
+    except SQLAlchemyError:
+        return []
+
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        created_at = row.get("created_at")
+        finished_at = row.get("finished_at")
+        metrics = row.get("metrics") or {}
+        if isinstance(metrics, str):
+            try:
+                metrics = json.loads(metrics)
+            except Exception:
+                metrics = {"raw": metrics}
+
+        out.append(
+            {
+                "id": int(row.get("id")),
+                "mode": row.get("mode"),
+                "status": row.get("status"),
+                "metrics": metrics,
+                "created_at": created_at.isoformat() if created_at is not None else None,
+                "finished_at": finished_at.isoformat() if finished_at is not None else None,
+            }
+        )
+
+    return out
