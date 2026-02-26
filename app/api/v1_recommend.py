@@ -10,6 +10,7 @@ from app.common.responses import ok, fail
 from app.common.validation import as_int
 from app.common.settings import Settings
 from app.reco.factory import build_pipeline
+from app.reco.recall.two_tower import ann_search, build_item_vector, load_config_from_settings
 from app.reco.types import RequestContext
 
 recommend_bp = Blueprint("recommend", __name__)
@@ -135,12 +136,22 @@ def recommend_item():
     movie_id = as_int(movie_id_raw, name="movie_id")
     n = as_int(request.args.get("n", 8), name="n")
 
-    # 这里复用 pipeline：只要 recall channels 支持 ctx.movie_id 即可。
-    # 默认 Settings 走 user_* 通道时可能为空；需要时可配置 RECALL_CHANNELS=item_similar_by_tags,...
     settings = Settings.from_config()
-    pipeline = build_pipeline(settings)
-    ctx = RequestContext(movie_id=movie_id, n=n)
-    items = pipeline.recommend(ctx)
+
+    cfg = load_config_from_settings(settings)
+    item_vec = build_item_vector(movie_id, cfg, None, mysql_dsn=settings.mysql_dsn)
+    if item_vec is None:
+      return fail(message="Item vector not found for movie_id: {}".format(movie_id))
+
+    pairs = ann_search(item_vec, k=max(n + 1, n), cfg=cfg)
+    items: list[int] = []
+    for item_id, _score in pairs:
+      iid = int(item_id)
+      if iid == movie_id:
+        continue
+      items.append(iid)
+      if len(items) >= n:
+        break
 
     data = {"source_id": movie_id, "items": items, "n": n}
     return ok(data)

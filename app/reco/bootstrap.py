@@ -31,38 +31,38 @@ def bootstrap_components() -> None:
         lambda s: TwoTowerRecall(cfg=load_config_from_settings(s), mysql_dsn=s.mysql_dsn),
     )
 
-    # # MySQL-backed recall channels
-    # register_recaller(
-    #     "user_collection",
-    #     lambda s: UserCollectionRecall(
-    #         mysql_dsn=s.mysql_dsn,
-    #         topk=s.recall_topk_user_collection,
-    #         per_seed_topk=s.recall_per_seed_topk_user_collection,
-    #     ),
-    # )
-    # register_recaller(
-    #     "user_high_rating_similar",
-    #     lambda s: UserHighRatingSimilarRecall(
-    #         mysql_dsn=s.mysql_dsn,
-    #         topk=s.recall_topk_user_high_rating,
-    #         rating_threshold=s.recall_rating_threshold,
-    #     ),
-    # )
-    # register_recaller(
-    #     "user_interest_tag",
-    #     lambda s: UserInterestTagRecall(
-    #         mysql_dsn=s.mysql_dsn,
-    #         topk=s.recall_topk_user_interest_tag,
-    #     ),
-    # )
-    # # for /recommend/item fallback when you want content-based similar
-    # register_recaller(
-    #     "item_similar_by_tags",
-    #     lambda s: ItemSimilarByTagsRecall(
-    #         mysql_dsn=s.mysql_dsn,
-    #         topk=s.recall_topk_item_similar_tag,
-    #     ),
-    # )
+    # MySQL-backed recall channels
+    register_recaller(
+        "user_collection",
+        lambda s: UserCollectionRecall(
+            mysql_dsn=s.mysql_dsn,
+            topk=s.recall_topk_user_collection,
+            per_seed_topk=s.recall_per_seed_topk_user_collection,
+        ),
+    )
+    register_recaller(
+        "user_high_rating_similar",
+        lambda s: UserHighRatingSimilarRecall(
+            mysql_dsn=s.mysql_dsn,
+            topk=s.recall_topk_user_high_rating,
+            rating_threshold=s.recall_rating_threshold,
+        ),
+    )
+    register_recaller(
+        "user_interest_tag",
+        lambda s: UserInterestTagRecall(
+            mysql_dsn=s.mysql_dsn,
+            topk=s.recall_topk_user_interest_tag,
+        ),
+    )
+    # for /recommend/item fallback when you want content-based similar
+    register_recaller(
+        "item_similar_by_tags",
+        lambda s: ItemSimilarByTagsRecall(
+            mysql_dsn=s.mysql_dsn,
+            topk=s.recall_topk_item_similar_tag,
+        ),
+    )
 
     # Ranking methods
     register_ranker("cf", lambda s: CollaborativeFilteringRanker(mysql_dsn=s.mysql_dsn))

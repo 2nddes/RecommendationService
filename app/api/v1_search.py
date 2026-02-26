@@ -10,8 +10,8 @@ search_bp = Blueprint("search", __name__)
 
 @search_bp.post("/search")
 def search():
-    """混合搜索
-
+    # TODO
+    """
     文档: POST /api/v1/search
     json body:
       - query: str (required)

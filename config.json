@@ -2,10 +2,7 @@
     "INTERNAL_SECRET": null,
     "MYSQL_DSN": "mysql+pymysql://root:admin@localhost:3306/movie_recommend",
     "RECALL_CHANNELS": [
-        "two_tower",
-        "user_collection",
-        "user_high_rating_similar",
-        "user_interest_tag"
+        "two_tower"
     ],
     "RECALL_TOPK_USER_COLLECTION": 200,
     "RECALL_PER_SEED_TOPK_USER_COLLECTION": 50,
@@ -13,7 +10,7 @@
     "RECALL_RATING_THRESHOLD": 8,
     "RECALL_TOPK_USER_INTEREST_TAG": 300,
     "RECALL_TOPK_ITEM_SIMILAR_TAG": 200,
-    "RANKING_METHOD": "cf",
+    "RANKING_METHOD": "xgb",
     "XGB_MODEL_PATH": null,
     "XGB_USE_MYSQL_FEATURES": true,
     "XGB_ALLOW_FALLBACK": true,
