@@ -16,6 +16,9 @@ from app.ops.model_ops import (
 from app.ops.tasks import get_task_manager
 
 
+_train_task_job_map: dict[str, int] = {}
+
+
 def new_task_id(prefix: str) -> str:
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     rand = secrets.token_hex(3)
@@ -31,30 +34,43 @@ def start_train_task(
     tm = get_task_manager()
     task_id = new_task_id("train")
     train_job_id = create_model_train_job(mysql_dsn=settings.mysql_dsn, mode="full")
+    _train_task_job_map[task_id] = int(train_job_id)
 
     def _fn() -> Dict[str, Any]:
         return train_current_models(settings, component=component, model=model, train_job_id=train_job_id)
 
-    task = tm.start(task_id=task_id, name=f"train:{component}.{model}", fn=_fn)
+    try:
+        task = tm.start(task_id=task_id, name=f"train:{component}.{model}", fn=_fn)
+    except Exception as e:
+        update_err = f"{type(e).__name__}: {e}"
+        from app.ops.model_ops import update_model_train_job
+
+        update_model_train_job(
+            mysql_dsn=settings.mysql_dsn,
+            job_id=int(train_job_id),
+            status="failed",
+            metrics={"error": update_err, "component": component, "model": model},
+            set_finished_at=True,
+        )
+        raise
     return {"task_id": task.id, "train_job_id": int(train_job_id)}
-
-
-def start_refresh_task(settings: Settings) -> Dict[str, Any]:
-    tm = get_task_manager()
-    task_id = new_task_id("refresh")
-
-    def _fn() -> Dict[str, Any]:
-        return refresh_current_models(settings)
-
-    task = tm.start(task_id=task_id, name="refresh", fn=_fn)
-    return {"task_id": task.id}
 
 
 def _map_model_train_job_status(status: str | None) -> str:
     mapping = {
         "pending": "pending",
-        "processing": "running",
-        "completed": "succeeded",
+        "processing": "processing",
+        "completed": "completed",
+        "failed": "failed",
+    }
+    return mapping.get(str(status), "pending")
+
+
+def _map_memory_task_status(status: str | None) -> str:
+    mapping = {
+        "pending": "pending",
+        "running": "processing",
+        "succeeded": "completed",
         "failed": "failed",
     }
     return mapping.get(str(status), "pending")
@@ -63,7 +79,25 @@ def _map_model_train_job_status(status: str | None) -> str:
 def get_task(settings: Settings, task_id: str) -> Dict[str, Any] | None:
     t = get_task_manager().get(task_id)
     if t is not None:
-        return t.to_dict()
+        payload = t.to_dict()
+        payload["status"] = _map_memory_task_status(payload.get("status"))
+
+        linked_job_id = _train_task_job_map.get(task_id)
+        if linked_job_id is not None:
+            job = get_model_train_job(mysql_dsn=settings.mysql_dsn, job_id=int(linked_job_id))
+            if job is not None:
+                metrics = job.get("metrics") or {}
+                payload["status"] = _map_model_train_job_status(job.get("status"))
+                payload["finished_at"] = job.get("finished_at") or payload.get("finished_at")
+                payload["result"] = {
+                    "train_job_id": int(job["id"]),
+                    "mode": job.get("mode"),
+                    "status": job.get("status"),
+                    "metrics": metrics,
+                }
+                if isinstance(metrics, dict):
+                    payload["error"] = metrics.get("error")
+        return payload
 
     if not str(task_id).isdigit():
         return None
@@ -114,17 +148,35 @@ def get_tasks(
         memory_tasks = [t.to_dict() for t in get_task_manager().list()]
         for item in memory_tasks:
             item["source"] = "memory"
+            item["status"] = _map_memory_task_status(item.get("status"))
+
+            linked_job_id = _train_task_job_map.get(str(item.get("id")))
+            if linked_job_id is not None:
+                job = get_model_train_job(mysql_dsn=settings.mysql_dsn, job_id=int(linked_job_id))
+                if job is not None:
+                    item["status"] = _map_model_train_job_status(job.get("status"))
+                    metrics = job.get("metrics") or {}
+                    item["result"] = {
+                        "train_job_id": int(job["id"]),
+                        "mode": job.get("mode"),
+                        "status": job.get("status"),
+                        "metrics": metrics,
+                    }
+                    if isinstance(metrics, dict):
+                        item["error"] = metrics.get("error")
+                    item["finished_at"] = job.get("finished_at") or item.get("finished_at")
+
         if status_value:
             memory_tasks = [t for t in memory_tasks if str(t.get("status", "")).lower() == status_value]
         items.extend(memory_tasks)
 
     if include_db:
         db_status = None
-        if status_value in {"pending", "running", "succeeded", "failed"}:
+        if status_value in {"pending", "processing", "completed", "failed"}:
             reverse = {
                 "pending": "pending",
-                "running": "processing",
-                "succeeded": "completed",
+                "processing": "processing",
+                "completed": "completed",
                 "failed": "failed",
             }
             db_status = reverse.get(status_value)

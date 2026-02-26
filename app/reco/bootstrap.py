@@ -14,7 +14,7 @@ from app.reco.recall.mysql_channels import (
 from app.reco.ranking.stub_rankers import (
     CollaborativeFilteringRanker,
 )
-from app.reco.ranking.xgb_ranker import XGBoostRanker
+from app.reco.ranking.xgb_ranker import XGBoostRanker, load_latest_local_model
 from app.reco.reranking.random_shuffle import RandomShuffleReranker
 
 _bootstrapped = False
@@ -69,9 +69,8 @@ def bootstrap_components() -> None:
     register_ranker(
         "xgb",
         lambda s: XGBoostRanker(
-            model_path=s.xgb_model_path,
+            model_path=load_latest_local_model(s),
             use_mysql_features=s.xgb_use_mysql_features,
-            allow_fallback=s.xgb_allow_fallback,
             mysql_dsn=s.mysql_dsn,
         ),
     )

@@ -11,6 +11,8 @@ from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 
 try:
     import hnswlib  # type: ignore
@@ -289,6 +291,64 @@ def _fetch_training_interactions(mysql_dsn: str | None, *, limit: int) -> List[t
     return out
 
 
+class _PositivePairDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
+    def __init__(self, pair_users: torch.Tensor, pair_items: torch.Tensor) -> None:
+        self._pair_users = pair_users
+        self._pair_items = pair_items
+
+    def __len__(self) -> int:
+        return int(self._pair_users.shape[0])
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return self._pair_users[idx], self._pair_items[idx]
+
+
+class _TwoTowerBPR(nn.Module):
+    def __init__(self, user_count: int, item_count: int, dim: int, seed: int) -> None:
+        super().__init__()
+        self.user_table = nn.Embedding(user_count, dim)
+        self.item_table = nn.Embedding(item_count, dim)
+        gen = torch.Generator(device="cpu")
+        gen.manual_seed(int(seed))
+        with torch.no_grad():
+            self.user_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.item_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+
+    def forward(
+        self,
+        user_idx: torch.Tensor,
+        pos_item_idx: torch.Tensor,
+        neg_item_idx: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        pu = self.user_table(user_idx)
+        pi = self.item_table(pos_item_idx)
+        pj = self.item_table(neg_item_idx)
+        logits = (pu * pi).sum(dim=1) - (pu * pj).sum(dim=1)
+        l2 = (pu.pow(2).sum(dim=1) + pi.pow(2).sum(dim=1) + pj.pow(2).sum(dim=1)).mean()
+        return logits, l2
+
+
+def _sample_negative_items(
+    *,
+    users: torch.Tensor,
+    user_pos_items: dict[int, set[int]],
+    item_count: int,
+    generator: torch.Generator,
+) -> torch.Tensor:
+    neg = torch.randint(item_count, size=(int(users.shape[0]),), generator=generator, dtype=torch.long)
+    for idx, u_idx in enumerate(users.tolist()):
+        positives = user_pos_items.get(int(u_idx), set())
+        if not positives:
+            continue
+        tries = 0
+        n = int(neg[idx].item())
+        while n in positives and tries < 20:
+            n = int(torch.randint(item_count, size=(1,), generator=generator).item())
+            tries += 1
+        neg[idx] = int(n)
+    return neg
+
+
 def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tuple[TwoTowerModel, dict[str, int | float]]:
     interactions = _fetch_training_interactions(mysql_dsn, limit=cfg.train_limit)
     if not interactions:
@@ -319,70 +379,51 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
     generator = torch.Generator(device="cpu")
     generator.manual_seed(int(cfg.seed))
 
-    user_table = torch.nn.Embedding(len(user_ids), cfg.dim)
-    item_table = torch.nn.Embedding(len(item_ids), cfg.dim)
-    with torch.no_grad():
-        user_table.weight.normal_(mean=0.0, std=0.05, generator=generator)
-        item_table.weight.normal_(mean=0.0, std=0.05, generator=generator)
-
-    optimizer = torch.optim.AdamW(
-        [user_table.weight, item_table.weight],
-        lr=float(cfg.train_lr),
-        weight_decay=float(cfg.train_reg),
-    )
+    net = _TwoTowerBPR(user_count=len(user_ids), item_count=len(item_ids), dim=cfg.dim, seed=int(cfg.seed))
+    optimizer = torch.optim.Adam(net.parameters(), lr=float(cfg.train_lr))
 
     pair_users = torch.as_tensor([p[0][0] for p in pairs], dtype=torch.long)
     pair_items = torch.as_tensor([p[0][1] for p in pairs], dtype=torch.long)
     pair_weights = torch.as_tensor([p[1] for p in pairs], dtype=torch.float32)
     prob = pair_weights / torch.clamp(pair_weights.sum(), min=1e-12)
 
-    batch_size = int(cfg.train_batch_size)
+    dataset = _PositivePairDataset(pair_users=pair_users, pair_items=pair_items)
+    sampled_size = max(len(pairs), int(cfg.train_batch_size))
+    sampler = torch.utils.data.WeightedRandomSampler(
+        weights=prob,
+        num_samples=sampled_size,
+        replacement=True,
+        generator=generator,
+    )
+    loader = DataLoader(
+        dataset,
+        batch_size=int(cfg.train_batch_size),
+        sampler=sampler,
+        num_workers=0,
+        drop_last=False,
+    )
+
     negatives = int(cfg.train_negatives)
     item_count = len(item_ids)
     last_loss = 0.0
 
     for _epoch in range(int(cfg.train_epochs)):
-        steps = max(len(pairs) // batch_size, 1)
-        for _ in range(steps):
-            sampled = torch.multinomial(prob, num_samples=batch_size, replacement=True, generator=generator)
-            batch_users = pair_users[sampled]
-            batch_items = pair_items[sampled]
+        for batch_users, batch_items in loader:
+            if negatives > 1:
+                batch_users = batch_users.repeat_interleave(negatives)
+                batch_items = batch_items.repeat_interleave(negatives)
 
-            triplet_users: list[int] = []
-            triplet_pos_items: list[int] = []
-            triplet_neg_items: list[int] = []
+            batch_neg_items = _sample_negative_items(
+                users=batch_users,
+                user_pos_items=user_pos_items,
+                item_count=item_count,
+                generator=generator,
+            )
 
-            for u_idx, i_idx in zip(batch_users.tolist(), batch_items.tolist()):
-                ui_set = user_pos_items.get(int(u_idx), set())
-                if not ui_set:
-                    continue
-
-                for _ in range(negatives):
-                    candidate = int(torch.randint(item_count, size=(1,), generator=generator).item())
-                    tries = 0
-                    while candidate in ui_set and tries < 10:
-                        candidate = int(torch.randint(item_count, size=(1,), generator=generator).item())
-                        tries += 1
-                    if candidate in ui_set:
-                        continue
-
-                    triplet_users.append(int(u_idx))
-                    triplet_pos_items.append(int(i_idx))
-                    triplet_neg_items.append(candidate)
-
-            if not triplet_users:
-                continue
-
-            u_tensor = torch.as_tensor(triplet_users, dtype=torch.long)
-            i_tensor = torch.as_tensor(triplet_pos_items, dtype=torch.long)
-            j_tensor = torch.as_tensor(triplet_neg_items, dtype=torch.long)
-
-            pu = user_table(u_tensor)
-            pi = item_table(i_tensor)
-            pj = item_table(j_tensor)
-
-            x = (pu * pi).sum(dim=1) - (pu * pj).sum(dim=1)
-            loss = -F.logsigmoid(x).mean()
+            logits, l2 = net(batch_users, batch_items, batch_neg_items)
+            bpr_loss = -F.logsigmoid(logits).mean()
+            reg_loss = float(cfg.train_reg) * l2
+            loss = bpr_loss + reg_loss
 
             optimizer.zero_grad()
             loss.backward()
@@ -390,8 +431,8 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
             last_loss = float(loss.item())
 
     with torch.no_grad():
-        user_emb = F.normalize(user_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
-        item_emb = F.normalize(item_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
+        user_emb = F.normalize(net.user_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
+        item_emb = F.normalize(net.item_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
 
     model = TwoTowerModel(
         dim=cfg.dim,

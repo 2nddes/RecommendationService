@@ -151,7 +151,8 @@ class UserCollectionRecall(Recaller):
             return []
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            return []
 
         topk = _clamp_positive(int(self.topk), 200)
 
@@ -172,7 +173,8 @@ class UserCollectionRecall(Recaller):
         seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id)})
         seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
+            # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
+            return []
 
         sim_sql = """
         SELECT
@@ -199,7 +201,8 @@ class UserCollectionRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=excluded)
         if candidates:
             return candidates[:topk]
-        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        return []
 
 
 @dataclass(frozen=True)
@@ -222,7 +225,8 @@ class UserHighRatingSimilarRecall(Recaller):
             return []
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            return []
 
         topk = _clamp_positive(int(self.topk), 300)
         thr = int(self.rating_threshold)
@@ -237,7 +241,8 @@ class UserHighRatingSimilarRecall(Recaller):
         seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id), "thr": thr})
         seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
+            # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
+            return []
 
         cf_sql = """
         SELECT
@@ -266,7 +271,8 @@ class UserHighRatingSimilarRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=excluded)
         if candidates:
             return candidates[:topk]
-        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        return []
 
 
 @dataclass(frozen=True)
@@ -288,7 +294,8 @@ class UserInterestTagRecall(Recaller):
             return []
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
+            return []
 
         topk = _clamp_positive(int(self.topk), 300)
 
@@ -312,7 +319,8 @@ class UserInterestTagRecall(Recaller):
 
         if candidates:
             return candidates[:topk]
-        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        return []
 
 
 @dataclass(frozen=True)
@@ -351,4 +359,5 @@ class ItemSimilarByTagsRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=set())
         if candidates:
             return candidates[:topk]
-        return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        return []

@@ -4,8 +4,9 @@ from flask import Blueprint, request
 
 from app.common.responses import ok, fail
 from app.common.settings import Settings
-from app.common.validation import ParamError, as_int, as_str
-from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_refresh_task, start_train_task
+from app.common.validation import as_int, as_str
+from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_train_task
+from app.ops.model_ops import refresh_current_models
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -28,11 +29,6 @@ def admin_train():
     component = as_str(component, name="component")
     model = as_str(model, name="model")
 
-    if component not in {"ranking", "recall"}:
-        return fail(message=f"Invalid component '{component}', expected one of: ranking, recall")
-    if model not in {"xgb", "two_tower"}:
-        return fail(message=f"Invalid model '{model}', expected one of: xgb, two_tower")
-
     settings = Settings.from_config()
     try:
         data = start_train_task(
@@ -54,9 +50,10 @@ def admin_refresh():
     """
 
     settings = Settings.from_config()
-    data = start_refresh_task(settings)
-    data["estimated_time"] = "unknown"
-    return ok(data, message="Refresh task started")
+    data = refresh_current_models(settings)
+    if str(data.get("status")) == "completed":
+        return ok(data, message="Refresh completed")
+    return fail(message=str(data.get("reason") or "refresh_failed"), data=data)
 
 
 @admin_bp.get("/admin/tasks/<task_id>")
@@ -80,7 +77,7 @@ def admin_tasks():
     文档: GET /api/v1/admin/tasks
     query params:
       - source: all|memory|db (optional, default all)
-      - status: pending|running|succeeded|failed (optional)
+            - status: pending|processing|completed|failed (optional)
       - limit: int (optional, default 20)
       - offset: int (optional, default 0)
     """
@@ -92,8 +89,8 @@ def admin_tasks():
     status = request.args.get("status")
     if status is not None:
         status = status.strip().lower()
-        if status not in {"pending", "running", "succeeded", "failed"}:
-            return fail(message="invalid 'status', expected one of: pending, running, succeeded, failed")
+        if status not in {"pending", "processing", "completed", "failed"}:
+            return fail(message="invalid 'status', expected one of: pending, processing, completed, failed")
 
     limit = as_int(request.args.get("limit", 20), name="limit")
     offset = as_int(request.args.get("offset", 0), name="offset")

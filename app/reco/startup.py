@@ -10,6 +10,7 @@ from app.reco.recall.two_tower import (
     load_config_from_settings,
     load_latest_local_model,
 )
+from app.reco.ranking.xgb_ranker import load_latest_local_model as load_latest_xgb_local_model
 from app.reco.ranking.stub_rankers import warmup_collaborative_filtering_model
 
 
@@ -75,6 +76,13 @@ def start_startup_jobs(settings: Settings) -> None:
     with _start_lock:
         if _started:
             return
+
+        if str(settings.ranking_method or "").lower() == "xgb":
+            try:
+                load_latest_xgb_local_model(settings)
+            except Exception:
+                pass
+
         _started = True
         _worker_thread = threading.Thread(
             target=_startup_worker,

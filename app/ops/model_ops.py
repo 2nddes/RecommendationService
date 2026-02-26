@@ -56,6 +56,11 @@ def train_current_models(
         else:
             raise ValueError(f"Unknown component/model combination: {component}/{model}")
 
+        if not bool(outcome.trained):
+            details = outcome.details if isinstance(outcome.details, dict) else {}
+            reason = details.get("reason") or details.get("error") or "train_outcome_not_trained"
+            raise RuntimeError(str(reason))
+
         if train_job_id is not None:
             update_model_train_job(
                 mysql_dsn=settings.mysql_dsn,
@@ -71,16 +76,38 @@ def train_current_models(
                 mysql_dsn=settings.mysql_dsn,
                 job_id=int(train_job_id),
                 status="failed",
-                metrics={"error": f"{type(e).__name__}: {e}"},
+                metrics={
+                    "error": f"{type(e).__name__}: {e}",
+                    "component": component,
+                    "model": model,
+                },
                 set_finished_at=True,
             )
         raise
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    # 重新加载权重
-    # TODO
-    return {"refreshed": True}
+    ranking_method = str(settings.ranking_method or "").strip().lower()
+    recall_channels = [str(ch).strip().lower() for ch in (settings.recall_channels or [])]
+
+    try:
+        if ranking_method == "xgb":
+            from app.reco.ranking.xgb_ranker import load_latest_local_model as load_latest_xgb_local_model
+
+            model_path = load_latest_xgb_local_model(settings)
+            if not model_path:
+                return {"status": "failed", "reason": "xgb_model_not_found"}
+
+        if "two_tower" in recall_channels:
+            from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
+
+            model_path = load_latest_two_tower_local_model(settings)
+            if not model_path:
+                return {"status": "failed", "reason": "two_tower_model_not_found"}
+
+        return {"status": "completed", "reason": None}
+    except Exception as e:  # noqa: BLE001
+        return {"status": "failed", "reason": f"{type(e).__name__}: {e}"}
 
 
 
@@ -99,41 +126,152 @@ def _get_mysql_engine(mysql_dsn: str | None) -> Engine | None:
         return None
 
 
-def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> List[Tuple[int, int, str, int | None]]:
-    """Return tuples: (user_id, movie_id, action_type, rating)."""
+def _interaction_strength(*, action_type: str, rating: int | None, source_kind: str) -> float:
+    if source_kind == "rating" and rating is not None:
+        # map 1~10 to [-0.8, 1.0], keep low-score ratings as hard negatives
+        return max(min((float(rating) - 5.0) / 5.0, 1.0), -0.8)
+
+    if source_kind == "action" and action_type == "rate":
+        # explicit score should come from rating table only
+        return 0.0
+
+    action_weight = {
+        "view": 0.2,
+        "like": 1.0,
+        "collect": 1.2,
+        "share": 0.8,
+        "comment": 0.7,
+        "rate": 0.9,
+        "dislike": -0.8,
+    }
+    return float(action_weight.get(str(action_type), 0.1))
+
+
+def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> List[Tuple[int, int, str, int | None, str, float]]:
+    """Return tuples: (user_id, movie_id, action_type, rating, source_kind, strength)."""
 
     engine = _get_mysql_engine(mysql_dsn)
     if engine is None:
         return []
 
     sql = """
-    SELECT ua.user_id AS user_id,
-           ua.movie_id AS movie_id,
-           ua.action_type AS action_type,
-           ua.rating AS rating
-    FROM user_action ua
-    WHERE ua.movie_id IS NOT NULL
-    ORDER BY ua.id DESC
+    SELECT t.user_id,
+           t.movie_id,
+           t.action_type,
+           t.rating,
+           t.source_kind,
+           t.event_time
+    FROM (
+        SELECT ua.user_id AS user_id,
+               ua.movie_id AS movie_id,
+               ua.action_type AS action_type,
+               NULL AS rating,
+               'action' AS source_kind,
+               ua.created_at AS event_time
+        FROM user_action ua
+        WHERE ua.movie_id IS NOT NULL
+                    AND ua.action_type <> 'rate'
+
+        UNION ALL
+
+        SELECT r.user_id AS user_id,
+               r.movie_id AS movie_id,
+               'rate' AS action_type,
+               r.rating AS rating,
+               'rating' AS source_kind,
+               r.updated_at AS event_time
+        FROM rating r
+        WHERE r.movie_id IS NOT NULL
+
+        UNION ALL
+
+        SELECT ucm.user_id AS user_id,
+               ucm.movie_id AS movie_id,
+               'collect' AS action_type,
+               NULL AS rating,
+               'collect' AS source_kind,
+               ucm.created_at AS event_time
+        FROM user_collect_movie ucm
+        WHERE ucm.movie_id IS NOT NULL
+    ) t
+    ORDER BY t.event_time DESC
     LIMIT :limit
     """
 
     try:
         with engine.connect() as conn:
             rs = conn.execute(text(sql), {"limit": int(limit)})
-            out: List[Tuple[int, int, str, int | None]] = []
+            best_by_pair: Dict[Tuple[int, int], Dict[str, Any]] = {}
             for row in rs:
                 d = dict(row._mapping)
                 try:
-                    out.append(
-                        (
-                            int(d.get("user_id")),
-                            int(d.get("movie_id")),
-                            str(d.get("action_type")),
-                            int(d["rating"]) if d.get("rating") is not None else None,
+                    user_id = int(d.get("user_id"))
+                    movie_id = int(d.get("movie_id"))
+                    action_type = str(d.get("action_type") or "view")
+                    source_kind = str(d.get("source_kind") or "action")
+                    rating = int(d["rating"]) if d.get("rating") is not None else None
+                    event_time = d.get("event_time")
+
+                    strength = _interaction_strength(action_type=action_type, rating=rating, source_kind=source_kind)
+                    source_priority = 3 if source_kind == "rating" else (2 if source_kind == "collect" else 1)
+                    key = (user_id, movie_id)
+                    prev = best_by_pair.get(key)
+
+                    # deduplicate (user,item): keep the strongest interaction; tie-break by recency
+                    if prev is None:
+                        best_by_pair[key] = {
+                            "user_id": user_id,
+                            "movie_id": movie_id,
+                            "action_type": action_type,
+                            "rating": rating,
+                            "source_kind": source_kind,
+                            "strength": strength,
+                            "source_priority": source_priority,
+                            "event_time": event_time,
+                        }
+                    else:
+                        prev_priority = int(prev.get("source_priority") or 0)
+                        prev_strength = float(prev.get("strength") or 0.0)
+                        prev_time = prev.get("event_time")
+                        replace = source_priority > prev_priority or (
+                            source_priority == prev_priority and abs(strength) > abs(prev_strength)
+                        ) or (
+                            source_priority == prev_priority
+                            and abs(strength) == abs(prev_strength)
+                            and event_time is not None
+                            and prev_time is not None
+                            and event_time > prev_time
                         )
-                    )
+                        if replace:
+                            prev.update(
+                                {
+                                    "action_type": action_type,
+                                    "rating": rating,
+                                    "source_kind": source_kind,
+                                    "strength": strength,
+                                    "source_priority": source_priority,
+                                    "event_time": event_time,
+                                }
+                            )
                 except Exception:
                     continue
+
+            dedup_rows = list(best_by_pair.values())
+            dedup_rows.sort(key=lambda x: x.get("event_time") or datetime.min, reverse=True)
+            dedup_rows = dedup_rows[: max(int(limit), 1)]
+
+            out: List[Tuple[int, int, str, int | None, str, float]] = []
+            for row in dedup_rows:
+                out.append(
+                    (
+                        int(row["user_id"]),
+                        int(row["movie_id"]),
+                        str(row["action_type"]),
+                        int(row["rating"]) if row.get("rating") is not None else None,
+                        str(row["source_kind"]),
+                        float(row["strength"]),
+                    )
+                )
             return out
     except SQLAlchemyError:
         return []
@@ -180,16 +318,35 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
     # rotate sources to make src_* features non-trivial
     sources = ["user_collection", "user_high_rating_similar", "user_interest_tag", "item_similar_by_tags"]
 
-    for i, (user_id, movie_id, action_type, rating) in enumerate(rows):
+    for i, (_user_id, movie_id, action_type, rating, source_kind, strength) in enumerate(rows):
         src = sources[i % len(sources)]
         # treat action intensity as recall score proxy
-        base = 1.0 if action_type in {"like", "collect", "rate", "comment", "share"} else 0.3
+        base = max(float(strength), 0.05)
         candidates.append(Candidate(item_id=int(movie_id), score=float(base), source=src))
 
-        y = 1.0 if action_type in {"like", "collect"} else 0.0
-        if action_type == "rate" and rating is not None:
+        # explicit negative feedback and low ratings become hard negatives
+        y = 1.0 if float(strength) >= 0.8 else 0.0
+        if source_kind == "rating" and rating is not None:
             y = 1.0 if int(rating) >= 8 else 0.0
+        if action_type == "dislike":
+            y = 0.0
         labels.append(float(y))
+
+    pos_cnt = sum(1 for x in labels if x > 0.5)
+    neg_cnt = len(labels) - pos_cnt
+    if pos_cnt == 0 or neg_cnt == 0:
+        return TrainOutcome(
+            component="ranking",
+            name="xgb",
+            artifact_path=None,
+            trained=False,
+            details={
+                "skipped": True,
+                "reason": "insufficient_label_diversity",
+                "positive": int(pos_cnt),
+                "negative": int(neg_cnt),
+            },
+        )
 
     movie_ids = [c.item_id for c in candidates]
     movie_features = (
@@ -216,9 +373,8 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         "seed": 20260106,
     }
 
-    num_boost_round = int(settings.xgb_train_rounds)
+    num_boost_round = max(int(settings.xgb_train_rounds), 1)
     booster = xgb.train(params, dtrain, num_boost_round=num_boost_round)
-
     booster.save_model(artifact_path)
 
     store.set("ranking.xgb.latest_artifact_path", artifact_path)
@@ -229,7 +385,13 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         name="xgb",
         artifact_path=artifact_path,
         trained=True,
-        details={"rows": len(rows), "feature_count": int(X.shape[1])},
+        details={
+            "rows": len(rows),
+            "positive": int(pos_cnt),
+            "negative": int(neg_cnt),
+            "feature_count": int(X.shape[1]),
+            "boost_rounds": int(num_boost_round),
+        },
     )
 
 

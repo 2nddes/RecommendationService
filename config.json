@@ -13,15 +13,17 @@
     "RANKING_METHOD": "xgb",
     "XGB_MODEL_PATH": null,
     "XGB_USE_MYSQL_FEATURES": true,
-    "XGB_ALLOW_FALLBACK": true,
+    "XGB_ALLOW_FALLBACK": false,
     "RERANKING_METHOD": "random_shuffle",
     "RERANKING_SEED": null,
+
     "XGB_TRAIN_LIMIT": 5000,
     "XGB_TRAIN_MAX_DEPTH": 5,
     "XGB_TRAIN_ETA": 0.1,
     "XGB_TRAIN_SUBSAMPLE": 0.9,
     "XGB_TRAIN_COLSAMPLE": 0.9,
     "XGB_TRAIN_ROUNDS": 50,
+
     "TWO_TOWER_DIM": 64,
     "TWO_TOWER_SEED": 20260105,
     "TWO_TOWER_ALPHA": 0.7,

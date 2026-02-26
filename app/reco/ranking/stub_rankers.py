@@ -67,18 +67,22 @@ class CollaborativeFilteringRanker(Ranker):
         try:
             model = self._get_or_build_model()
             if model is None:
-                return self._fallback_rank(candidates, reason="cf_fallback_no_model")
+                # return self._fallback_rank(candidates, reason="cf_fallback_no_model")
+                return []
 
             if ctx.user_id is None:
-                return self._fallback_rank(candidates, reason="cf_fallback_no_user")
+                # return self._fallback_rank(candidates, reason="cf_fallback_no_user")
+                return []
 
             scored = self._score_candidates_item_cf(ctx, candidates, model)
             if scored is None:
-                return self._fallback_rank(candidates, reason="cf_fallback_cold_user")
+                # return self._fallback_rank(candidates, reason="cf_fallback_cold_user")
+                return []
 
             return scored
         except Exception:
-            return self._fallback_rank(candidates, reason="cf_fallback_error")
+            # return self._fallback_rank(candidates, reason="cf_fallback_error")
+            return []
 
     def _get_or_build_model(self) -> dict[str, Any] | None:
         dsn = (self.mysql_dsn or "").strip()
@@ -242,7 +246,8 @@ class CollaborativeFilteringRanker(Ranker):
         # 过滤无向量候选
         valid_candidates = [c for c in candidates if int(c.item_id) in item_index]
         if not valid_candidates:
-            return self._fallback_rank(candidates, reason="cf_fallback_no_item_vector")
+            # return self._fallback_rank(candidates, reason="cf_fallback_no_item_vector")
+            return []
 
         cand_idx = [item_index[int(c.item_id)] for c in valid_candidates]
         hist_idx = [item_index[mid] for mid in hist_item_ids]
@@ -290,8 +295,9 @@ class CollaborativeFilteringRanker(Ranker):
         ranked_ids = {x.item_id for x in ranked}
         tail = [c for c in candidates if int(c.item_id) not in ranked_ids]
         if tail:
-            tail_ranked = self._fallback_rank(tail, reason="cf_fallback_tail")
-            ranked.extend(tail_ranked)
+            # tail_ranked = self._fallback_rank(tail, reason="cf_fallback_tail")
+            # ranked.extend(tail_ranked)
+            pass
         return ranked
 
     def _fallback_rank(self, candidates: List[Candidate], *, reason: str) -> List[RankedItem]:

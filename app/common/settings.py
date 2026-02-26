@@ -13,7 +13,7 @@ class Settings:
     ranking_method: str = "cf"
     xgb_model_path: str | None = None
     xgb_use_mysql_features: bool = True
-    xgb_allow_fallback: bool = True
+    xgb_allow_fallback: bool = False
     reranking_method: str = "random_shuffle"
     reranking_seed: int | None = None
     mysql_dsn: str | None = None

@@ -72,13 +72,13 @@ def fetch_movie_features(movie_ids: Sequence[int], *, mysql_dsn: str | None = No
         return {}
 
     sql = """
-    SELECT m.id,
-           m.rating_avg,
+        SELECT m.movie_id AS id,
+            CASE WHEN m.rating_count > 0 THEN (m.rating_sum * 1.0 / m.rating_count) ELSE 0 END AS rating_avg,
            m.rating_count,
            m.year,
            m.duration_min
     FROM movie m
-        WHERE m.id IN :ids
+        WHERE m.movie_id IN :ids
     """
 
     try:

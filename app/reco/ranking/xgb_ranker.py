@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import List, Sequence
 
+from app.common.settings import Settings
 from app.reco.ranking.base import Ranker
 from app.reco.ranking.xgb_features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
 from app.reco.types import Candidate, RankedItem, RequestContext
@@ -19,6 +21,34 @@ def _as_bool(value: str | None, default: bool) -> bool:
     return default
 
 
+def load_latest_local_model(settings: Settings) -> str | None:
+    configured = str(settings.xgb_model_path or "").strip()
+    active_path = configured or os.path.join("data", "models", "xgb_latest.json")
+
+    if os.path.exists(active_path):
+        return active_path
+
+    artifact_dir = os.path.join("data", "artifacts", "xgb")
+    if not os.path.isdir(artifact_dir):
+        return None
+
+    candidates = [
+        os.path.join(artifact_dir, name)
+        for name in os.listdir(artifact_dir)
+        if name.endswith(".json")
+    ]
+    if not candidates:
+        return None
+
+    latest = max(candidates, key=lambda p: os.path.getmtime(p))
+    os.makedirs(os.path.dirname(active_path) or ".", exist_ok=True)
+    tmp = active_path + ".tmp"
+    with open(latest, "rb") as src, open(tmp, "wb") as dst:
+        dst.write(src.read())
+    os.replace(tmp, active_path)
+    return active_path
+
+
 @dataclass(frozen=True)
 class XGBoostRanker(Ranker):
     """XGBoost + manual feature engineering ranker.
@@ -30,7 +60,6 @@ class XGBoostRanker(Ranker):
 
     model_path: str | None = None
     use_mysql_features: bool = True
-    allow_fallback: bool = True
     mysql_dsn: str | None = None
 
     @property
@@ -55,31 +84,23 @@ class XGBoostRanker(Ranker):
         matrix = builder.to_matrix(rows)
         feature_names = builder.feature_names()
 
-        # 2) Score with XGBoost if model is present; otherwise fall back to a simple weighted score.
+        # 2) Score with xgboost model.
         scores = self._predict_with_xgboost(matrix, feature_names)
-        if scores is None:
-            scores = self._fallback_scores(rows)
-            reason = "xgb_fallback"
-        else:
-            reason = "xgb"
+        reason = "xgb"
 
         ranked = [RankedItem(item_id=c.item_id, score=float(s), reason=reason) for c, s in zip(candidates, scores)]
         return sorted(ranked, key=lambda x: x.score, reverse=True)
 
-    def _predict_with_xgboost(self, matrix: Sequence[Sequence[float]], feature_names: Sequence[str]) -> List[float] | None:
+    def _predict_with_xgboost(self, matrix: Sequence[Sequence[float]], feature_names: Sequence[str]) -> List[float]:
         model_path = self.model_path
         if not model_path:
-            return None
+            raise RuntimeError("ranking_model_path_is_empty")
 
-        # Allow graceful degradation in environments without xgboost installed.
-        allow_no_xgb = bool(self.allow_fallback)
         try:
             import numpy as np
             import xgboost as xgb
-        except Exception:
-            if allow_no_xgb:
-                return None
-            raise
+        except Exception as e:
+            raise RuntimeError(f"xgboost_dependency_not_available: {e}") from e
 
         try:
             booster = xgb.Booster()
@@ -89,31 +110,5 @@ class XGBoostRanker(Ranker):
             dmat = xgb.DMatrix(X, feature_names=list(feature_names))
             pred = booster.predict(dmat)
             return [float(x) for x in pred.tolist()]
-        except Exception:
-            if allow_no_xgb:
-                return None
-            raise
-
-    def _fallback_scores(self, rows: Sequence[dict[str, float]]) -> List[float]:
-        """Deterministic fallback scoring.
-
-        This keeps the service working even when model file isn't shipped yet.
-        You can tweak weights quickly during early iterations.
-        """
-
-        # These weights intentionally map to names from `ManualFeatureBuilder`.
-        w = {
-            "recall_score": 1.0,
-            "movie_rating_avg": 0.15,
-            "movie_log_rating_cnt": 0.05,
-            "src_user_interest_tag": 0.02,
-            "src_user_high_rating_similar": 0.02,
-        }
-
-        out: List[float] = []
-        for r in rows:
-            s = 0.0
-            for k, wk in w.items():
-                s += float(r.get(k, 0.0)) * float(wk)
-            out.append(s)
-        return out
+        except Exception as e:
+            raise RuntimeError(f"xgboost_rank_inference_failed: {type(e).__name__}: {e}") from e
