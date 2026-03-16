@@ -82,12 +82,12 @@ JSON{
 - `RECALL_TOPK_USER_INTEREST_TAG`（默认 300）
 - `RECALL_TOPK_ITEM_SIMILAR_TAG`（默认 200）
 
-## 排序阶段（XGBoost + 手工特征）
+## 排序阶段（XGBoost / MMoE）
 
-本项目支持通过 `config.json` 切换排序器，排序阶段当前可使用 `xgb`（XGBoost + 手工构造特征）。
+本项目支持通过 `config.json` 切换排序器，排序阶段当前可使用 `xgb` 与 `mmoe`。
 
 - `RANKING_METHOD`
-  - `cf` / `tag` / `nn` / `xgb`
+  - `cf` / `xgb` / `mmoe`
   - 示例：在 `config.json` 中设置 `"RANKING_METHOD": "xgb"`
 - `XGB_MODEL_PATH`：XGBoost 模型文件路径（可选）。
   - 未提供时会自动回退到“手工权重打分”，保证服务可用。
@@ -95,6 +95,18 @@ JSON{
   - `true`（默认）开启；`false` 关闭。
 - `XGB_ALLOW_FALLBACK`：当未安装 xgboost 或模型加载失败时是否允许回退。
   - 默认 `true`，用于开发/部署早期不阻塞服务启动。
+
+### MMoE 多任务精排（MySQL 真数据训练）
+
+- `MMOE_MODEL_PATH`：MMoE 模型路径（可选）。
+- `MMOE_TRAIN_LIMIT` / `MMOE_TRAIN_EPOCHS` / `MMOE_TRAIN_BATCH_SIZE` / `MMOE_TRAIN_LR`：训练参数。
+- 任务目标：`click`、`collect`、`comment`、`rating`。
+- 标签定义：
+  - 点击 = 1（`user_action.action_type='view'`）
+  - 收藏 = 1（`user_action.action_type='collect'` 或 `user_collect_movie`）
+  - 评论 = 1（`user_action.action_type='comment'` 或 `movie_comment`）
+  - 评分 = 1（`rating.rating > 5`）
+- 数据仅从 MySQL 拉取，不使用模拟/造数。
 
 手工特征的入口在 [app/reco/ranking/xgb_features.py](app/reco/ranking/xgb_features.py)，后续要替换算法时建议保留特征构造模块不变，仅替换 ranker/scorer 实现。
 
@@ -154,6 +166,43 @@ JSON{
 ## 搜索服务接口 (Search APIs)
 虽然简单的 SQL LIKE 查询可以在 Java 端做，但 Python 端可以利用 NLP 技术做语义搜索 (Semantic Search)。
 
+## RAG 流式推荐接口 (LangChain + FAISS)
+
+新增接口：`POST /api/v1/recommend/rag/stream`
+
+- 使用 `LangChain` 组织检索流程。
+- 向量库使用 `FAISS`，索引目录来自 `RAG_FAISS_DIR`。
+- Embedding 模型默认 `BAAI/bge-large-zh-v1.5`（可通过 `RAG_EMBEDDING_MODEL_NAME` 修改）。
+- 返回类型为 `text/event-stream`，事件包含：`start`、`movie`、`done`。
+
+请求体示例:
+
+JSON{
+  "query": "想看高分悬疑推理电影",
+  "n": 8,
+  "rebuild_index": false
+}
+
+事件示例:
+
+```
+event: start
+data: {"query":"想看高分悬疑推理电影","n":8}
+
+event: movie
+data: {"index":1,"item":{"movie_id":123,"title":"...","year":2019,"summary":"...","score":0.31}}
+
+event: done
+data: {"count":8,"elapsed_ms":386}
+```
+
+相关配置项（`config.json`）:
+
+- `RAG_EMBEDDING_MODEL_NAME`：默认 `BAAI/bge-large-zh-v1.5`
+- `RAG_FAISS_DIR`：默认 `data/faiss/movie_rag`
+- `RAG_FAISS_INDEX_NAME`：默认 `movie_index`
+- `RAG_BUILD_LIMIT`：构建索引时最多读取电影条数，默认 `50000`
+
 ### 混合搜索
 URL: /api/v1/search
 Method: POST (使用 POST 以便扩展复杂的过滤条件)
@@ -195,12 +244,12 @@ Method: POST
 请求体字段（可选）:
 - mode: full | incremental（默认 full）
 - component（或 module）: recall | ranking
-- model: two_tower | xgb
+- model: two_tower | xgb | mmoe
 
 说明:
 - 不传 component/module 和 model：按当前配置训练已启用模型（保持原行为）
-- 只传 component：训练该模块下支持的模型（当前 recall=two_tower, ranking=xgb）
-- 只传 model：按模型名定向训练（two_tower 或 xgb）
+- 只传 component：训练该模块下支持的模型（当前 recall=two_tower, ranking=xgb/mmoe）
+- 只传 model：按模型名定向训练（two_tower、xgb 或 mmoe）
 - 同时传 component + model：训练指定模块中的指定模型（若不匹配将返回 400）
 
 响应示例:

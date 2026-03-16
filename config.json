@@ -1,6 +1,6 @@
 {
     "INTERNAL_SECRET": null,
-    "MYSQL_DSN": "mysql+pymysql://root:admin@localhost:3306/movie_recommend",
+    "MYSQL_DSN": "mysql+pymysql://root:admin@localhost:3306/movie_rec",
     "RECALL_CHANNELS": [
         "two_tower"
     ],
@@ -14,6 +14,7 @@
     "XGB_MODEL_PATH": null,
     "XGB_USE_MYSQL_FEATURES": true,
     "XGB_ALLOW_FALLBACK": false,
+    "MMOE_MODEL_PATH": null,
     "RERANKING_METHOD": "random_shuffle",
     "RERANKING_SEED": null,
 
@@ -24,17 +25,27 @@
     "XGB_TRAIN_COLSAMPLE": 0.9,
     "XGB_TRAIN_ROUNDS": 50,
 
+    "MMOE_TRAIN_LIMIT": 50000,
+    "MMOE_TRAIN_EPOCHS": 4,
+    "MMOE_TRAIN_BATCH_SIZE": 1024,
+    "MMOE_TRAIN_LR": 0.001,
+    "MMOE_EMB_DIM": 32,
+    "MMOE_NUM_EXPERTS": 4,
+    "MMOE_EXPERT_HIDDEN_DIM": 64,
+    "MMOE_TOWER_HIDDEN_DIM": 32,
+
     "TWO_TOWER_DIM": 64,
     "TWO_TOWER_SEED": 20260105,
     "TWO_TOWER_ALPHA": 0.7,
     "TWO_TOWER_RECENT_ITEM_LIMIT": 50,
     "RECALL_TOPK_TWO_TOWER": 300,
+    "TWO_TOWER_HR_EVAL_K": 20,
     "TWO_TOWER_SPACE": "cosine",
     "TWO_TOWER_RELOAD_INTERVAL_S": 2.0,
     "TWO_TOWER_INDEX_PATH": "data/two_tower_items.hnsw",
     "TWO_TOWER_VECTOR_DB_PATH": "data/two_tower_vectors.db",
     "TWO_TOWER_MODEL_PATH": "data/models/two_tower_latest.pt",
-    "TWO_TOWER_TRAIN_EPOCHS": 6,
+    "TWO_TOWER_TRAIN_EPOCHS": 20,
     "TWO_TOWER_TRAIN_BATCH_SIZE": 2048,
     "TWO_TOWER_TRAIN_LR": 0.03,
     "TWO_TOWER_TRAIN_REG": 0.0001,
@@ -42,5 +53,10 @@
     "TWO_TOWER_TRAIN_LIMIT": 300000,
     "TWO_TOWER_STARTUP_BUILD": true,
     "TWO_TOWER_DAILY_UPDATE_INTERVAL_HOURS": 24,
-    "STARTUP_PREWARM_CF": true
+    "STARTUP_PREWARM_CF": true,
+
+    "RAG_EMBEDDING_MODEL_NAME": "BAAI/bge-large-zh-v1.5",
+    "RAG_FAISS_DIR": "data/faiss/movie_rag",
+    "RAG_FAISS_INDEX_NAME": "movie_index",
+    "RAG_BUILD_LIMIT": 50000
 }

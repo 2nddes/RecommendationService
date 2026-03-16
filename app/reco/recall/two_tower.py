@@ -6,7 +6,7 @@ import os
 import sqlite3
 import threading
 import time
-from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -77,6 +77,7 @@ class TwoTowerConfig:
     alpha: float = 0.7
     recent_item_limit: int = 50
     recall_topk: int = 300
+    hr_eval_k: int = 20
     space: str = "cosine"
     reload_interval_s: float = 2.0
     index_path: str = os.path.join("data", "two_tower_items.hnsw")
@@ -101,6 +102,7 @@ class TwoTowerModel:
     item_emb: np.ndarray
     user_id_to_index: dict[int, int]
     item_id_to_index: dict[int, int]
+    metadata: dict[str, Any] | None = None
 
 
 def load_config_from_settings(settings: Settings) -> TwoTowerConfig:
@@ -110,6 +112,7 @@ def load_config_from_settings(settings: Settings) -> TwoTowerConfig:
         alpha=min(max(float(settings.two_tower_alpha), 0.0), 1.0),
         recent_item_limit=max(int(settings.two_tower_recent_item_limit), 0),
         recall_topk=max(int(settings.recall_topk_two_tower), 0),
+        hr_eval_k=max(int(settings.two_tower_hr_eval_k), 1),
         space=str(settings.two_tower_space or "cosine"),
         reload_interval_s=max(float(settings.two_tower_reload_interval_s), 0.1),
         index_path=str(settings.two_tower_index_path or os.path.join("data", "two_tower_items.hnsw")),
@@ -130,6 +133,7 @@ def load_config_from_settings(settings: Settings) -> TwoTowerConfig:
         alpha=cfg.alpha,
         recent_item_limit=cfg.recent_item_limit,
         recall_topk=cfg.recall_topk,
+        hr_eval_k=cfg.hr_eval_k,
         space=space,
         reload_interval_s=cfg.reload_interval_s,
         index_path=cfg.index_path,
@@ -164,11 +168,13 @@ def save_model_weights(model: TwoTowerModel, model_path: str) -> None:
     os.makedirs(os.path.dirname(model_path) or ".", exist_ok=True)
     tmp = model_path + ".tmp"
     payload = {
+        "version": 2,
         "dim": int(model.dim),
         "user_ids": torch.as_tensor(model.user_ids.astype(np.int64, copy=False)),
         "item_ids": torch.as_tensor(model.item_ids.astype(np.int64, copy=False)),
         "user_emb": torch.as_tensor(model.user_emb.astype(np.float32, copy=False)),
         "item_emb": torch.as_tensor(model.item_emb.astype(np.float32, copy=False)),
+        "metadata": model.metadata or {},
         "trained_at": float(datetime.utcnow().timestamp()),
     }
     torch.save(payload, tmp)
@@ -200,6 +206,7 @@ def load_model_weights(model_path: str) -> TwoTowerModel | None:
             item_ids = torch.as_tensor(data["item_ids"], dtype=torch.int64).cpu().numpy()
             user_emb = torch.as_tensor(data["user_emb"], dtype=torch.float32).cpu().numpy()
             item_emb = torch.as_tensor(data["item_emb"], dtype=torch.float32).cpu().numpy()
+            metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else None
         except Exception:
             return None
 
@@ -215,6 +222,7 @@ def load_model_weights(model_path: str) -> TwoTowerModel | None:
             item_emb=item_emb,
             user_id_to_index=user_idx,
             item_id_to_index=item_idx,
+            metadata=metadata,
         )
         _model_cache[path] = (mtime, model)
         return model
@@ -303,26 +311,354 @@ class _PositivePairDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
         return self._pair_users[idx], self._pair_items[idx]
 
 
-class _TwoTowerBPR(nn.Module):
-    def __init__(self, user_count: int, item_count: int, dim: int, seed: int) -> None:
+def _parse_datetime_like(raw: object) -> datetime | None:
+    if isinstance(raw, datetime):
+        return raw
+    if raw is None:
+        return None
+    text_val = str(raw).strip()
+    if not text_val:
+        return None
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text_val, fmt)
+        except ValueError:
+            continue
+    try:
+        return datetime.fromisoformat(text_val)
+    except Exception:
+        return None
+
+
+def _age_bucket_index(raw_birth: object) -> int:
+    dt = _parse_datetime_like(raw_birth)
+    if dt is None:
+        return 0
+    age = max(int((datetime.utcnow().date() - dt.date()).days // 365), 0)
+    if age <= 17:
+        return 1
+    if age <= 24:
+        return 2
+    if age <= 34:
+        return 3
+    if age <= 44:
+        return 4
+    if age <= 54:
+        return 5
+    return 6
+
+
+def _register_bucket_index(raw_created_at: object) -> int:
+    dt = _parse_datetime_like(raw_created_at)
+    if dt is None:
+        return 0
+    days = max(int((datetime.utcnow() - dt).days), 0)
+    if days < 30:
+        return 1
+    if days < 180:
+        return 2
+    if days < 365:
+        return 3
+    if days < 365 * 3:
+        return 4
+    return 5
+
+
+def _gender_index(raw_gender: object) -> int:
+    g = str(raw_gender or "unknown").strip().lower()
+    if g == "male":
+        return 1
+    if g == "female":
+        return 2
+    return 0
+
+
+def _fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[int, dict[str, object]]:
+    if not user_ids:
+        return {}
+
+    sql = """
+    SELECT u.user_id, u.gender, u.birth, u.created_at
+    FROM user u
+    WHERE u.user_id IN :user_ids
+    """
+    rows = _execute(
+        mysql_dsn,
+        sql,
+        {"user_ids": [int(x) for x in user_ids]},
+        expanding=("user_ids",),
+    )
+    out: dict[int, dict[str, object]] = {}
+    for row in rows:
+        try:
+            uid = int(row["user_id"])
+        except Exception:
+            continue
+        out[uid] = {
+            "gender": row.get("gender"),
+            "birth": row.get("birth"),
+            "created_at": row.get("created_at"),
+        }
+    return out
+
+
+def _fetch_user_recent_sequences(
+    mysql_dsn: str | None,
+    user_ids: Sequence[int],
+    *,
+    recent_limit: int,
+) -> dict[int, list[int]]:
+    if not user_ids or int(recent_limit) <= 0:
+        return {}
+
+    sql = """
+    SELECT x.user_id, x.movie_id, x.ts
+    FROM (
+      SELECT ua.user_id, ua.movie_id, ua.created_at AS ts
+      FROM user_action ua
+      WHERE ua.user_id IN :user_ids AND ua.movie_id IS NOT NULL
+
+      UNION ALL
+
+      SELECT r.user_id, r.movie_id, r.updated_at AS ts
+      FROM rating r
+      WHERE r.user_id IN :user_ids AND r.movie_id IS NOT NULL
+
+      UNION ALL
+
+      SELECT c.user_id, c.movie_id, c.created_at AS ts
+      FROM user_collect_movie c
+      WHERE c.user_id IN :user_ids AND c.movie_id IS NOT NULL
+    ) x
+    ORDER BY x.user_id ASC, x.ts DESC
+    """
+    rows = _execute(
+        mysql_dsn,
+        sql,
+        {"user_ids": [int(x) for x in user_ids]},
+        expanding=("user_ids",),
+    )
+
+    out: dict[int, list[int]] = {}
+    limit = int(recent_limit)
+    for row in rows:
+        try:
+            uid = int(row["user_id"])
+            iid = int(row["movie_id"])
+        except Exception:
+            continue
+        seq = out.setdefault(uid, [])
+        if len(seq) < limit:
+            seq.append(iid)
+    return out
+
+
+def _fetch_item_tags(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int, list[int]]:
+    if not item_ids:
+        return {}
+    sql = """
+    SELECT mt.movie_id, mt.tag_id
+    FROM movie_tag mt
+    WHERE mt.movie_id IN :movie_ids
+    ORDER BY mt.movie_id ASC, mt.weight DESC, mt.hot_score DESC
+    """
+    rows = _execute(
+        mysql_dsn,
+        sql,
+        {"movie_ids": [int(x) for x in item_ids]},
+        expanding=("movie_ids",),
+    )
+    out: dict[int, list[int]] = {}
+    for row in rows:
+        try:
+            mid = int(row["movie_id"])
+            tid = int(row["tag_id"])
+        except Exception:
+            continue
+        out.setdefault(mid, []).append(tid)
+    return out
+
+
+def _build_item_stat_vector(row: Mapping[str, object]) -> np.ndarray:
+    rating_count = float(row.get("rating_count") or 0.0)
+    rating_sum = float(row.get("rating_sum") or 0.0)
+    avg_rating = rating_sum / rating_count if rating_count > 0 else 0.0
+
+    hist = [float(row.get(f"rating_{i}_count") or 0.0) for i in range(1, 11)]
+    hist_total = max(sum(hist), 1.0)
+    hist_ratio = [v / hist_total for v in hist]
+
+    collect_cnt = float(row.get("collect_cnt") or 0.0)
+    hot_cnt = float(row.get("hot_cnt_30d") or 0.0)
+    return np.asarray(
+        [avg_rating / 10.0, np.log1p(rating_count), *hist_ratio, np.log1p(collect_cnt), np.log1p(hot_cnt)],
+        dtype=np.float32,
+    )
+
+
+def _fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int, np.ndarray]:
+    if not item_ids:
+        return {}
+
+    sql = """
+    SELECT m.movie_id,
+           m.rating_sum,
+           m.rating_count,
+           m.rating_1_count,
+           m.rating_2_count,
+           m.rating_3_count,
+           m.rating_4_count,
+           m.rating_5_count,
+           m.rating_6_count,
+           m.rating_7_count,
+           m.rating_8_count,
+           m.rating_9_count,
+           m.rating_10_count,
+           COALESCE(c.collect_cnt, 0) AS collect_cnt,
+           COALESCE(h.hot_cnt_30d, 0) AS hot_cnt_30d
+    FROM movie m
+    LEFT JOIN (
+        SELECT movie_id, COUNT(*) AS collect_cnt
+        FROM user_collect_movie
+        GROUP BY movie_id
+    ) c ON c.movie_id = m.movie_id
+    LEFT JOIN (
+        SELECT movie_id, COUNT(*) AS hot_cnt_30d
+        FROM user_action
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY movie_id
+    ) h ON h.movie_id = m.movie_id
+    WHERE m.movie_id IN :movie_ids
+    """
+    rows = _execute(
+        mysql_dsn,
+        sql,
+        {"movie_ids": [int(x) for x in item_ids]},
+        expanding=("movie_ids",),
+    )
+
+    out: dict[int, np.ndarray] = {}
+    for row in rows:
+        try:
+            mid = int(row["movie_id"])
+        except Exception:
+            continue
+        out[mid] = _build_item_stat_vector(row)
+    return out
+
+
+class _FeatureTwoTowerEncoder(nn.Module):
+    def __init__(
+        self,
+        *,
+        user_count: int,
+        item_count: int,
+        tag_count: int,
+        dim: int,
+        stats_dim: int,
+        seed: int,
+    ) -> None:
         super().__init__()
-        self.user_table = nn.Embedding(user_count, dim)
-        self.item_table = nn.Embedding(item_count, dim)
+        self.user_id_table = nn.Embedding(user_count, dim)
+        self.item_id_table = nn.Embedding(item_count, dim)
+        self.gender_table = nn.Embedding(3, dim)
+        self.age_bucket_table = nn.Embedding(7, dim)
+        self.register_bucket_table = nn.Embedding(6, dim)
+        self.tag_table = nn.Embedding(tag_count, dim)
+        self.item_stats_proj = nn.Linear(stats_dim, dim)
+        self.user_proj = nn.Linear(dim * 5, dim)
+        self.item_proj = nn.Linear(dim * 3, dim)
+
         gen = torch.Generator(device="cpu")
         gen.manual_seed(int(seed))
         with torch.no_grad():
-            self.user_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
-            self.item_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.user_id_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.item_id_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.gender_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.age_bucket_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.register_bucket_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+            self.tag_table.weight.normal_(mean=0.0, std=0.05, generator=gen)
+
+    @staticmethod
+    def _masked_mean(x: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        m = mask.unsqueeze(-1).to(dtype=x.dtype)
+        denom = torch.clamp(m.sum(dim=1), min=1e-6)
+        return (x * m).sum(dim=1) / denom
+
+    def encode_user_inputs(
+        self,
+        *,
+        user_id_idx: torch.Tensor,
+        gender_idx: torch.Tensor,
+        age_bucket_idx: torch.Tensor,
+        register_bucket_idx: torch.Tensor,
+        seq_item_idx: torch.Tensor,
+        seq_mask: torch.Tensor,
+    ) -> torch.Tensor:
+        uid_vec = self.user_id_table(user_id_idx)
+        gender_vec = self.gender_table(gender_idx)
+        age_vec = self.age_bucket_table(age_bucket_idx)
+        reg_vec = self.register_bucket_table(register_bucket_idx)
+
+        seq_emb = self.item_id_table(seq_item_idx)
+        seq_vec = self._masked_mean(seq_emb, seq_mask)
+
+        user_input = torch.cat([uid_vec, gender_vec, age_vec, reg_vec, seq_vec], dim=1)
+        return F.normalize(self.user_proj(user_input), p=2, dim=1, eps=1e-12)
+
+    def encode_item_inputs(
+        self,
+        *,
+        item_id_idx: torch.Tensor,
+        tag_idx: torch.Tensor,
+        tag_mask: torch.Tensor,
+        stats: torch.Tensor,
+    ) -> torch.Tensor:
+        iid_vec = self.item_id_table(item_id_idx)
+        tag_emb = self.tag_table(tag_idx)
+        tag_vec = self._masked_mean(tag_emb, tag_mask)
+        stats_vec = self.item_stats_proj(stats)
+        item_input = torch.cat([iid_vec, tag_vec, stats_vec], dim=1)
+        return F.normalize(self.item_proj(item_input), p=2, dim=1, eps=1e-12)
 
     def forward(
         self,
-        user_idx: torch.Tensor,
-        pos_item_idx: torch.Tensor,
-        neg_item_idx: torch.Tensor,
+        *,
+        user_id_idx: torch.Tensor,
+        user_gender_idx: torch.Tensor,
+        user_age_idx: torch.Tensor,
+        user_register_idx: torch.Tensor,
+        user_seq_item_idx: torch.Tensor,
+        user_seq_mask: torch.Tensor,
+        pos_item_id_idx: torch.Tensor,
+        pos_tag_idx: torch.Tensor,
+        pos_tag_mask: torch.Tensor,
+        pos_stats: torch.Tensor,
+        neg_item_id_idx: torch.Tensor,
+        neg_tag_idx: torch.Tensor,
+        neg_tag_mask: torch.Tensor,
+        neg_stats: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        pu = self.user_table(user_idx)
-        pi = self.item_table(pos_item_idx)
-        pj = self.item_table(neg_item_idx)
+        pu = self.encode_user_inputs(
+            user_id_idx=user_id_idx,
+            gender_idx=user_gender_idx,
+            age_bucket_idx=user_age_idx,
+            register_bucket_idx=user_register_idx,
+            seq_item_idx=user_seq_item_idx,
+            seq_mask=user_seq_mask,
+        )
+        pi = self.encode_item_inputs(
+            item_id_idx=pos_item_id_idx,
+            tag_idx=pos_tag_idx,
+            tag_mask=pos_tag_mask,
+            stats=pos_stats,
+        )
+        pj = self.encode_item_inputs(
+            item_id_idx=neg_item_id_idx,
+            tag_idx=neg_tag_idx,
+            tag_mask=neg_tag_mask,
+            stats=neg_stats,
+        )
         logits = (pu * pi).sum(dim=1) - (pu * pj).sum(dim=1)
         l2 = (pu.pow(2).sum(dim=1) + pi.pow(2).sum(dim=1) + pj.pow(2).sum(dim=1)).mean()
         return logits, l2
@@ -335,7 +671,10 @@ def _sample_negative_items(
     item_count: int,
     generator: torch.Generator,
 ) -> torch.Tensor:
-    neg = torch.randint(item_count, size=(int(users.shape[0]),), generator=generator, dtype=torch.long)
+    if int(item_count) <= 1:
+        return torch.zeros((int(users.shape[0]),), dtype=torch.long)
+
+    neg = torch.randint(1, item_count, size=(int(users.shape[0]),), generator=generator, dtype=torch.long)
     for idx, u_idx in enumerate(users.tolist()):
         positives = user_pos_items.get(int(u_idx), set())
         if not positives:
@@ -343,7 +682,7 @@ def _sample_negative_items(
         tries = 0
         n = int(neg[idx].item())
         while n in positives and tries < 20:
-            n = int(torch.randint(item_count, size=(1,), generator=generator).item())
+            n = int(torch.randint(1, item_count, size=(1,), generator=generator).item())
             tries += 1
         neg[idx] = int(n)
     return neg
@@ -359,8 +698,11 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
     if not user_ids or not item_ids:
         raise RuntimeError("empty_user_or_item_set")
 
-    user_id_to_index = {uid: i for i, uid in enumerate(user_ids)}
-    item_id_to_index = {iid: i for i, iid in enumerate(item_ids)}
+    # Reserve index 0 for Unknown user/item/tag.
+    user_id_to_index = {uid: (i + 1) for i, uid in enumerate(user_ids)}
+    item_id_to_index = {iid: (i + 1) for i, iid in enumerate(item_ids)}
+    user_count = len(user_ids) + 1
+    item_count = len(item_ids) + 1
 
     # aggregate positives
     pos_weight: dict[tuple[int, int], float] = {}
@@ -371,24 +713,101 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
         pos_weight[(ui, ii)] = pos_weight.get((ui, ii), 0.0) + float(w)
         user_pos_items.setdefault(ui, set()).add(ii)
 
-    pairs = list(pos_weight.items())
-    if not pairs:
+    # user-level holdout for HR@K: keep one positive as test when user has >=2 positives
+    user_train_pos_items: dict[int, set[int]] = {}
+    test_pairs: list[tuple[int, int]] = []
+    for ui, items in user_pos_items.items():
+        pos_items = sorted(items)
+        if len(pos_items) >= 2:
+            holdout_ii = max(pos_items, key=lambda ii: (float(pos_weight.get((ui, ii), 0.0)), int(ii)))
+            train_set = {ii for ii in pos_items if ii != holdout_ii}
+            if train_set:
+                user_train_pos_items[ui] = train_set
+                test_pairs.append((ui, holdout_ii))
+            else:
+                user_train_pos_items[ui] = set(pos_items)
+        else:
+            user_train_pos_items[ui] = set(pos_items)
+
+    train_pairs = [
+        ((ui, ii), w)
+        for (ui, ii), w in pos_weight.items()
+        if ii in user_train_pos_items.get(ui, set())
+    ]
+    if not train_pairs:
         raise RuntimeError("no_positive_pairs")
+
+    user_profiles = _fetch_user_profiles(mysql_dsn, user_ids)
+    user_sequences = _fetch_user_recent_sequences(
+        mysql_dsn,
+        user_ids,
+        recent_limit=max(int(cfg.recent_item_limit), 1),
+    )
+
+    raw_item_tags = _fetch_item_tags(mysql_dsn, item_ids)
+    unique_tag_ids = sorted({tid for tags in raw_item_tags.values() for tid in tags})
+    tag_id_to_index = {tid: (i + 1) for i, tid in enumerate(unique_tag_ids)}
+    tag_count = len(unique_tag_ids) + 1
+
+    item_stats_by_id = _fetch_item_stats(mysql_dsn, item_ids)
+    stats_dim = 14
+
+    seq_len = max(int(cfg.recent_item_limit), 1)
+    max_tags = 12
+
+    user_gender_idx = torch.zeros((user_count,), dtype=torch.long)
+    user_age_idx = torch.zeros((user_count,), dtype=torch.long)
+    user_register_idx = torch.zeros((user_count,), dtype=torch.long)
+    user_seq_items = torch.zeros((user_count, seq_len), dtype=torch.long)
+    user_seq_mask = torch.zeros((user_count, seq_len), dtype=torch.bool)
+
+    for uid in user_ids:
+        ui = user_id_to_index[uid]
+        profile = user_profiles.get(uid, {})
+        user_gender_idx[ui] = _gender_index(profile.get("gender"))
+        user_age_idx[ui] = _age_bucket_index(profile.get("birth"))
+        user_register_idx[ui] = _register_bucket_index(profile.get("created_at"))
+
+        seq_raw = user_sequences.get(uid, [])
+        seq_idx = [item_id_to_index.get(mid, 0) for mid in seq_raw if item_id_to_index.get(mid, 0) > 0][:seq_len]
+        if seq_idx:
+            user_seq_items[ui, : len(seq_idx)] = torch.as_tensor(seq_idx, dtype=torch.long)
+            user_seq_mask[ui, : len(seq_idx)] = True
+
+    item_tag_ids = torch.zeros((item_count, max_tags), dtype=torch.long)
+    item_tag_mask = torch.zeros((item_count, max_tags), dtype=torch.bool)
+    item_stats = torch.zeros((item_count, stats_dim), dtype=torch.float32)
+    for iid in item_ids:
+        ii = item_id_to_index[iid]
+        tag_idx = [tag_id_to_index.get(t, 0) for t in raw_item_tags.get(iid, []) if tag_id_to_index.get(t, 0) > 0][:max_tags]
+        if tag_idx:
+            item_tag_ids[ii, : len(tag_idx)] = torch.as_tensor(tag_idx, dtype=torch.long)
+            item_tag_mask[ii, : len(tag_idx)] = True
+        vec = item_stats_by_id.get(iid)
+        if vec is not None and vec.shape[0] == stats_dim:
+            item_stats[ii] = torch.as_tensor(vec, dtype=torch.float32)
 
     torch.manual_seed(int(cfg.seed))
     generator = torch.Generator(device="cpu")
     generator.manual_seed(int(cfg.seed))
 
-    net = _TwoTowerBPR(user_count=len(user_ids), item_count=len(item_ids), dim=cfg.dim, seed=int(cfg.seed))
+    net = _FeatureTwoTowerEncoder(
+        user_count=user_count,
+        item_count=item_count,
+        tag_count=tag_count,
+        dim=cfg.dim,
+        stats_dim=stats_dim,
+        seed=int(cfg.seed),
+    )
     optimizer = torch.optim.Adam(net.parameters(), lr=float(cfg.train_lr))
 
-    pair_users = torch.as_tensor([p[0][0] for p in pairs], dtype=torch.long)
-    pair_items = torch.as_tensor([p[0][1] for p in pairs], dtype=torch.long)
-    pair_weights = torch.as_tensor([p[1] for p in pairs], dtype=torch.float32)
+    pair_users = torch.as_tensor([p[0][0] for p in train_pairs], dtype=torch.long)
+    pair_items = torch.as_tensor([p[0][1] for p in train_pairs], dtype=torch.long)
+    pair_weights = torch.as_tensor([p[1] for p in train_pairs], dtype=torch.float32)
     prob = pair_weights / torch.clamp(pair_weights.sum(), min=1e-12)
 
     dataset = _PositivePairDataset(pair_users=pair_users, pair_items=pair_items)
-    sampled_size = max(len(pairs), int(cfg.train_batch_size))
+    sampled_size = max(len(train_pairs), int(cfg.train_batch_size))
     sampler = torch.utils.data.WeightedRandomSampler(
         weights=prob,
         num_samples=sampled_size,
@@ -404,7 +823,6 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
     )
 
     negatives = int(cfg.train_negatives)
-    item_count = len(item_ids)
     last_loss = 0.0
 
     for _epoch in range(int(cfg.train_epochs)):
@@ -415,12 +833,27 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
 
             batch_neg_items = _sample_negative_items(
                 users=batch_users,
-                user_pos_items=user_pos_items,
+                user_pos_items=user_train_pos_items,
                 item_count=item_count,
                 generator=generator,
             )
 
-            logits, l2 = net(batch_users, batch_items, batch_neg_items)
+            logits, l2 = net(
+                user_id_idx=batch_users,
+                user_gender_idx=user_gender_idx[batch_users],
+                user_age_idx=user_age_idx[batch_users],
+                user_register_idx=user_register_idx[batch_users],
+                user_seq_item_idx=user_seq_items[batch_users],
+                user_seq_mask=user_seq_mask[batch_users],
+                pos_item_id_idx=batch_items,
+                pos_tag_idx=item_tag_ids[batch_items],
+                pos_tag_mask=item_tag_mask[batch_items],
+                pos_stats=item_stats[batch_items],
+                neg_item_id_idx=batch_neg_items,
+                neg_tag_idx=item_tag_ids[batch_neg_items],
+                neg_tag_mask=item_tag_mask[batch_neg_items],
+                neg_stats=item_stats[batch_neg_items],
+            )
             bpr_loss = -F.logsigmoid(logits).mean()
             reg_loss = float(cfg.train_reg) * l2
             loss = bpr_loss + reg_loss
@@ -431,8 +864,28 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
             last_loss = float(loss.item())
 
     with torch.no_grad():
-        user_emb = F.normalize(net.user_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
-        item_emb = F.normalize(net.item_table.weight.detach(), p=2, dim=1, eps=1e-12).cpu().numpy().astype(np.float32)
+        all_user_idx = torch.arange(user_count, dtype=torch.long)
+        all_item_idx = torch.arange(item_count, dtype=torch.long)
+        full_user_emb = net.encode_user_inputs(
+            user_id_idx=all_user_idx,
+            gender_idx=user_gender_idx,
+            age_bucket_idx=user_age_idx,
+            register_bucket_idx=user_register_idx,
+            seq_item_idx=user_seq_items,
+            seq_mask=user_seq_mask,
+        ).cpu().numpy().astype(np.float32, copy=False)
+        full_item_emb = net.encode_item_inputs(
+            item_id_idx=all_item_idx,
+            tag_idx=item_tag_ids,
+            tag_mask=item_tag_mask,
+            stats=item_stats,
+        ).cpu().numpy().astype(np.float32, copy=False)
+
+    user_emb = full_user_emb[1:]
+    item_emb = full_item_emb[1:]
+
+    public_user_id_to_index = {uid: i for i, uid in enumerate(user_ids)}
+    public_item_id_to_index = {iid: i for i, iid in enumerate(item_ids)}
 
     model = TwoTowerModel(
         dim=cfg.dim,
@@ -440,16 +893,55 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
         item_ids=np.asarray(item_ids, dtype=np.int64),
         user_emb=user_emb.astype(np.float32, copy=False),
         item_emb=item_emb.astype(np.float32, copy=False),
-        user_id_to_index=user_id_to_index,
-        item_id_to_index=item_id_to_index,
+        user_id_to_index=public_user_id_to_index,
+        item_id_to_index=public_item_id_to_index,
+        metadata={
+            "encoder": {
+                "dim": int(cfg.dim),
+                "stats_dim": int(stats_dim),
+                "seq_len": int(seq_len),
+                "max_tags": int(max_tags),
+                "user_count": int(user_count),
+                "item_count": int(item_count),
+                "tag_count": int(tag_count),
+                "state_dict": {k: v.detach().cpu() for k, v in net.state_dict().items()},
+                "user_id_to_train_index": {int(k): int(v) for k, v in user_id_to_index.items()},
+                "item_id_to_train_index": {int(k): int(v) for k, v in item_id_to_index.items()},
+                "tag_id_to_index": {int(k): int(v) for k, v in tag_id_to_index.items()},
+            }
+        },
     )
+
+    eval_k = max(1, min(int(cfg.hr_eval_k), len(item_ids)))
+    hr_at_k: float | None = None
+    if test_pairs:
+        hits = 0
+        for ui, test_ii in test_pairs:
+            user_vec = full_user_emb[ui]
+            scores = np.matmul(full_item_emb, user_vec)
+            scores[0] = -1e12
+
+            exclude = user_train_pos_items.get(ui, set())
+            if exclude:
+                scores[np.asarray(list(exclude), dtype=np.int64)] = -1e12
+
+            if eval_k >= len(item_ids):
+                topk_idx = np.arange(1, len(item_ids) + 1, dtype=np.int64)
+            else:
+                topk_idx = np.argpartition(scores, -eval_k)[-eval_k:]
+            if int(test_ii) in set(int(x) for x in topk_idx.tolist()):
+                hits += 1
+        hr_at_k = float(hits / max(len(test_pairs), 1))
 
     metrics = {
         "users": len(user_ids),
         "items": len(item_ids),
-        "pairs": len(pairs),
+        "pairs": len(train_pairs),
         "epochs": int(cfg.train_epochs),
         "last_loss": float(last_loss),
+        "hr_k": int(eval_k),
+        "hr_test_size": int(len(test_pairs)),
+        "hr_at_k": hr_at_k if hr_at_k is not None else 0.0,
     }
     return model, metrics
 
@@ -547,50 +1039,94 @@ class ItemVectorStore:
 # ----------------------------
 
 
-def _fetch_user_recent_actions(user_id: int, limit: int, *, mysql_dsn: str | None) -> List[int]:
-    if int(limit) <= 0:
-        return []
+def _load_feature_encoder(model: TwoTowerModel) -> tuple[
+    _FeatureTwoTowerEncoder,
+    dict[int, int],
+    dict[int, int],
+    dict[int, int],
+    int,
+    int,
+] | None:
+    metadata = model.metadata if isinstance(model.metadata, dict) else None
+    encoder_meta = metadata.get("encoder") if isinstance(metadata, dict) else None
+    if not isinstance(encoder_meta, dict):
+        return None
 
-    sql = """
-    SELECT x.movie_id
-    FROM (
-      SELECT ua.movie_id AS movie_id, ua.created_at AS ts
-      FROM user_action ua
-      WHERE ua.user_id = :user_id AND ua.movie_id IS NOT NULL
+    try:
+        dim = int(encoder_meta["dim"])
+        stats_dim = int(encoder_meta["stats_dim"])
+        seq_len = int(encoder_meta["seq_len"])
+        max_tags = int(encoder_meta["max_tags"])
+        user_count = int(encoder_meta["user_count"])
+        item_count = int(encoder_meta["item_count"])
+        tag_count = int(encoder_meta["tag_count"])
+        state_dict = encoder_meta["state_dict"]
+        if not isinstance(state_dict, dict):
+            return None
+    except Exception:
+        return None
 
-      UNION ALL
+    user_map_raw = encoder_meta.get("user_id_to_train_index")
+    item_map_raw = encoder_meta.get("item_id_to_train_index")
+    tag_map_raw = encoder_meta.get("tag_id_to_index")
+    if not isinstance(user_map_raw, dict) or not isinstance(item_map_raw, dict) or not isinstance(tag_map_raw, dict):
+        return None
 
-      SELECT r.movie_id AS movie_id, r.updated_at AS ts
-      FROM rating r
-      WHERE r.user_id = :user_id AND r.movie_id IS NOT NULL
+    user_map = {int(k): int(v) for k, v in user_map_raw.items()}
+    item_map = {int(k): int(v) for k, v in item_map_raw.items()}
+    tag_map = {int(k): int(v) for k, v in tag_map_raw.items()}
 
-      UNION ALL
+    encoder = _FeatureTwoTowerEncoder(
+        user_count=user_count,
+        item_count=item_count,
+        tag_count=tag_count,
+        dim=dim,
+        stats_dim=stats_dim,
+        seed=0,
+    )
+    try:
+        encoder.load_state_dict(state_dict, strict=True)
+    except Exception:
+        return None
 
-      SELECT ucm.movie_id AS movie_id, ucm.created_at AS ts
-      FROM user_collect_movie ucm
-      WHERE ucm.user_id = :user_id AND ucm.movie_id IS NOT NULL
-    ) x
-    ORDER BY x.ts DESC
-    LIMIT :limit
-    """
-    rows = _execute(mysql_dsn, sql, {"user_id": int(user_id), "limit": int(limit)})
-    out: List[int] = []
-    for row in rows:
-        try:
-            out.append(int(row["movie_id"]))
-        except Exception:
-            continue
-    return out
+    encoder.eval()
+    return encoder, user_map, item_map, tag_map, seq_len, max_tags
 
 
 def build_item_vector(movie_id: int, cfg: TwoTowerConfig, _unused: object | None = None, *, mysql_dsn: str | None) -> np.ndarray | None:
-    _ = mysql_dsn
     model = load_model_weights(cfg.model_path)
     if model is None:
         return None
+
     idx = model.item_id_to_index.get(int(movie_id))
     if idx is None:
-        return None
+        bundle = _load_feature_encoder(model)
+        if bundle is None:
+            return None
+
+        encoder, _user_map, item_map, tag_map, _seq_len, max_tags = bundle
+        raw_tags = _fetch_item_tags(mysql_dsn, [int(movie_id)]).get(int(movie_id), [])
+        tag_idx = [tag_map.get(int(tid), 0) for tid in raw_tags if tag_map.get(int(tid), 0) > 0][:max_tags]
+
+        tag_tensor = torch.zeros((1, max_tags), dtype=torch.long)
+        tag_mask = torch.zeros((1, max_tags), dtype=torch.bool)
+        if tag_idx:
+            tag_tensor[0, : len(tag_idx)] = torch.as_tensor(tag_idx, dtype=torch.long)
+            tag_mask[0, : len(tag_idx)] = True
+
+        stats_vec = _fetch_item_stats(mysql_dsn, [int(movie_id)]).get(int(movie_id), np.zeros((14,), dtype=np.float32))
+        stats_tensor = torch.as_tensor(stats_vec.reshape(1, -1), dtype=torch.float32)
+        item_train_idx = int(item_map.get(int(movie_id), 0))
+
+        with torch.no_grad():
+            vec = encoder.encode_item_inputs(
+                item_id_idx=torch.as_tensor([item_train_idx], dtype=torch.long),
+                tag_idx=tag_tensor,
+                tag_mask=tag_mask,
+                stats=stats_tensor,
+            )[0].cpu().numpy()
+        return _l2_normalize(vec)
+
     return model.item_emb[idx]
 
 
@@ -599,24 +1135,38 @@ def build_user_vector(user_id: int, cfg: TwoTowerConfig, _unused: object | None 
     if model is None:
         return None
 
-    vecs: List[np.ndarray] = []
+    bundle = _load_feature_encoder(model)
+    if bundle is None:
+        # Backward compatibility for old checkpoints without feature metadata.
+        u_idx = model.user_id_to_index.get(int(user_id))
+        return model.user_emb[u_idx] if u_idx is not None else None
 
-    u_idx = model.user_id_to_index.get(int(user_id))
-    if u_idx is not None:
-        vecs.append(model.user_emb[u_idx])
+    encoder, user_map, item_map, _tag_map, seq_len, _max_tags = bundle
+    user_profile = _fetch_user_profiles(mysql_dsn, [int(user_id)]).get(int(user_id), {})
+    seq = _fetch_user_recent_sequences(mysql_dsn, [int(user_id)], recent_limit=seq_len).get(int(user_id), [])
 
-    recent_ids = _fetch_user_recent_actions(int(user_id), int(cfg.recent_item_limit), mysql_dsn=mysql_dsn)
-    rec_item_vecs = [model.item_emb[model.item_id_to_index[iid]] for iid in recent_ids if iid in model.item_id_to_index]
-    if rec_item_vecs:
-        vecs.append(_l2_normalize(np.mean(np.stack(rec_item_vecs, axis=0), axis=0)))
+    user_train_idx = int(user_map.get(int(user_id), 0))
+    gender_idx = _gender_index(user_profile.get("gender"))
+    age_idx = _age_bucket_index(user_profile.get("birth"))
+    reg_idx = _register_bucket_index(user_profile.get("created_at"))
 
-    if not vecs:
-        return None
-    if len(vecs) == 1:
-        return _l2_normalize(vecs[0].copy())
+    seq_item_idx = [item_map.get(int(mid), 0) for mid in seq if item_map.get(int(mid), 0) > 0][:seq_len]
+    seq_tensor = torch.zeros((1, seq_len), dtype=torch.long)
+    seq_mask = torch.zeros((1, seq_len), dtype=torch.bool)
+    if seq_item_idx:
+        seq_tensor[0, : len(seq_item_idx)] = torch.as_tensor(seq_item_idx, dtype=torch.long)
+        seq_mask[0, : len(seq_item_idx)] = True
 
-    alpha = float(cfg.alpha)
-    return _l2_normalize(alpha * vecs[0] + (1.0 - alpha) * vecs[1])
+    with torch.no_grad():
+        vec = encoder.encode_user_inputs(
+            user_id_idx=torch.as_tensor([user_train_idx], dtype=torch.long),
+            gender_idx=torch.as_tensor([gender_idx], dtype=torch.long),
+            age_bucket_idx=torch.as_tensor([age_idx], dtype=torch.long),
+            register_bucket_idx=torch.as_tensor([reg_idx], dtype=torch.long),
+            seq_item_idx=seq_tensor,
+            seq_mask=seq_mask,
+        )[0].cpu().numpy()
+    return _l2_normalize(vec)
 
 
 def fetch_user_excluded_items(user_id: int, *, mysql_dsn: str | None) -> set[int]:

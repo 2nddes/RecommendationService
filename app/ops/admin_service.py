@@ -229,6 +229,7 @@ def get_admin_status(settings: Settings) -> Dict[str, Any]:
             "ranking_method": settings.ranking_method,
             "reranking_method": settings.reranking_method,
             "xgb_model_path": settings.xgb_model_path,
+            "mmoe_model_path": settings.mmoe_model_path,
         },
         "artifacts": store.get_all(),
     }
