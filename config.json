@@ -10,7 +10,7 @@
     "RECALL_RATING_THRESHOLD": 8,
     "RECALL_TOPK_USER_INTEREST_TAG": 300,
     "RECALL_TOPK_ITEM_SIMILAR_TAG": 200,
-    "RANKING_METHOD": "xgb",
+    "RANKING_METHOD": "mmoe",
     "XGB_MODEL_PATH": null,
     "XGB_USE_MYSQL_FEATURES": true,
     "XGB_ALLOW_FALLBACK": false,
@@ -33,6 +33,18 @@
     "MMOE_NUM_EXPERTS": 4,
     "MMOE_EXPERT_HIDDEN_DIM": 64,
     "MMOE_TOWER_HIDDEN_DIM": 32,
+    "MMOE_IN_BATCH_NEG_RATIO": 1,
+    "MMOE_CLICK_NEG_USER_POOL": 2000,
+    "MMOE_CLICK_NEG_MOVIE_POOL": 5000,
+    "MMOE_CLICK_PARQUET_PATH": "data/offline/clicks.parquet",
+    "MMOE_COLLECT_PARQUET_PATH": "data/offline/collects.parquet",
+    "MMOE_RATE_PARQUET_PATH": "data/offline/rates.parquet",
+    "MMOE_COMMENT_PARQUET_PATH": "data/offline/comments.parquet",
+    "MMOE_GLOBAL_NEG_RATIO": 4,
+    "MMOE_LOSS_WEIGHT_CLICK": 1.0,
+    "MMOE_LOSS_WEIGHT_COLLECT": 5.0,
+    "MMOE_LOSS_WEIGHT_RATE": 10.0,
+    "MMOE_LOSS_WEIGHT_COMMENT": 20.0,
 
     "TWO_TOWER_DIM": 64,
     "TWO_TOWER_SEED": 20260105,
@@ -53,10 +65,13 @@
     "TWO_TOWER_TRAIN_LIMIT": 300000,
     "TWO_TOWER_STARTUP_BUILD": true,
     "TWO_TOWER_DAILY_UPDATE_INTERVAL_HOURS": 24,
-    "STARTUP_PREWARM_CF": true,
+    "STARTUP_PREWARM_CF": false,
 
     "RAG_EMBEDDING_MODEL_NAME": "BAAI/bge-large-zh-v1.5",
     "RAG_FAISS_DIR": "data/faiss/movie_rag",
     "RAG_FAISS_INDEX_NAME": "movie_index",
-    "RAG_BUILD_LIMIT": 50000
+    "RAG_BUILD_LIMIT": 50000,
+
+    "LOG_LEVEL": "INFO",
+    "LOG_FILE_PATH": "logs/app.log"
 }

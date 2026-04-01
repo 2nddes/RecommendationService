@@ -3,14 +3,48 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime
 import json
+import logging
 import os
+import time
 from typing import Any, Dict, List, Sequence, Tuple
 
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Engine, bindparam, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
+
+
+logger = logging.getLogger(__name__)
+
+
+def _fmt_log_value(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float, str)):
+        return str(value)
+    try:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    except Exception:
+        return str(value)
+
+
+def _log_event(level: str, event: str, **fields: Any) -> None:
+    payload: Dict[str, Any] = {"event": event}
+    for key in sorted(fields.keys()):
+        payload[key] = fields[key]
+    message = " | ".join(f"{k}={_fmt_log_value(v)}" for k, v in payload.items())
+    getattr(logger, level, logger.info)(message)
+
+
+def _log_exception(event: str, error: Exception, **fields: Any) -> None:
+    payload: Dict[str, Any] = {"event": event, "error": f"{type(error).__name__}: {error}"}
+    for key in sorted(fields.keys()):
+        payload[key] = fields[key]
+    message = " | ".join(f"{k}={_fmt_log_value(v)}" for k, v in payload.items())
+    logger.exception(message)
 
 
 
@@ -39,6 +73,16 @@ def train_current_models(
     It only produces artifacts and records their paths.
     """
 
+    _log_event(
+        "info",
+        "train.task.start",
+        component=component,
+        model=model,
+        stage="dispatch",
+        status="processing",
+        train_job_id=train_job_id,
+    )
+
     if train_job_id is not None:
         update_model_train_job(
             mysql_dsn=settings.mysql_dsn,
@@ -62,6 +106,15 @@ def train_current_models(
         if not bool(outcome.trained):
             details = outcome.details if isinstance(outcome.details, dict) else {}
             reason = details.get("reason") or details.get("error") or "train_outcome_not_trained"
+            _log_event(
+                "warning",
+                "train.task.untrained",
+                component=component,
+                model=model,
+                reason=reason,
+                status="failed",
+                train_job_id=train_job_id,
+            )
             raise RuntimeError(str(reason))
 
         if train_job_id is not None:
@@ -72,6 +125,15 @@ def train_current_models(
                 metrics=result,
                 set_finished_at=True,
             )
+        _log_event(
+            "info",
+            "train.task.done",
+            artifact_path=outcome.artifact_path,
+            component=component,
+            model=model,
+            status="completed",
+            train_job_id=train_job_id,
+        )
         return result
     except Exception as e:  # noqa: BLE001
         if train_job_id is not None:
@@ -86,6 +148,14 @@ def train_current_models(
                 },
                 set_finished_at=True,
             )
+        _log_exception(
+            "train.task.failed",
+            e,
+            component=component,
+            model=model,
+            status="failed",
+            train_job_id=train_job_id,
+        )
         raise
 
 
@@ -354,12 +424,23 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
 
 def _train_xgb(settings: Settings) -> TrainOutcome:
     store = get_artifact_store()
+    started_at = time.time()
 
     # Decide output location (staging)
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     out_dir = os.path.join("data", "artifacts", "xgb")
     os.makedirs(out_dir, exist_ok=True)
     artifact_path = os.path.join(out_dir, f"xgb_{ts}.json")
+    _log_event(
+        "info",
+        "train.xgb.start",
+        artifact_path=artifact_path,
+        eta=float(settings.xgb_train_eta),
+        max_depth=int(settings.xgb_train_max_depth),
+        rounds=int(settings.xgb_train_rounds),
+        stage="prepare",
+        train_limit=int(settings.xgb_train_limit),
+    )
 
     try:
         import numpy as np
@@ -378,6 +459,7 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
 
     rows = _fetch_xgb_training_rows(mysql_dsn=settings.mysql_dsn, limit=int(settings.xgb_train_limit))
     if not rows:
+        _log_event("warning", "train.xgb.empty_data", reason="no_training_data_or_mysql_not_configured", status="skipped")
         return TrainOutcome(
             component="ranking",
             name="xgb",
@@ -409,7 +491,23 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
 
     pos_cnt = sum(1 for x in labels if x > 0.5)
     neg_cnt = len(labels) - pos_cnt
+    _log_event(
+        "info",
+        "train.xgb.samples_ready",
+        negative=int(neg_cnt),
+        positive=int(pos_cnt),
+        rows=len(labels),
+        stage="dataset",
+    )
     if pos_cnt == 0 or neg_cnt == 0:
+        _log_event(
+            "warning",
+            "train.xgb.label_insufficient",
+            negative=int(neg_cnt),
+            positive=int(pos_cnt),
+            reason="insufficient_label_diversity",
+            status="skipped",
+        )
         return TrainOutcome(
             component="ranking",
             name="xgb",
@@ -449,6 +547,14 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         )
 
     train_idx, test_idx = split_idx
+    _log_event(
+        "info",
+        "train.xgb.split_done",
+        feature_count=int(X.shape[1]),
+        stage="split",
+        test_rows=len(test_idx),
+        train_rows=len(train_idx),
+    )
     X_train = X[train_idx]
     y_train = y[train_idx]
     X_test = X[test_idx]
@@ -468,13 +574,23 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
     }
 
     num_boost_round = max(int(settings.xgb_train_rounds), 1)
+    _log_event("info", "train.xgb.fit_start", boost_rounds=int(num_boost_round), stage="fit")
     booster = xgb.train(params, dtrain, num_boost_round=num_boost_round)
     test_pred = booster.predict(dtest)
     test_auc = _binary_auc(y_test.tolist(), test_pred.tolist())
     booster.save_model(artifact_path)
+    _log_event(
+        "info",
+        "train.xgb.eval_done",
+        artifact_path=artifact_path,
+        stage="evaluate",
+        test_auc=test_auc,
+    )
 
     store.set("ranking.xgb.latest_artifact_path", artifact_path)
     store.set("ranking.xgb.latest_trained_at", ts)
+    elapsed_ms = int((time.time() - started_at) * 1000)
+    _log_event("info", "train.xgb.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
     return TrainOutcome(
         component="ranking",
@@ -499,160 +615,446 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
 # ----------------------------
 
 
-def _fetch_mmoe_training_rows(*, mysql_dsn: str | None, limit: int = 100000) -> List[Dict[str, Any]]:
-    """Build multi-task labels from MySQL only.
+def _fetch_mmoe_training_rows(
+    *,
+    settings: Settings,
+    limit: int = 100000,
+) -> List[Dict[str, Any]]:
+    """Build multi-task labels from most recent interactions by configured sample size.
 
-    Labels:
-    - click: action_type='view' -> 1
-    - collect: collect action / user_collect_movie -> 1
-    - comment: user_action.comment / movie_comment -> 1
-    - rating: rating > 5 -> 1
-    """
-
-    engine = _get_mysql_engine(mysql_dsn)
-    if engine is None:
-        return []
-
-    sql = """
-    SELECT t.user_id,
-           t.movie_id,
-           t.event_type,
-           t.rating,
-           t.event_time
-    FROM (
-        SELECT ua.user_id AS user_id,
-               ua.movie_id AS movie_id,
-               'click' AS event_type,
-               NULL AS rating,
-               ua.created_at AS event_time
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'view'
-
-        UNION ALL
-
-        SELECT ua.user_id AS user_id,
-               ua.movie_id AS movie_id,
-               'collect' AS event_type,
-               NULL AS rating,
-               ua.created_at AS event_time
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'collect'
-
-        UNION ALL
-
-        SELECT ucm.user_id AS user_id,
-               ucm.movie_id AS movie_id,
-               'collect' AS event_type,
-               NULL AS rating,
-               ucm.created_at AS event_time
-        FROM user_collect_movie ucm
-        WHERE ucm.movie_id IS NOT NULL
-
-        UNION ALL
-
-        SELECT ua.user_id AS user_id,
-               ua.movie_id AS movie_id,
-               'comment' AS event_type,
-               NULL AS rating,
-               ua.created_at AS event_time
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'comment'
-
-        UNION ALL
-
-        SELECT mc.user_id AS user_id,
-               mc.movie_id AS movie_id,
-               'comment' AS event_type,
-               NULL AS rating,
-               mc.created_at AS event_time
-        FROM movie_comment mc
-        WHERE mc.movie_id IS NOT NULL AND mc.deleted_at IS NULL
-
-        UNION ALL
-
-        SELECT r.user_id AS user_id,
-               r.movie_id AS movie_id,
-               'rating' AS event_type,
-               r.rating AS rating,
-               r.updated_at AS event_time
-        FROM rating r
-        WHERE r.movie_id IS NOT NULL
-    ) t
-    ORDER BY t.event_time DESC
-    LIMIT :limit
+    Positive samples come from recent interaction stream.
+    Negative samples are generated from global movie pool (not limited to recent movies).
     """
 
     try:
-        with engine.connect() as conn:
-            rs = conn.execute(text(sql), {"limit": max(int(limit), 1)})
+        import numpy as np
+    except Exception:
+        return []
 
-            by_pair: Dict[Tuple[int, int], Dict[str, Any]] = {}
+    engine = _get_mysql_engine(settings.mysql_dsn)
+    if engine is None:
+        return []
+
+    limit_n = max(int(limit), 1)
+    sql_recent = """
+    SELECT t.user_id, t.movie_id, t.kind
+    FROM (
+      SELECT ua.user_id, ua.movie_id, 'click' AS kind, ua.created_at AS ts
+      FROM user_action ua
+      WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'view'
+
+      UNION ALL
+
+      SELECT c.user_id, c.movie_id, 'collect' AS kind, c.created_at AS ts
+      FROM user_collect_movie c
+      WHERE c.movie_id IS NOT NULL
+
+      UNION ALL
+
+      SELECT r.user_id, r.movie_id, 'rate' AS kind, r.updated_at AS ts
+      FROM rating r
+      WHERE r.movie_id IS NOT NULL
+
+      UNION ALL
+
+      SELECT mc.user_id, mc.movie_id, 'comment' AS kind, mc.created_at AS ts
+      FROM movie_comment mc
+      WHERE mc.movie_id IS NOT NULL AND mc.deleted_at IS NULL
+    ) t
+    ORDER BY t.ts DESC
+    LIMIT :limit
+    """
+
+    sql_all_movies = """
+    SELECT m.movie_id
+    FROM movie m
+    WHERE m.movie_id IS NOT NULL
+    """
+
+    by_pair: Dict[Tuple[int, int], Dict[str, Any]] = {}
+    try:
+        with engine.connect() as conn:
+            rs = conn.execute(text(sql_recent), {"limit": limit_n})
             for row in rs:
                 d = dict(row._mapping)
                 try:
-                    user_id = int(d.get("user_id"))
-                    movie_id = int(d.get("movie_id"))
+                    uid = int(d.get("user_id") or 0)
+                    mid = int(d.get("movie_id") or 0)
+                    kind = str(d.get("kind") or "")
                 except Exception:
                     continue
-
-                if user_id <= 0 or movie_id <= 0:
+                if uid <= 0 or mid <= 0:
                     continue
 
-                key = (user_id, movie_id)
-                sample = by_pair.get(key)
-                if sample is None:
-                    sample = {
-                        "user_id": user_id,
-                        "movie_id": movie_id,
+                sample = by_pair.setdefault(
+                    (uid, mid),
+                    {
+                        "user_id": uid,
+                        "movie_id": mid,
                         "click": 0.0,
                         "collect": 0.0,
                         "comment": 0.0,
                         "rating": 0.0,
-                        "source": "user_collection",
-                        "recall_score": 0.0,
-                        "event_time": d.get("event_time"),
-                    }
-                    by_pair[key] = sample
+                        "source": "recent_interaction",
+                        "recall_score": 1.0,
+                    },
+                )
 
-                event_type = str(d.get("event_type") or "").strip().lower()
-                if event_type == "click":
+                if kind == "click":
                     sample["click"] = 1.0
-                    sample["source"] = "user_interest_tag"
-                    sample["recall_score"] = max(float(sample["recall_score"]), 0.5)
-                elif event_type == "collect":
+                elif kind == "collect":
+                    sample["click"] = 1.0
                     sample["collect"] = 1.0
-                    sample["source"] = "user_collection"
-                    sample["recall_score"] = max(float(sample["recall_score"]), 0.9)
-                elif event_type == "comment":
+                elif kind == "rate":
+                    sample["click"] = 1.0
+                    sample["rating"] = 1.0
+                elif kind == "comment":
+                    sample["click"] = 1.0
                     sample["comment"] = 1.0
-                    sample["source"] = "user_interest_tag"
-                    sample["recall_score"] = max(float(sample["recall_score"]), 0.8)
-                elif event_type == "rating":
-                    rating_raw = d.get("rating")
-                    rating_val = int(rating_raw) if rating_raw is not None else 0
-                    sample["rating"] = 1.0 if rating_val > 5 else 0.0
-                    sample["source"] = "user_high_rating_similar"
-                    sample["recall_score"] = max(float(sample["recall_score"]), min(max(rating_val, 0), 10) / 10.0)
 
-            return list(by_pair.values())
+            movie_rows = conn.execute(text(sql_all_movies), {})
+            global_movies = []
+            for row in movie_rows:
+                try:
+                    mid = int(dict(row._mapping).get("movie_id") or 0)
+                except Exception:
+                    continue
+                if mid > 0:
+                    global_movies.append(mid)
     except SQLAlchemyError:
         return []
+
+    positives = list(by_pair.values())
+    if not positives:
+        return []
+
+    if not global_movies:
+        global_movies = sorted({int(r["movie_id"]) for r in positives})
+
+    neg_ratio = max(int(settings.mmoe_global_neg_ratio), 0)
+    negatives: List[Dict[str, Any]] = []
+    if neg_ratio > 0 and global_movies:
+        rng = np.random.default_rng(20260401)
+        user_pos: Dict[int, int] = {}
+        seen_by_user: Dict[int, set[int]] = {}
+        for row in positives:
+            uid = int(row["user_id"])
+            mid = int(row["movie_id"])
+            user_pos[uid] = user_pos.get(uid, 0) + 1
+            seen_by_user.setdefault(uid, set()).add(mid)
+
+        for uid, pos_cnt in user_pos.items():
+            need = int(pos_cnt) * neg_ratio
+            if need <= 0:
+                continue
+            seen = seen_by_user.get(uid, set())
+            candidates = [mid for mid in global_movies if mid not in seen]
+            if not candidates:
+                continue
+
+            take_n = min(len(candidates), need)
+            picked = rng.choice(candidates, size=take_n, replace=False)
+            for mid in picked.tolist():
+                negatives.append(
+                    {
+                        "user_id": int(uid),
+                        "movie_id": int(mid),
+                        "click": 0.0,
+                        "collect": 0.0,
+                        "comment": 0.0,
+                        "rating": 0.0,
+                        "source": "global_negative",
+                        "recall_score": 0.0,
+                    }
+                )
+
+    out = positives + negatives
+    rng = np.random.default_rng(20260401)
+    if len(out) > 1:
+        rng.shuffle(out)
+    if limit_n > 0 and len(out) > limit_n:
+        out = out[:limit_n]
+
+    _log_event(
+        "info",
+        "train.mmoe.dataset_built",
+        click_positive=int(sum(1 for r in out if float(r.get("click") or 0.0) > 0.5)),
+        collect_positive=int(sum(1 for r in out if float(r.get("collect") or 0.0) > 0.5)),
+        comment_positive=int(sum(1 for r in out if float(r.get("comment") or 0.0) > 0.5)),
+        global_movie_pool=len(global_movies),
+        global_neg_ratio=neg_ratio,
+        rate_positive=int(sum(1 for r in out if float(r.get("rating") or 0.0) > 0.5)),
+        rows=len(out),
+        stage="dataset",
+    )
+    return out
+
+
+def _fetch_mmoe_aux_training_features(
+    *,
+    mysql_dsn: str | None,
+    user_ids: Sequence[int],
+    movie_ids: Sequence[int],
+) -> Dict[str, Any]:
+    engine = _get_mysql_engine(mysql_dsn)
+    if engine is None:
+        _log_event(
+            "warning",
+            "train.mmoe.aux_fallback",
+            mysql_dsn_set=bool(str(mysql_dsn or "").strip()),
+            reason="mysql_engine_unavailable",
+            stage="aux_features",
+        )
+        return {
+            "movie_stats_by_id": {},
+            "item_static_tags_by_movie": {},
+            "user_profile_by_id": {},
+            "short_hist_by_user": {},
+            "long_interest_tags_by_user": {},
+            "user_clicked_static_tag_count_by_user": {},
+            "user_total_click_by_user": {},
+        }
+
+    uid_list = sorted({int(x) for x in user_ids if int(x) > 0})
+    mid_list = sorted({int(x) for x in movie_ids if int(x) > 0})
+    if not uid_list or not mid_list:
+        _log_event(
+            "warning",
+            "train.mmoe.aux_fallback",
+            movies=len(mid_list),
+            reason="empty_user_or_movie_ids",
+            stage="aux_features",
+            users=len(uid_list),
+        )
+        return {
+            "movie_stats_by_id": {},
+            "item_static_tags_by_movie": {},
+            "user_profile_by_id": {},
+            "short_hist_by_user": {},
+            "long_interest_tags_by_user": {},
+            "user_clicked_static_tag_count_by_user": {},
+            "user_total_click_by_user": {},
+        }
+
+    movie_stats_sql = text(
+        """
+        SELECT m.movie_id AS movie_id,
+               CASE WHEN m.rating_count > 0 THEN (m.rating_sum * 1.0 / m.rating_count) ELSE 0 END AS rating_avg,
+               m.rating_count,
+               m.year,
+               m.duration_min,
+               COALESCE(mc.comment_count, 0) AS comment_count,
+               COALESCE(ua_all.click_count, 0) AS click_count,
+               COALESCE(ua_1h.click_1h, 0) AS click_1h,
+               COALESCE(ua_24h.click_24h, 0) AS click_24h
+        FROM movie m
+        LEFT JOIN (
+            SELECT movie_id, COUNT(*) AS comment_count
+            FROM movie_comment
+            WHERE deleted_at IS NULL
+            GROUP BY movie_id
+        ) mc ON mc.movie_id = m.movie_id
+        LEFT JOIN (
+            SELECT movie_id, COUNT(*) AS click_count
+            FROM user_action
+            WHERE action_type = 'view'
+            GROUP BY movie_id
+        ) ua_all ON ua_all.movie_id = m.movie_id
+        LEFT JOIN (
+            SELECT movie_id, COUNT(*) AS click_1h
+            FROM user_action
+            WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)
+            GROUP BY movie_id
+        ) ua_1h ON ua_1h.movie_id = m.movie_id
+        LEFT JOIN (
+            SELECT movie_id, COUNT(*) AS click_24h
+            FROM user_action
+            WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)
+            GROUP BY movie_id
+        ) ua_24h ON ua_24h.movie_id = m.movie_id
+        WHERE m.movie_id IN :mids
+        """
+    ).bindparams(bindparam("mids", expanding=True))
+
+    item_static_tags_sql = text(
+        """
+        SELECT mt.movie_id, mt.tag_id
+        FROM movie_tag mt
+        JOIN tag_dict td ON td.tag_id = mt.tag_id
+        WHERE mt.movie_id IN :mids AND td.type = 'static'
+        """
+    ).bindparams(bindparam("mids", expanding=True))
+
+    user_profile_sql = text(
+        """
+        SELECT u.user_id, u.gender, u.birth
+        FROM user u
+        WHERE u.user_id IN :uids AND u.deleted_at IS NULL
+        """
+    ).bindparams(bindparam("uids", expanding=True))
+
+    short_hist_sql = text(
+        """
+        SELECT t.user_id, t.movie_id
+        FROM (
+            SELECT ua.user_id,
+                   ua.movie_id,
+                   ROW_NUMBER() OVER (PARTITION BY ua.user_id ORDER BY ua.created_at DESC) AS rn
+            FROM user_action ua
+            WHERE ua.user_id IN :uids AND ua.action_type = 'view'
+        ) t
+        WHERE t.rn <= 10
+        """
+    ).bindparams(bindparam("uids", expanding=True))
+
+    long_interest_tags_sql = text(
+        """
+        SELECT t.user_id, t.tag_id
+        FROM (
+            SELECT r.user_id,
+                   mt.tag_id,
+                   ROW_NUMBER() OVER (PARTITION BY r.user_id ORDER BY r.updated_at DESC) AS rn
+            FROM rating r
+            JOIN movie_tag mt ON mt.movie_id = r.movie_id
+            JOIN tag_dict td ON td.tag_id = mt.tag_id
+            WHERE r.user_id IN :uids AND r.rating >= 8 AND td.type = 'static'
+        ) t
+        WHERE t.rn <= 100
+        """
+    ).bindparams(bindparam("uids", expanding=True))
+
+    user_tag_click_sql = text(
+        """
+        SELECT ua.user_id, mt.tag_id, COUNT(*) AS click_cnt
+        FROM user_action ua
+        JOIN movie_tag mt ON mt.movie_id = ua.movie_id
+        JOIN tag_dict td ON td.tag_id = mt.tag_id
+        WHERE ua.user_id IN :uids AND ua.action_type = 'view' AND td.type = 'static'
+        GROUP BY ua.user_id, mt.tag_id
+        """
+    ).bindparams(bindparam("uids", expanding=True))
+
+    user_total_click_sql = text(
+        """
+        SELECT ua.user_id, COUNT(*) AS total_click
+        FROM user_action ua
+        WHERE ua.user_id IN :uids AND ua.action_type = 'view'
+        GROUP BY ua.user_id
+        """
+    ).bindparams(bindparam("uids", expanding=True))
+
+    out: Dict[str, Any] = {
+        "movie_stats_by_id": {},
+        "item_static_tags_by_movie": {},
+        "user_profile_by_id": {},
+        "short_hist_by_user": {},
+        "long_interest_tags_by_user": {},
+        "user_clicked_static_tag_count_by_user": {},
+        "user_total_click_by_user": {},
+    }
+
+    try:
+        with engine.connect() as conn:
+            rs = conn.execute(movie_stats_sql, {"mids": mid_list})
+            movie_stats_by_id: Dict[int, Dict[str, Any]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                mid = int(d.get("movie_id") or 0)
+                if mid > 0:
+                    movie_stats_by_id[mid] = d
+            out["movie_stats_by_id"] = movie_stats_by_id
+
+            rs = conn.execute(item_static_tags_sql, {"mids": mid_list})
+            item_static_tags_by_movie: Dict[int, List[int]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                mid = int(d.get("movie_id") or 0)
+                tag_id = int(d.get("tag_id") or 0)
+                if mid > 0 and tag_id > 0:
+                    item_static_tags_by_movie.setdefault(mid, []).append(tag_id)
+            out["item_static_tags_by_movie"] = item_static_tags_by_movie
+
+            rs = conn.execute(user_profile_sql, {"uids": uid_list})
+            out["user_profile_by_id"] = {int(dict(r._mapping).get("user_id") or 0): dict(r._mapping) for r in rs}
+
+            rs = conn.execute(short_hist_sql, {"uids": uid_list})
+            short_hist_by_user: Dict[int, List[int]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                uid = int(d.get("user_id") or 0)
+                mid = int(d.get("movie_id") or 0)
+                if uid > 0 and mid > 0:
+                    short_hist_by_user.setdefault(uid, []).append(mid)
+            out["short_hist_by_user"] = short_hist_by_user
+
+            rs = conn.execute(long_interest_tags_sql, {"uids": uid_list})
+            long_interest_tags_by_user: Dict[int, List[int]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                uid = int(d.get("user_id") or 0)
+                tag_id = int(d.get("tag_id") or 0)
+                if uid > 0 and tag_id > 0:
+                    long_interest_tags_by_user.setdefault(uid, []).append(tag_id)
+            out["long_interest_tags_by_user"] = long_interest_tags_by_user
+
+            rs = conn.execute(user_tag_click_sql, {"uids": uid_list})
+            user_clicked_static_tag_count_by_user: Dict[int, Dict[int, int]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                uid = int(d.get("user_id") or 0)
+                tag_id = int(d.get("tag_id") or 0)
+                cnt = int(d.get("click_cnt") or 0)
+                if uid > 0 and tag_id > 0:
+                    user_clicked_static_tag_count_by_user.setdefault(uid, {})[tag_id] = cnt
+            out["user_clicked_static_tag_count_by_user"] = user_clicked_static_tag_count_by_user
+
+            rs = conn.execute(user_total_click_sql, {"uids": uid_list})
+            out["user_total_click_by_user"] = {
+                int(dict(r._mapping).get("user_id") or 0): int(dict(r._mapping).get("total_click") or 0)
+                for r in rs
+            }
+    except SQLAlchemyError:
+        _log_event("warning", "train.mmoe.aux_fallback", reason="query_aux_features_failed", stage="aux_features")
+        return out
+
+    return out
 
 
 def _train_mmoe(settings: Settings) -> TrainOutcome:
     store = get_artifact_store()
+    started_at = time.time()
 
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     out_dir = os.path.join("data", "artifacts", "mmoe")
     os.makedirs(out_dir, exist_ok=True)
     artifact_path = os.path.join(out_dir, f"mmoe_{ts}.pt")
+    _log_event(
+        "info",
+        "train.mmoe.start",
+        artifact_path=artifact_path,
+        batch_size=int(settings.mmoe_train_batch_size),
+        epochs=int(settings.mmoe_train_epochs),
+        lr=float(settings.mmoe_train_lr),
+        stage="prepare",
+        train_limit=int(settings.mmoe_train_limit),
+    )
 
     try:
         import torch
         from torch import nn
 
         from app.reco.ranking.mmoe_ranker import MMoENet, bundle_feature_order
-        from app.reco.ranking.xgb_features import fetch_movie_features
+        from app.reco.ranking.mmoe.features import (
+            ITEM_TAG_SEQ_LEN,
+            LONG_INTEREST_TAG_SEQ_LEN,
+            SHORT_INTEREST_SEQ_LEN,
+            bucketize_age,
+            default_age_bucket_index,
+            default_gender_index,
+            normalize_gender,
+            pad_or_truncate,
+            safe_float,
+        )
     except Exception as e:  # noqa: BLE001
         return TrainOutcome(
             component="ranking",
@@ -662,8 +1064,12 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             details={"skipped": True, "reason": f"deps_not_available: {type(e).__name__}: {e}"},
         )
 
-    rows = _fetch_mmoe_training_rows(mysql_dsn=settings.mysql_dsn, limit=int(settings.mmoe_train_limit))
+    rows = _fetch_mmoe_training_rows(
+        settings=settings,
+        limit=int(settings.mmoe_train_limit),
+    )
     if not rows:
+        _log_event("warning", "train.mmoe.empty_data", reason="no_training_data_or_mysql_not_configured", status="skipped")
         return TrainOutcome(
             component="ranking",
             name="mmoe",
@@ -672,8 +1078,32 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             details={"skipped": True, "reason": "no_training_data_or_mysql_not_configured"},
         )
 
-    movie_ids = [int(r["movie_id"]) for r in rows]
-    movie_features = fetch_movie_features(movie_ids, mysql_dsn=settings.mysql_dsn)
+    user_ids_all = [int(r["user_id"]) for r in rows]
+    movie_ids_all = [int(r["movie_id"]) for r in rows]
+    _log_event(
+        "info",
+        "train.mmoe.sample_overview",
+        rows=len(rows),
+        stage="dataset",
+        unique_items=len(set(movie_ids_all)),
+        unique_users=len(set(user_ids_all)),
+    )
+    aux = _fetch_mmoe_aux_training_features(mysql_dsn=settings.mysql_dsn, user_ids=user_ids_all, movie_ids=movie_ids_all)
+    movie_stats_by_id = aux.get("movie_stats_by_id") or {}
+    item_static_tags_by_movie = aux.get("item_static_tags_by_movie") or {}
+    user_profile_by_id = aux.get("user_profile_by_id") or {}
+    short_hist_by_user = aux.get("short_hist_by_user") or {}
+    long_interest_tags_by_user = aux.get("long_interest_tags_by_user") or {}
+    user_clicked_static_tag_count_by_user = aux.get("user_clicked_static_tag_count_by_user") or {}
+    user_total_click_by_user = aux.get("user_total_click_by_user") or {}
+    _log_event(
+        "info",
+        "train.mmoe.aux_loaded",
+        movie_stats=len(movie_stats_by_id),
+        rows=len(rows),
+        stage="aux_features",
+        user_profiles=len(user_profile_by_id),
+    )
 
     feature_names = bundle_feature_order()
     src_features = {
@@ -688,22 +1118,89 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     labels: List[List[float]] = []
     user_values: List[int] = []
     item_values: List[int] = []
+    gender_values: List[str] = []
+    age_bucket_values: List[str] = []
+    all_tag_ids: set[int] = set()
+    item_tag_raw_rows: List[List[int]] = []
+    short_hist_raw_rows: List[List[int]] = []
+    long_interest_tag_raw_rows: List[List[int]] = []
 
+    rating_avg_vals = [safe_float(v.get("rating_avg"), 0.0) for v in movie_stats_by_id.values()]
+    rating_count_vals = [safe_float(v.get("rating_count"), 0.0) for v in movie_stats_by_id.values()]
+    comment_count_vals = [safe_float(v.get("comment_count"), 0.0) for v in movie_stats_by_id.values()]
+    click_count_vals = [safe_float(v.get("click_count"), 0.0) for v in movie_stats_by_id.values()]
+    click_1h_vals = [safe_float(v.get("click_1h"), 0.0) for v in movie_stats_by_id.values()]
+    click_24h_vals = [safe_float(v.get("click_24h"), 0.0) for v in movie_stats_by_id.values()]
+    year_vals = [safe_float(v.get("year"), 0.0) for v in movie_stats_by_id.values()]
+    duration_vals = [safe_float(v.get("duration_min"), 0.0) for v in movie_stats_by_id.values()]
+
+    defaults = {
+        "movie_rating_avg": sum(rating_avg_vals) / max(len(rating_avg_vals), 1),
+        "movie_rating_count": sum(rating_count_vals) / max(len(rating_count_vals), 1),
+        "movie_comment_count": sum(comment_count_vals) / max(len(comment_count_vals), 1),
+        "movie_click_count": sum(click_count_vals) / max(len(click_count_vals), 1),
+        "movie_click_1h": sum(click_1h_vals) / max(len(click_1h_vals), 1),
+        "movie_click_24h": sum(click_24h_vals) / max(len(click_24h_vals), 1),
+        "movie_year": sum(year_vals) / max(len(year_vals), 1),
+        "movie_duration_min": sum(duration_vals) / max(len(duration_vals), 1),
+        "user_static_tag_ctr": 0.0,
+    }
+    if not movie_stats_by_id:
+        _log_event(
+            "warning",
+            "train.mmoe.default_feature_used",
+            reason="movie_stats_empty",
+            rows=len(rows),
+            stage="feature_build",
+        )
+
+    missing_movie_stats_cnt = 0
+    padded_long_interest_cnt = 0
     for row in rows:
         uid = int(row["user_id"])
         mid = int(row["movie_id"])
-        mf = movie_features.get(mid) or {}
+        mf = movie_stats_by_id.get(mid) or {}
+        if not mf:
+            missing_movie_stats_cnt += 1
+        item_tags = [int(x) for x in (item_static_tags_by_movie.get(mid) or []) if int(x) > 0]
+        all_tag_ids.update(item_tags)
+
+        user_profile = user_profile_by_id.get(uid) or {}
+        user_gender = normalize_gender(str(user_profile.get("gender") or "unknown"))
+        birth = user_profile.get("birth")
+        user_age = None
+        if birth is not None:
+            try:
+                now = datetime.utcnow().date()
+                user_age = max(now.year - birth.year - ((now.month, now.day) < (birth.month, birth.day)), 0)
+            except Exception:
+                user_age = None
+        user_age_bucket = bucketize_age(user_age)
+
+        short_hist_items = [int(x) for x in (short_hist_by_user.get(uid) or []) if int(x) > 0]
+        long_interest_tags = [int(x) for x in (long_interest_tags_by_user.get(uid) or []) if int(x) > 0]
+        all_tag_ids.update(long_interest_tags)
+
+        user_tag_click_map = user_clicked_static_tag_count_by_user.get(uid) or {}
+        user_total_click = max(int(user_total_click_by_user.get(uid) or 0), 1)
+        ctr_vals = [float(user_tag_click_map.get(tag_id, 0)) / float(user_total_click) for tag_id in item_tags]
+        user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals)) if ctr_vals else defaults["user_static_tag_ctr"]
 
         source = str(row.get("source") or "")
         raw = {
             "recall_score": float(row.get("recall_score") or 0.0),
-            "movie_rating_avg": float(mf.get("rating_avg") or 0.0),
-            "movie_rating_count": float(mf.get("rating_count") or 0.0),
-            "movie_year": float(mf.get("year") or 0.0),
-            "movie_duration_min": float(mf.get("duration_min") or 0.0),
+            "movie_rating_avg": safe_float(mf.get("rating_avg"), defaults["movie_rating_avg"]),
+            "movie_rating_count": safe_float(mf.get("rating_count"), defaults["movie_rating_count"]),
+            "movie_comment_count": safe_float(mf.get("comment_count"), defaults["movie_comment_count"]),
+            "movie_click_count": safe_float(mf.get("click_count"), defaults["movie_click_count"]),
+            "movie_click_1h": safe_float(mf.get("click_1h"), defaults["movie_click_1h"]),
+            "movie_click_24h": safe_float(mf.get("click_24h"), defaults["movie_click_24h"]),
+            "movie_year": safe_float(mf.get("year"), defaults["movie_year"]),
+            "movie_duration_min": safe_float(mf.get("duration_min"), defaults["movie_duration_min"]),
+            "user_static_tag_ctr": safe_float(user_static_tag_ctr, defaults["user_static_tag_ctr"]),
             "src_user_collection": 1.0 if source == "user_collection" else 0.0,
             "src_user_high_rating_similar": 1.0 if source == "user_high_rating_similar" else 0.0,
-            "src_user_interest_tag": 1.0 if source == "user_interest_tag" else 0.0,
+            "src_user_interest_tag": 1.0 if source in {"user_interest_tag", "recent_interaction"} else 0.0,
             "src_item_similar_by_tags": 1.0 if source == "item_similar_by_tags" else 0.0,
             "src_two_tower": 1.0 if source == "two_tower" else 0.0,
         }
@@ -719,6 +1216,42 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         )
         user_values.append(uid)
         item_values.append(mid)
+        gender_values.append(user_gender)
+        age_bucket_values.append(user_age_bucket)
+        item_tag_raw_rows.append(pad_or_truncate(item_tags, size=ITEM_TAG_SEQ_LEN))
+        short_hist_raw_rows.append(pad_or_truncate(short_hist_items, size=SHORT_INTEREST_SEQ_LEN))
+
+        # Missing sequence is represented by PAD and masked in model pooling.
+        if not long_interest_tags:
+            padded_long_interest_cnt += 1
+        long_interest_tag_raw_rows.append(pad_or_truncate(long_interest_tags, size=LONG_INTEREST_TAG_SEQ_LEN))
+
+    if missing_movie_stats_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.missing_movie_stats",
+            missing=missing_movie_stats_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if padded_long_interest_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.long_interest_padded",
+            padded=padded_long_interest_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+
+    _log_event(
+        "info",
+        "train.mmoe.sample_features_built",
+        rows=len(rows),
+        short_hist_covered=int(sum(1 for seq in short_hist_raw_rows if any(int(x) > 0 for x in seq))),
+        stage="feature_build",
+        tags_vocab=len(all_tag_ids),
+        users_with_profile=len(user_profile_by_id),
+    )
 
     total_rows = len(labels)
     if total_rows <= 1:
@@ -734,6 +1267,26 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     pos_collect = sum(int(v[1] > 0.5) for v in labels)
     pos_comment = sum(int(v[2] > 0.5) for v in labels)
     pos_rating = sum(int(v[3] > 0.5) for v in labels)
+    neg_click = int(total_rows - pos_click)
+    neg_collect = int(total_rows - pos_collect)
+    neg_comment = int(total_rows - pos_comment)
+    neg_rating = int(total_rows - pos_rating)
+
+    _log_event(
+        "info",
+        "train.mmoe.label_distribution",
+        click_negative=neg_click,
+        click_positive=pos_click,
+        collect_negative=neg_collect,
+        collect_positive=pos_collect,
+        comment_negative=neg_comment,
+        comment_positive=pos_comment,
+        rating_negative=neg_rating,
+        rating_positive=pos_rating,
+        rows=total_rows,
+        stage="dataset",
+    )
+
     if min(pos_click, pos_collect, pos_comment, pos_rating) == 0:
         return TrainOutcome(
             component="ranking",
@@ -744,9 +1297,13 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
                 "skipped": True,
                 "reason": "insufficient_task_positive_samples",
                 "click_positive": int(pos_click),
+                "click_negative": int(neg_click),
                 "collect_positive": int(pos_collect),
+                "collect_negative": int(neg_collect),
                 "comment_positive": int(pos_comment),
+                "comment_negative": int(neg_comment),
                 "rating_positive": int(pos_rating),
+                "rating_negative": int(neg_rating),
             },
         )
 
@@ -754,6 +1311,23 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     item_vocab = sorted(set(item_values))
     user_index = {uid: i + 1 for i, uid in enumerate(user_vocab)}
     item_index = {mid: i + 1 for i, mid in enumerate(item_vocab)}
+    tag_vocab = sorted(all_tag_ids)
+    tag_index = {tag_id: i + 2 for i, tag_id in enumerate(tag_vocab)}
+    gender_index = default_gender_index()
+    age_bucket_index = default_age_bucket_index()
+
+    item_tag_rows = [
+        [int(tag_index.get(tag_id, 1)) if int(tag_id) > 0 else 0 for tag_id in row]
+        for row in item_tag_raw_rows
+    ]
+    short_hist_rows = [
+        [int(item_index.get(mid, 1)) if int(mid) > 0 else 0 for mid in row]
+        for row in short_hist_raw_rows
+    ]
+    long_interest_tag_rows = [
+        [int(tag_index.get(tag_id, 1)) if int(tag_id) > 0 else 0 for tag_id in row]
+        for row in long_interest_tag_raw_rows
+    ]
 
     feature_stats: Dict[str, Dict[str, float]] = {}
     for col_i, name in enumerate(feature_names):
@@ -778,6 +1352,8 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
 
     user_idx = [int(user_index.get(uid, 0)) for uid in user_values]
     item_idx = [int(item_index.get(mid, 0)) for mid in item_values]
+    gender_idx = [int(gender_index.get(g, gender_index["unknown"])) for g in gender_values]
+    age_bucket_idx = [int(age_bucket_index.get(a, age_bucket_index["unknown"])) for a in age_bucket_values]
 
     split_idx = _simple_train_test_split_indices(len(labels), train_ratio=0.8)
     if split_idx is None:
@@ -789,10 +1365,23 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             details={"skipped": True, "reason": "insufficient_data_for_train_test_split"},
         )
     train_idx, test_idx = split_idx
+    _log_event(
+        "info",
+        "train.mmoe.split_done",
+        feature_count=len(feature_names),
+        stage="split",
+        test_rows=len(test_idx),
+        train_rows=len(train_idx),
+    )
 
     user_tensor = torch.tensor(user_idx, dtype=torch.long)
     item_tensor = torch.tensor(item_idx, dtype=torch.long)
     numeric_tensor = torch.tensor(x_numeric, dtype=torch.float32)
+    gender_tensor = torch.tensor(gender_idx, dtype=torch.long)
+    age_bucket_tensor = torch.tensor(age_bucket_idx, dtype=torch.long)
+    item_tag_tensor = torch.tensor(item_tag_rows, dtype=torch.long)
+    short_hist_tensor = torch.tensor(short_hist_rows, dtype=torch.long)
+    long_interest_tag_tensor = torch.tensor(long_interest_tag_rows, dtype=torch.long)
     label_tensor = torch.tensor(labels, dtype=torch.float32)
 
     model = MMoENet(
@@ -803,37 +1392,143 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         num_experts=int(settings.mmoe_num_experts),
         expert_hidden_dim=int(settings.mmoe_expert_hidden_dim),
         tower_hidden_dim=int(settings.mmoe_tower_hidden_dim),
+        gender_vocab_size=max(gender_index.values()) + 1,
+        age_bucket_vocab_size=max(age_bucket_index.values()) + 1,
+        tag_vocab_size=max(tag_index.values(), default=1) + 1,
+        use_item_tag_pooling=True,
+        use_target_attention=True,
+        use_long_interest_pooling=True,
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=float(settings.mmoe_train_lr))
     bce = nn.BCELoss()
 
     epochs = max(int(settings.mmoe_train_epochs), 1)
     batch_size = max(int(settings.mmoe_train_batch_size), 16)
+    in_batch_neg_ratio = max(int(settings.mmoe_in_batch_neg_ratio), 0)
+    w_click = max(float(settings.mmoe_loss_weight_click), 0.0)
+    w_collect = max(float(settings.mmoe_loss_weight_collect), 0.0)
+    w_rate = max(float(settings.mmoe_loss_weight_rate), 0.0)
+    w_comment = max(float(settings.mmoe_loss_weight_comment), 0.0)
     n = len(train_idx)
     train_idx_tensor = torch.tensor(train_idx, dtype=torch.long)
     test_idx_tensor = torch.tensor(test_idx, dtype=torch.long)
+    _log_event(
+        "info",
+        "train.mmoe.neg_sampling_config",
+        in_batch_neg_ratio=in_batch_neg_ratio,
+        loss_weight_click=w_click,
+        loss_weight_collect=w_collect,
+        loss_weight_comment=w_comment,
+        loss_weight_rate=w_rate,
+        stage="fit",
+    )
 
     model.train()
-    for _ in range(epochs):
+    for epoch_idx in range(epochs):
+        epoch_loss_sum = 0.0
+        epoch_steps = 0
+        epoch_click_neg_samples = 0
+        epoch_collect_neg_samples = 0
+        epoch_comment_neg_samples = 0
+        epoch_rating_neg_samples = 0
         order = train_idx_tensor[torch.randperm(n)]
         for start in range(0, n, batch_size):
             idx = order[start : start + batch_size]
-            pred = model(user_tensor[idx], item_tensor[idx], numeric_tensor[idx])
+            pred = model(
+                user_tensor[idx],
+                item_tensor[idx],
+                numeric_tensor[idx],
+                gender_idx=gender_tensor[idx],
+                age_bucket_idx=age_bucket_tensor[idx],
+                item_tag_ids=item_tag_tensor[idx],
+                short_hist_item_ids=short_hist_tensor[idx],
+                long_interest_tag_ids=long_interest_tag_tensor[idx],
+            )
+
+            click_pos_loss = bce(pred["click"], label_tensor[idx, 0])
+            click_neg_loss = torch.tensor(0.0, dtype=click_pos_loss.dtype)
+            collect_neg_loss = torch.tensor(0.0, dtype=click_pos_loss.dtype)
+            comment_neg_loss = torch.tensor(0.0, dtype=click_pos_loss.dtype)
+            rating_neg_loss = torch.tensor(0.0, dtype=click_pos_loss.dtype)
+
+            # In-batch negative sampling for all tasks:
+            # keep user-side features, but roll item-side features within the same batch.
+            if idx.shape[0] > 1 and in_batch_neg_ratio > 0:
+                for neg_round in range(in_batch_neg_ratio):
+                    neg_src = idx.roll(shifts=neg_round + 1)
+                    neg_pred = model(
+                        user_tensor[idx],
+                        item_tensor[neg_src],
+                        numeric_tensor[neg_src],
+                        gender_idx=gender_tensor[idx],
+                        age_bucket_idx=age_bucket_tensor[idx],
+                        item_tag_ids=item_tag_tensor[neg_src],
+                        short_hist_item_ids=short_hist_tensor[idx],
+                        long_interest_tag_ids=long_interest_tag_tensor[idx],
+                    )
+                    click_neg_target = torch.zeros_like(neg_pred["click"])
+                    click_neg_loss = click_neg_loss + bce(neg_pred["click"], click_neg_target)
+                    collect_neg_target = torch.zeros_like(neg_pred["collect"])
+                    collect_neg_loss = collect_neg_loss + bce(neg_pred["collect"], collect_neg_target)
+                    comment_neg_target = torch.zeros_like(neg_pred["comment"])
+                    comment_neg_loss = comment_neg_loss + bce(neg_pred["comment"], comment_neg_target)
+                    rating_neg_target = torch.zeros_like(neg_pred["rating"])
+                    rating_neg_loss = rating_neg_loss + bce(neg_pred["rating"], rating_neg_target)
+                    epoch_click_neg_samples += int(click_neg_target.shape[0])
+                    epoch_collect_neg_samples += int(collect_neg_target.shape[0])
+                    epoch_comment_neg_samples += int(comment_neg_target.shape[0])
+                    epoch_rating_neg_samples += int(rating_neg_target.shape[0])
+
+                ratio_den = float(in_batch_neg_ratio)
+                click_neg_loss = click_neg_loss / ratio_den
+                collect_neg_loss = collect_neg_loss / ratio_den
+                comment_neg_loss = comment_neg_loss / ratio_den
+                rating_neg_loss = rating_neg_loss / ratio_den
+
+            collect_pos_loss = bce(pred["collect"], label_tensor[idx, 1])
+            comment_pos_loss = bce(pred["comment"], label_tensor[idx, 2])
+            rating_pos_loss = bce(pred["rating"], label_tensor[idx, 3])
 
             loss = (
-                bce(pred["click"], label_tensor[idx, 0])
-                + bce(pred["collect"], label_tensor[idx, 1])
-                + bce(pred["comment"], label_tensor[idx, 2])
-                + bce(pred["rating"], label_tensor[idx, 3])
+                w_click * (click_pos_loss + click_neg_loss)
+                + w_collect * (collect_pos_loss + collect_neg_loss)
+                + w_comment * (comment_pos_loss + comment_neg_loss)
+                + w_rate * (rating_pos_loss + rating_neg_loss)
             )
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            epoch_loss_sum += float(loss.item())
+            epoch_steps += 1
+
+        avg_loss = (epoch_loss_sum / max(epoch_steps, 1))
+        _log_event(
+            "info",
+            "train.mmoe.epoch_done",
+            avg_loss=f"{avg_loss:.6f}",
+            epoch=epoch_idx + 1,
+            epochs=epochs,
+            in_batch_click_negatives=epoch_click_neg_samples,
+            in_batch_collect_negatives=epoch_collect_neg_samples,
+            in_batch_comment_negatives=epoch_comment_neg_samples,
+            in_batch_rating_negatives=epoch_rating_neg_samples,
+            stage="fit",
+            step_count=epoch_steps,
+        )
 
     model.eval()
     with torch.no_grad():
-        test_pred = model(user_tensor[test_idx_tensor], item_tensor[test_idx_tensor], numeric_tensor[test_idx_tensor])
+        test_pred = model(
+            user_tensor[test_idx_tensor],
+            item_tensor[test_idx_tensor],
+            numeric_tensor[test_idx_tensor],
+            gender_idx=gender_tensor[test_idx_tensor],
+            age_bucket_idx=age_bucket_tensor[test_idx_tensor],
+            item_tag_ids=item_tag_tensor[test_idx_tensor],
+            short_hist_item_ids=short_hist_tensor[test_idx_tensor],
+            long_interest_tag_ids=long_interest_tag_tensor[test_idx_tensor],
+        )
 
     y_test = label_tensor[test_idx_tensor].cpu().numpy()
     auc_click = _binary_auc(y_test[:, 0].tolist(), test_pred["click"].cpu().numpy().tolist())
@@ -842,6 +1537,16 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     auc_rating = _binary_auc(y_test[:, 3].tolist(), test_pred["rating"].cpu().numpy().tolist())
     auc_values = [x for x in [auc_click, auc_collect, auc_comment, auc_rating] if x is not None]
     auc_mean = float(sum(auc_values) / len(auc_values)) if auc_values else None
+    _log_event(
+        "info",
+        "train.mmoe.eval_done",
+        auc_click=auc_click,
+        auc_collect=auc_collect,
+        auc_comment=auc_comment,
+        auc_mean=auc_mean,
+        auc_rating=auc_rating,
+        stage="evaluate",
+    )
 
     bundle = {
         "state_dict": model.state_dict(),
@@ -853,17 +1558,29 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             "num_experts": int(settings.mmoe_num_experts),
             "expert_hidden_dim": int(settings.mmoe_expert_hidden_dim),
             "tower_hidden_dim": int(settings.mmoe_tower_hidden_dim),
+            "gender_vocab_size": max(gender_index.values()) + 1,
+            "age_bucket_vocab_size": max(age_bucket_index.values()) + 1,
+            "tag_vocab_size": max(tag_index.values(), default=1) + 1,
+            "use_item_tag_pooling": True,
+            "use_target_attention": True,
+            "use_long_interest_pooling": True,
         },
         "tasks": ["click", "collect", "comment", "rating"],
         "feature_order": feature_names,
         "feature_stats": feature_stats,
         "user_index": user_index,
         "item_index": item_index,
+        "gender_index": gender_index,
+        "age_bucket_index": age_bucket_index,
+        "tag_index": tag_index,
     }
     torch.save(bundle, artifact_path)
+    _log_event("info", "train.mmoe.model_saved", artifact_path=artifact_path, stage="finalize")
 
     store.set("ranking.mmoe.latest_artifact_path", artifact_path)
     store.set("ranking.mmoe.latest_trained_at", ts)
+    elapsed_ms = int((time.time() - started_at) * 1000)
+    _log_event("info", "train.mmoe.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
     return TrainOutcome(
         component="ranking",
@@ -873,9 +1590,13 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         details={
             "rows": int(total_rows),
             "click_positive": int(pos_click),
+            "click_negative": int(neg_click),
             "collect_positive": int(pos_collect),
+            "collect_negative": int(neg_collect),
             "comment_positive": int(pos_comment),
+            "comment_negative": int(neg_comment),
             "rating_positive": int(pos_rating),
+            "rating_negative": int(neg_rating),
             "feature_count": int(len(feature_names)),
             "epochs": int(epochs),
             "batch_size": int(batch_size),
@@ -896,6 +1617,7 @@ def _two_tower_active_index_path(settings: Settings) -> str:
 
 def _train_two_tower_index(settings: Settings) -> TrainOutcome:
     store = get_artifact_store()
+    started_at = time.time()
 
     ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     out_dir = os.path.join("data", "artifacts", "two_tower")
@@ -903,6 +1625,14 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
     artifact_model_path = os.path.join(out_dir, f"two_tower_{ts}.pt")
     artifact_index_path = os.path.join(out_dir, f"two_tower_{ts}.hnsw")
     artifact_vector_db_path = os.path.join(out_dir, f"two_tower_{ts}.db")
+    _log_event(
+        "info",
+        "train.two_tower.start",
+        index_path=artifact_index_path,
+        model_path=artifact_model_path,
+        stage="prepare",
+        vector_db_path=artifact_vector_db_path,
+    )
 
     try:
         from app.reco.recall.two_tower import (
@@ -921,17 +1651,30 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
         )
 
     cfg = load_config_from_settings(settings)
+    _log_event(
+        "info",
+        "train.two_tower.config_loaded",
+        dim=cfg.dim,
+        recall_topk=cfg.recall_topk,
+        stage="prepare",
+        train_batch_size=cfg.train_batch_size,
+        train_epochs=cfg.train_epochs,
+    )
 
     try:
         model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.mysql_dsn)
+        _log_event("info", "train.two_tower.fit_done", metrics=train_metrics, stage="fit")
         save_model_weights(model, artifact_model_path)
+        _log_event("info", "train.two_tower.model_saved", model_path=artifact_model_path, stage="finalize")
         count = materialize_item_vectors_from_model(
             cfg=cfg,
             model_path=artifact_model_path,
             vector_db_path=artifact_vector_db_path,
             index_path=artifact_index_path,
         )
+        _log_event("info", "train.two_tower.index_done", items_indexed=int(count), stage="finalize")
     except Exception as e:  # noqa: BLE001
+        _log_exception("train.two_tower.failed", e, stage="fit", status="failed")
         return TrainOutcome(
             component="recall",
             name="two_tower",
@@ -944,6 +1687,8 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
     store.set("recall.two_tower.latest_index_artifact_path", artifact_index_path)
     store.set("recall.two_tower.latest_vector_db_artifact_path", artifact_vector_db_path)
     store.set("recall.two_tower.latest_trained_at", ts)
+    elapsed_ms = int((time.time() - started_at) * 1000)
+    _log_event("info", "train.two_tower.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
     return TrainOutcome(
         component="recall",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from typing import Iterator
 
@@ -12,6 +13,7 @@ from app.reco.rag_service import get_movie_rag_service
 
 
 rag_bp = Blueprint("rag", __name__)
+logger = logging.getLogger(__name__)
 
 
 def _sse(event: str, payload: dict) -> str:
@@ -49,6 +51,7 @@ def recommend_rag_stream():
     query = as_str(payload.get("query"), name="query").strip()
     n = as_int(payload.get("n", 8), name="n")
     rebuild_index = _as_bool(payload.get("rebuild_index", False), default=False)
+    logger.info("收到RAG流式推荐请求，query_len=%s, n=%s, rebuild_index=%s", len(query), n, rebuild_index)
 
     if not query:
         raise ValueError("query cannot be empty")
@@ -73,6 +76,7 @@ def recommend_rag_stream():
             yield _sse("movie", {"index": count, "item": item.to_dict()})
 
         elapsed_ms = int((time.time() - started_at) * 1000)
+        logger.info("RAG流式推荐完成，输出条数=%s, 耗时=%sms", count, elapsed_ms)
         yield _sse("done", {"count": count, "elapsed_ms": elapsed_ms})
 
     response = Response(_generate(), mimetype="text/event-stream")

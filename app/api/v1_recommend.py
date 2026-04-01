@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
 
 from flask import Blueprint, request
 from sqlalchemy import Engine, create_engine, text
@@ -14,6 +15,7 @@ from app.reco.recall.two_tower import ann_search, build_item_vector, load_config
 from app.reco.types import RequestContext
 
 recommend_bp = Blueprint("recommend", __name__)
+logger = logging.getLogger(__name__)
 
 _engine_by_dsn: dict[str, Engine] = {}
 
@@ -50,6 +52,7 @@ def _window_start(window: str) -> datetime | None:
 def _fetch_trending_items(mysql_dsn: str | None, *, window: str, n: int) -> list[int]:
   engine = _get_engine(mysql_dsn)
   if engine is None:
+    logger.warning("趋势推荐查询失败：MySQL 引擎不可用")
     return []
 
   sql = """
@@ -89,6 +92,7 @@ def _fetch_trending_items(mysql_dsn: str | None, *, window: str, n: int) -> list
           continue
       return out
   except SQLAlchemyError:
+    logger.exception("趋势推荐查询异常，window=%s, n=%s", window, n)
     return []
 
 
@@ -108,12 +112,14 @@ def recommend_user():
 
     user_id = as_int(user_id_raw, name="user_id")
     n = as_int(request.args.get("n", 10), name="n")
+    logger.info("收到个性化推荐请求，user_id=%s, n=%s", user_id, n)
 
     # 召回/排序/重排：由 pipeline 统一编排。
     settings = Settings.from_config()
     pipeline = build_pipeline(settings)
     ctx = RequestContext(user_id=user_id, n=n)
     items = pipeline.recommend(ctx)
+    logger.info("个性化推荐完成，user_id=%s, 返回条数=%s", user_id, len(items))
 
     data = {"user_id": user_id, "items": items, "n": n}
     return ok(data)
@@ -135,12 +141,14 @@ def recommend_item():
 
     movie_id = as_int(movie_id_raw, name="movie_id")
     n = as_int(request.args.get("n", 8), name="n")
+    logger.info("收到相似影片推荐请求，movie_id=%s, n=%s", movie_id, n)
 
     settings = Settings.from_config()
 
     cfg = load_config_from_settings(settings)
     item_vec = build_item_vector(movie_id, cfg, None, mysql_dsn=settings.mysql_dsn)
     if item_vec is None:
+      logger.warning("相似影片推荐失败：未找到物品向量，movie_id=%s", movie_id)
       return fail(message="Item vector not found for movie_id: {}".format(movie_id))
 
     pairs = ann_search(item_vec, k=max(n + 1, n), cfg=cfg)
@@ -154,6 +162,7 @@ def recommend_item():
         break
 
     data = {"source_id": movie_id, "items": items, "n": n}
+    logger.info("相似影片推荐完成，movie_id=%s, 返回条数=%s", movie_id, len(items))
     return ok(data)
 
 
@@ -171,10 +180,12 @@ def recommend_trending():
     n = as_int(request.args.get("n", 10), name="n")
 
     if window not in {"daily", "weekly", "monthly", "all_time"}:
+      logger.warning("趋势推荐请求参数非法，window=%s", window)
       return fail(message="invalid 'window'")
 
     settings = Settings.from_config()
     items = _fetch_trending_items(settings.mysql_dsn, window=window, n=n)
+    logger.info("趋势推荐完成，window=%s, n=%s, 返回条数=%s", window, n, len(items))
 
     data = {
         "window": window,

@@ -44,6 +44,18 @@ class Settings:
     mmoe_num_experts: int = 4
     mmoe_expert_hidden_dim: int = 64
     mmoe_tower_hidden_dim: int = 32
+    mmoe_in_batch_neg_ratio: int = 1
+    mmoe_click_neg_user_pool: int = 2000
+    mmoe_click_neg_movie_pool: int = 5000
+    mmoe_click_parquet_path: str = "data/offline/clicks.parquet"
+    mmoe_collect_parquet_path: str = "data/offline/collects.parquet"
+    mmoe_rate_parquet_path: str = "data/offline/rates.parquet"
+    mmoe_comment_parquet_path: str = "data/offline/comments.parquet"
+    mmoe_global_neg_ratio: int = 4
+    mmoe_loss_weight_click: float = 1.0
+    mmoe_loss_weight_collect: float = 5.0
+    mmoe_loss_weight_rate: float = 10.0
+    mmoe_loss_weight_comment: float = 20.0
 
     # Two-tower
     two_tower_index_path: str = "data/two_tower_items.hnsw"
@@ -120,6 +132,22 @@ class Settings:
             mmoe_num_experts=config.get_int("MMOE_NUM_EXPERTS", 4),
             mmoe_expert_hidden_dim=config.get_int("MMOE_EXPERT_HIDDEN_DIM", 64),
             mmoe_tower_hidden_dim=config.get_int("MMOE_TOWER_HIDDEN_DIM", 32),
+            mmoe_in_batch_neg_ratio=config.get_int("MMOE_IN_BATCH_NEG_RATIO", 1),
+            mmoe_click_neg_user_pool=config.get_int("MMOE_CLICK_NEG_USER_POOL", 2000),
+            mmoe_click_neg_movie_pool=config.get_int("MMOE_CLICK_NEG_MOVIE_POOL", 5000),
+            mmoe_click_parquet_path=config.get_str("MMOE_CLICK_PARQUET_PATH", "data/offline/clicks.parquet")
+            or "data/offline/clicks.parquet",
+            mmoe_collect_parquet_path=config.get_str("MMOE_COLLECT_PARQUET_PATH", "data/offline/collects.parquet")
+            or "data/offline/collects.parquet",
+            mmoe_rate_parquet_path=config.get_str("MMOE_RATE_PARQUET_PATH", "data/offline/rates.parquet")
+            or "data/offline/rates.parquet",
+            mmoe_comment_parquet_path=config.get_str("MMOE_COMMENT_PARQUET_PATH", "data/offline/comments.parquet")
+            or "data/offline/comments.parquet",
+            mmoe_global_neg_ratio=config.get_int("MMOE_GLOBAL_NEG_RATIO", 4),
+            mmoe_loss_weight_click=config.get_float("MMOE_LOSS_WEIGHT_CLICK", 1.0),
+            mmoe_loss_weight_collect=config.get_float("MMOE_LOSS_WEIGHT_COLLECT", 5.0),
+            mmoe_loss_weight_rate=config.get_float("MMOE_LOSS_WEIGHT_RATE", 10.0),
+            mmoe_loss_weight_comment=config.get_float("MMOE_LOSS_WEIGHT_COMMENT", 20.0),
 
             two_tower_index_path=config.get_str("TWO_TOWER_INDEX_PATH", "data/two_tower_items.hnsw")
             or "data/two_tower_items.hnsw",

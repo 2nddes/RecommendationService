@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import logging
 import secrets
 from typing import Any, Dict, List
 
@@ -16,6 +17,7 @@ from app.ops.model_ops import (
 from app.ops.tasks import get_task_manager
 
 
+logger = logging.getLogger(__name__)
 _train_task_job_map: dict[str, int] = {}
 
 
@@ -33,27 +35,31 @@ def start_train_task(
 ) -> Dict[str, Any]:
     tm = get_task_manager()
     task_id = new_task_id("train")
-    train_job_id = create_model_train_job(mysql_dsn=settings.mysql_dsn, mode="full")
-    _train_task_job_map[task_id] = int(train_job_id)
+    logger.info("开始创建训练任务，task_id=%s, component=%s, model=%s", task_id, component, model)
 
     def _fn() -> Dict[str, Any]:
+        train_job_id: int | None = None
+        try:
+            train_job_id = create_model_train_job(mysql_dsn=settings.mysql_dsn, mode="full")
+            _train_task_job_map[task_id] = int(train_job_id)
+            logger.info("训练任务已创建数据库记录，task_id=%s, train_job_id=%s", task_id, train_job_id)
+        except Exception as e:  # noqa: BLE001
+            # Do not block or fail the whole training flow when DB side bookkeeping is unavailable.
+            logger.warning(
+                "创建数据库训练记录失败，继续执行内存任务，task_id=%s, error=%s: %s",
+                task_id,
+                type(e).__name__,
+                e,
+            )
         return train_current_models(settings, component=component, model=model, train_job_id=train_job_id)
 
     try:
         task = tm.start(task_id=task_id, name=f"train:{component}.{model}", fn=_fn)
     except Exception as e:
-        update_err = f"{type(e).__name__}: {e}"
-        from app.ops.model_ops import update_model_train_job
-
-        update_model_train_job(
-            mysql_dsn=settings.mysql_dsn,
-            job_id=int(train_job_id),
-            status="failed",
-            metrics={"error": update_err, "component": component, "model": model},
-            set_finished_at=True,
-        )
+        logger.exception("训练任务启动失败，task_id=%s", task_id)
         raise
-    return {"task_id": task.id, "train_job_id": int(train_job_id)}
+    logger.info("训练任务启动成功，task_id=%s", task.id)
+    return {"task_id": task.id, "train_job_id": None}
 
 
 def _map_model_train_job_status(status: str | None) -> str:

@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+import logging
 import threading
 import traceback
 from typing import Any, Callable, Dict, Optional
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -41,6 +45,7 @@ class TaskManager:
         with self._lock:
             t = Task(id=task_id, name=name, status="pending", created_at=_now_iso())
             self._tasks[task_id] = t
+            logger.info("创建后台任务，task_id=%s, name=%s", task_id, name)
             return t
 
     def get(self, task_id: str) -> Task | None:
@@ -53,11 +58,13 @@ class TaskManager:
 
     def start(self, *, task_id: str, name: str, fn: TaskFn) -> Task:
         t = self.create(task_id=task_id, name=name)
+        logger.info("准备启动后台任务，task_id=%s, name=%s", task_id, name)
 
         def _runner() -> None:
             with self._lock:
                 t.status = "running"
                 t.started_at = _now_iso()
+            logger.info("后台任务开始执行，task_id=%s", task_id)
 
             try:
                 result = fn() or {}
@@ -65,6 +72,7 @@ class TaskManager:
                     t.result = dict(result)
                     t.status = "succeeded"
                     t.finished_at = _now_iso()
+                logger.info("后台任务执行成功，task_id=%s", task_id)
             except Exception as e:  # noqa: BLE001
                 err = f"{type(e).__name__}: {e}"
                 tb = traceback.format_exc(limit=50)
@@ -72,6 +80,7 @@ class TaskManager:
                     t.status = "failed"
                     t.error = err + "\n" + tb
                     t.finished_at = _now_iso()
+                logger.exception("后台任务执行失败，task_id=%s, 错误=%s", task_id, err)
 
         th = threading.Thread(target=_runner, name=f"task:{task_id}", daemon=True)
         th.start()

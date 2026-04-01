@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from flask import Blueprint, request
 
 from app.common.responses import ok, fail
@@ -9,6 +11,7 @@ from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_t
 from app.ops.model_ops import refresh_current_models
 
 admin_bp = Blueprint("admin", __name__)
+logger = logging.getLogger(__name__)
 
 
 @admin_bp.post("/admin/train")
@@ -28,6 +31,7 @@ def admin_train():
 
     component = as_str(component, name="component")
     model = as_str(model, name="model")
+    logger.info("收到训练任务请求，component=%s, model=%s", component, model)
 
     settings = Settings.from_config()
     try:
@@ -37,8 +41,10 @@ def admin_train():
             model=model,
         )
     except Exception as e:  # noqa: BLE001
+        logger.exception("创建训练任务失败，component=%s, model=%s", component, model)
         return fail(message=f"Failed to start training task: {type(e).__name__}: {e}")
     data["estimated_time"] = "unknown"
+    logger.info("训练任务已提交，task_id=%s", data.get("task_id"))
     return ok(data, message="Training task started")
 
 
@@ -50,9 +56,12 @@ def admin_refresh():
     """
 
     settings = Settings.from_config()
+    logger.info("收到模型刷新请求")
     data = refresh_current_models(settings)
     if str(data.get("status")) == "completed":
+        logger.info("模型刷新完成")
         return ok(data, message="Refresh completed")
+    logger.warning("模型刷新失败，reason=%s", data.get("reason"))
     return fail(message=str(data.get("reason") or "refresh_failed"), data=data)
 
 
