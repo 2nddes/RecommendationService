@@ -160,38 +160,14 @@ def train_current_models(
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    if settings.ranking_method is None:
-        err = RuntimeError("ranking_method_undefined")
-        _log_exception("refresh.current_models.config_missing", err, key="ranking_method")
-        raise err
-    if settings.recall_channels is None:
-        err = RuntimeError("recall_channels_undefined")
-        _log_exception("refresh.current_models.config_missing", err, key="recall_channels")
-        raise err
-    ranking_method = str(settings.ranking_method).strip().lower()
-    recall_channels = [str(ch).strip().lower() for ch in settings.recall_channels]
-
     try:
-        if ranking_method == "xgb":
-            from app.reco.ranking.xgb_ranker import load_latest_local_model as load_latest_xgb_local_model
+        from app.reco.ranking.mmoe_ranker import load_latest_local_model as load_latest_mmoe_local_model
+        from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
 
-            model_path = load_latest_xgb_local_model(settings)
-            if not model_path:
-                return {"status": "failed", "reason": "xgb_model_not_found"}
-
-        if ranking_method == "mmoe":
-            from app.reco.ranking.mmoe_ranker import load_latest_local_model as load_latest_mmoe_local_model
-
-            model_path = load_latest_mmoe_local_model(settings)
-            if not model_path:
-                return {"status": "failed", "reason": "mmoe_model_not_found"}
-
-        if "two_tower" in recall_channels:
-            from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
-
-            model_path = load_latest_two_tower_local_model(settings)
-            if not model_path:
-                return {"status": "failed", "reason": "two_tower_model_not_found"}
+        if not load_latest_mmoe_local_model(settings):
+            return {"status": "failed", "reason": "mmoe_model_not_found"}
+        if not load_latest_two_tower_local_model(settings):
+            return {"status": "failed", "reason": "two_tower_model_not_found"}
 
         return {"status": "completed", "reason": None}
     except Exception as e:  # noqa: BLE001
@@ -1154,6 +1130,12 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         raise err
 
     padded_long_interest_cnt = 0
+    padded_short_hist_cnt = 0
+    missing_long_interest_user_cnt = 0
+    missing_user_static_tag_click_map_cnt = 0
+    non_positive_user_total_click_cnt = 0
+    zero_user_static_tag_ctr_cnt = 0
+    missing_item_static_tags_cnt = 0
     for row in rows:
         uid = int(row["user_id"])
         mid = int(row["movie_id"])
@@ -1163,10 +1145,8 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             raise err
         mf = movie_stats_by_id[mid]
         if mid not in item_static_tags_by_movie:
-            err = RuntimeError("item_static_tags_missing")
-            _log_exception("train.mmoe.item_tags_missing", err, item_id=mid, stage="feature_build")
-            raise err
-        item_tags = [int(x) for x in item_static_tags_by_movie[mid] if int(x) > 0]
+            missing_item_static_tags_cnt += 1
+        item_tags = [int(x) for x in item_static_tags_by_movie.get(mid, []) if int(x) > 0]
         all_tag_ids.update(item_tags)
 
         if uid not in user_profile_by_id:
@@ -1187,33 +1167,31 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         user_age_bucket = bucketize_age(user_age)
 
         if uid not in short_hist_by_user:
-            err = RuntimeError("short_hist_missing")
-            _log_exception("train.mmoe.short_hist_missing", err, user_id=uid, stage="feature_build")
-            raise err
+            padded_short_hist_cnt += 1
         if uid not in long_interest_tags_by_user:
-            err = RuntimeError("long_interest_tags_missing")
-            _log_exception("train.mmoe.long_interest_tags_missing", err, user_id=uid, stage="feature_build")
-            raise err
-        short_hist_items = [int(x) for x in short_hist_by_user[uid] if int(x) > 0]
-        long_interest_tags = [int(x) for x in long_interest_tags_by_user[uid] if int(x) > 0]
+            missing_long_interest_user_cnt += 1
+        short_hist_items = [int(x) for x in short_hist_by_user.get(uid, []) if int(x) > 0]
+        long_interest_tags = [int(x) for x in long_interest_tags_by_user.get(uid, []) if int(x) > 0]
         all_tag_ids.update(long_interest_tags)
 
         if uid not in user_clicked_static_tag_count_by_user:
-            err = RuntimeError("user_static_tag_click_map_missing")
-            _log_exception("train.mmoe.user_static_tag_click_map_missing", err, user_id=uid, stage="feature_build")
-            raise err
-        user_tag_click_map = user_clicked_static_tag_count_by_user[uid]
-        user_total_click = int(user_total_click_by_user[uid])
+            missing_user_static_tag_click_map_cnt += 1
+        user_tag_click_map = user_clicked_static_tag_count_by_user.get(uid, {})
+        user_total_click = int(user_total_click_by_user.get(uid, 0))
         if user_total_click <= 0:
-            err = RuntimeError("user_total_click_non_positive")
-            _log_exception("train.mmoe.user_total_click_invalid", err, user_id=uid, stage="feature_build")
-            raise err
-        ctr_vals = [float(user_tag_click_map[tag_id]) / float(user_total_click) for tag_id in item_tags if tag_id in user_tag_click_map]
+            non_positive_user_total_click_cnt += 1
+            ctr_vals: List[float] = []
+        else:
+            ctr_vals = [
+                float(user_tag_click_map[tag_id]) / float(user_total_click)
+                for tag_id in item_tags
+                if tag_id in user_tag_click_map
+            ]
         if not ctr_vals:
-            err = RuntimeError("user_static_tag_ctr_empty")
-            _log_exception("train.mmoe.user_static_tag_ctr_empty", err, user_id=uid, item_id=mid, stage="feature_build")
-            raise err
-        user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals))
+            zero_user_static_tag_ctr_cnt += 1
+            user_static_tag_ctr = 0.0
+        else:
+            user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals))
 
         source = str(row["source"])
         raw = {
@@ -1260,6 +1238,54 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             "warning",
             "train.mmoe.long_interest_padded",
             padded=padded_long_interest_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if padded_short_hist_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.short_hist_padded",
+            padded=padded_short_hist_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if missing_long_interest_user_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.long_interest_user_missing_summary",
+            missing_users=missing_long_interest_user_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if missing_user_static_tag_click_map_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.user_static_tag_click_map_missing_summary",
+            missing_users=missing_user_static_tag_click_map_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if non_positive_user_total_click_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.user_total_click_non_positive_summary",
+            users=non_positive_user_total_click_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if zero_user_static_tag_ctr_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.user_static_tag_ctr_zero_summary",
+            users=zero_user_static_tag_ctr_cnt,
+            stage="feature_build",
+            total=len(rows),
+        )
+    if missing_item_static_tags_cnt > 0:
+        _log_event(
+            "warning",
+            "train.mmoe.item_static_tags_missing_summary",
+            missing_items=missing_item_static_tags_cnt,
             stage="feature_build",
             total=len(rows),
         )

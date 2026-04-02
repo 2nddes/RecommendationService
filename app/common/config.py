@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 def _find_repo_root(start: Path) -> Path:
@@ -81,23 +81,3 @@ def get_bool(key: str, default: bool) -> bool:
         if s in {"0", "false", "no", "off"}:
             return False
     return default
-
-
-def get_str_list(key: str, default: List[str]) -> List[str]:
-    v = get(key, None)
-    if v is None:
-        return list(default)
-    if isinstance(v, list):
-        out: List[str] = []
-        for item in v:
-            if item is None:
-                continue
-            s = str(item).strip()
-            if s:
-                out.append(s)
-        return out
-    if isinstance(v, str):
-        # allow legacy comma-separated form
-        parts = [x.strip() for x in v.split(",")]
-        return [x for x in parts if x] or list(default)
-    return list(default)

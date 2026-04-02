@@ -254,3 +254,240 @@
 2026-04-02 10:07:17 | INFO | werkzeug |  * Debugger PIN: 165-747-606
 2026-04-02 10:07:17 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
 2026-04-02 10:07:17 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-02 10:28:23 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:28:23 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:28:23 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 10:28:23 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 10:28:23 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 10:28:23 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 10:28:23 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.77.195:5000
+2026-04-02 10:28:23 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-02 10:28:23 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 10:28:23 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 10:28:23 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 10:28:26 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:28:26 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:28:26 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 10:28:26 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 10:28:26 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 10:28:26 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 10:28:26 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 10:28:26 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 10:28:26 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 10:28:26 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 10:29:42 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-02 10:29:42 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260402_022942_d48a25, component=ranking, model=mmoe
+2026-04-02 10:29:42 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260402_022942_d48a25, name=train:ranking.mmoe
+2026-04-02 10:29:42 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260402_022942_d48a25, name=train:ranking.mmoe
+2026-04-02 10:29:42 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260402_022942_d48a25
+2026-04-02 10:29:42 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260402_022942_d48a25
+2026-04-02 10:29:42 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260402_022942_d48a25
+2026-04-02 10:29:42 | INFO | werkzeug | 127.0.0.1 - - [02/Apr/2026 10:29:42] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-02 10:29:43 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260402_022942_d48a25, train_job_id=29
+2026-04-02 10:29:43 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=29
+2026-04-02 10:29:43 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260402_022943.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 10:32:13 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=10033 | collect_positive=509 | comment_positive=0 | global_movie_pool=140518 | global_neg_ratio=4 | rate_positive=0 | rows=50000 | stage=dataset
+2026-04-02 10:32:13 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=50000 | stage=dataset | unique_items=40664 | unique_users=14256
+2026-04-02 10:37:43 | INFO | app.ops.model_ops | event=train.mmoe.aux_loaded | movie_stats=40664 | rows=50000 | stage=aux_features | user_profiles=14256
+2026-04-02 10:37:43 | ERROR | app.ops.model_ops | event=train.mmoe.long_interest_tags_missing | error=RuntimeError: long_interest_tags_missing | stage=feature_build | user_id=505657
+NoneType: None
+2026-04-02 10:37:43 | ERROR | app.ops.model_ops | event=train.task.failed | error=RuntimeError: long_interest_tags_missing | component=ranking | model=mmoe | status=failed | train_job_id=29
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 98, in train_current_models
+    outcome = _train_mmoe(settings)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 1172, in _train_mmoe
+    raise err
+RuntimeError: long_interest_tags_missing
+2026-04-02 10:37:43 | ERROR | app.ops.tasks | 后台任务执行失败，task_id=train_20260402_022942_d48a25, 错误=RuntimeError: long_interest_tags_missing
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\tasks.py", line 70, in _runner
+    result = fn() or {}
+             ~~^^
+  File "d:\project\Python\RecommendationService\app\ops\admin_service.py", line 48, in _fn
+    return train_current_models(settings, component=component, model=model, train_job_id=train_job_id)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 98, in train_current_models
+    outcome = _train_mmoe(settings)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 1172, in _train_mmoe
+    raise err
+RuntimeError: long_interest_tags_missing
+2026-04-02 19:40:47 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 19:40:47 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 19:40:47 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 19:40:47 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 19:40:47 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 19:40:47 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 19:40:47 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.77.195:5000
+2026-04-02 19:40:47 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-02 19:40:47 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 19:40:47 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 19:40:47 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 19:40:50 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 19:40:50 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 19:40:50 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 19:40:50 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 19:40:50 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 19:40:50 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 19:40:50 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 19:40:50 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 19:40:50 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 19:40:50 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 19:41:45 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-02 19:41:45 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260402_114145_01b548, component=ranking, model=mmoe
+2026-04-02 19:41:45 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260402_114145_01b548, name=train:ranking.mmoe
+2026-04-02 19:41:45 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260402_114145_01b548, name=train:ranking.mmoe
+2026-04-02 19:41:45 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260402_114145_01b548
+2026-04-02 19:41:45 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260402_114145_01b548
+2026-04-02 19:41:45 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260402_114145_01b548
+2026-04-02 19:41:45 | INFO | werkzeug | 127.0.0.1 - - [02/Apr/2026 19:41:45] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-02 19:41:46 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260402_114145_01b548, train_job_id=30
+2026-04-02 19:41:46 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=30
+2026-04-02 19:41:46 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260402_114146.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 19:45:26 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=10033 | collect_positive=509 | comment_positive=0 | global_movie_pool=140518 | global_neg_ratio=4 | rate_positive=0 | rows=50000 | stage=dataset
+2026-04-02 19:45:26 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=50000 | stage=dataset | unique_items=40664 | unique_users=14256
+2026-04-02 19:50:50 | INFO | app.ops.model_ops | event=train.mmoe.aux_loaded | movie_stats=40664 | rows=50000 | stage=aux_features | user_profiles=14256
+2026-04-02 19:50:50 | ERROR | app.ops.model_ops | event=train.mmoe.item_tags_missing | error=RuntimeError: item_static_tags_missing | item_id=26881577 | stage=feature_build
+NoneType: None
+2026-04-02 19:50:50 | ERROR | app.ops.model_ops | event=train.task.failed | error=RuntimeError: item_static_tags_missing | component=ranking | model=mmoe | status=failed | train_job_id=30
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 98, in train_current_models
+    outcome = _train_mmoe(settings)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 1149, in _train_mmoe
+    raise err
+RuntimeError: item_static_tags_missing
+2026-04-02 19:50:50 | ERROR | app.ops.tasks | 后台任务执行失败，task_id=train_20260402_114145_01b548, 错误=RuntimeError: item_static_tags_missing
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\tasks.py", line 70, in _runner
+    result = fn() or {}
+             ~~^^
+  File "d:\project\Python\RecommendationService\app\ops\admin_service.py", line 48, in _fn
+    return train_current_models(settings, component=component, model=model, train_job_id=train_job_id)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 98, in train_current_models
+    outcome = _train_mmoe(settings)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 1149, in _train_mmoe
+    raise err
+RuntimeError: item_static_tags_missing
+2026-04-02 20:26:19 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:26:19 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:26:19 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:26:19 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:26:19 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:26:19 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:26:19 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.77.195:5000
+2026-04-02 20:26:19 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-02 20:26:19 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 20:26:19 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:26:19 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:26:21 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:26:21 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:26:21 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:26:21 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:26:21 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:26:21 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:26:21 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 20:26:21 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 20:26:21 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:26:21 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:26:30 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-02 20:26:30 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260402_122630_a70aac, component=ranking, model=mmoe
+2026-04-02 20:26:30 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260402_122630_a70aac, name=train:ranking.mmoe
+2026-04-02 20:26:30 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260402_122630_a70aac, name=train:ranking.mmoe
+2026-04-02 20:26:30 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260402_122630_a70aac
+2026-04-02 20:26:30 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260402_122630_a70aac
+2026-04-02 20:26:30 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260402_122630_a70aac
+2026-04-02 20:26:30 | INFO | werkzeug | 127.0.0.1 - - [02/Apr/2026 20:26:30] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-02 20:26:31 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260402_122630_a70aac, train_job_id=31
+2026-04-02 20:26:31 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=31
+2026-04-02 20:26:31 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260402_122631.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 20:27:15 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-02 20:27:15 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260402_122715_d2e535, component=ranking, model=mmoe
+2026-04-02 20:27:15 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260402_122715_d2e535, name=train:ranking.mmoe
+2026-04-02 20:27:15 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260402_122715_d2e535, name=train:ranking.mmoe
+2026-04-02 20:27:15 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260402_122715_d2e535
+2026-04-02 20:27:15 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260402_122715_d2e535
+2026-04-02 20:27:15 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260402_122715_d2e535
+2026-04-02 20:27:15 | INFO | werkzeug | 127.0.0.1 - - [02/Apr/2026 20:27:15] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-02 20:27:16 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260402_122715_d2e535, train_job_id=32
+2026-04-02 20:27:16 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=32
+2026-04-02 20:27:16 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260402_122716.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 20:27:53 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:27:53 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:27:53 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:27:53 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:27:53 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:27:53 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:27:53 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.77.195:5000
+2026-04-02 20:27:53 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-02 20:27:53 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 20:27:53 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:27:53 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:27:55 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:27:55 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:27:55 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:27:55 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:27:55 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:27:55 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:27:55 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 20:27:55 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 20:27:55 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:27:55 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:28:10 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-02 20:28:10 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260402_122810_4b8826, component=ranking, model=mmoe
+2026-04-02 20:28:10 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260402_122810_4b8826, name=train:ranking.mmoe
+2026-04-02 20:28:10 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260402_122810_4b8826, name=train:ranking.mmoe
+2026-04-02 20:28:10 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260402_122810_4b8826
+2026-04-02 20:28:10 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260402_122810_4b8826
+2026-04-02 20:28:10 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260402_122810_4b8826
+2026-04-02 20:28:10 | INFO | werkzeug | 127.0.0.1 - - [02/Apr/2026 20:28:10] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-02 20:28:10 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260402_122810_4b8826, train_job_id=33
+2026-04-02 20:28:10 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=33
+2026-04-02 20:28:10 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260402_122810.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 20:30:36 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=10033 | collect_positive=509 | comment_positive=0 | global_movie_pool=140518 | global_neg_ratio=4 | rate_positive=0 | rows=50000 | stage=dataset
+2026-04-02 20:30:36 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=50000 | stage=dataset | unique_items=40664 | unique_users=14256
+2026-04-02 20:33:41 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\common\\settings.py', reloading
+2026-04-02 20:33:41 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 20:33:44 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:33:44 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:33:44 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:33:44 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:33:44 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:33:44 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:33:44 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 20:33:44 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 20:33:45 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:33:45 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:34:24 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\ops\\model_ops.py', reloading
+2026-04-02 20:34:24 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 20:34:27 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:34:27 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:34:28 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:34:28 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:34:28 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:34:28 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:34:28 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 20:34:28 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 20:34:28 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:34:28 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-02 20:35:20 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\ops\\model_ops.py', reloading
+2026-04-02 20:35:21 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 20:35:24 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:35:24 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 20:35:24 | INFO | app.reco.startup | Startup worker begins
+2026-04-02 20:35:24 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-02 20:35:24 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 20:35:24 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-02 20:35:24 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 20:35:24 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 20:35:24 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 20:35:24 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400

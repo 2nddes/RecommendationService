@@ -11,7 +11,6 @@ from app.ops.model_ops import (
     create_model_train_job,
     get_model_train_job,
     list_model_train_jobs,
-    refresh_current_models,
     train_current_models,
 )
 from app.ops.tasks import get_task_manager
@@ -226,11 +225,17 @@ def get_admin_status(settings: Settings) -> Dict[str, Any]:
     store = get_artifact_store()
     return {
         "config": {
-            "recall_channels": list(settings.recall_channels or []),
-            "ranking_method": settings.ranking_method,
-            "reranking_method": settings.reranking_method,
-            "xgb_model_path": settings.xgb_model_path,
+            "pipeline": {
+                "recall": "two_tower",
+                "ranking": "mmoe",
+                "reranking": "random_shuffle",
+            },
             "mmoe_model_path": settings.mmoe_model_path,
+            "two_tower_model_path": settings.two_tower_model_path,
+            "two_tower_index_path": settings.two_tower_index_path,
+            "two_tower_vector_db_path": settings.two_tower_vector_db_path,
+            "two_tower_startup_build": settings.two_tower_startup_build,
+            "two_tower_daily_update_interval_hours": settings.two_tower_daily_update_interval_hours,
         },
         "artifacts": store.get_all(),
     }
