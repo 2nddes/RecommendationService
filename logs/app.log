@@ -170,3 +170,87 @@
 2026-04-01 19:56:52 | INFO | werkzeug |  * Debugger PIN: 165-747-606
 2026-04-01 19:56:52 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
 2026-04-01 19:56:52 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-01 20:25:13 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:25:13 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:25:13 | INFO | app.reco.startup | 启动后台工作线程
+2026-04-01 20:25:13 | INFO | app.reco.startup | 后台工作线程已启动，thread_name=reco-startup-worker
+2026-04-01 20:25:13 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-01 20:25:13 | INFO | app.reco.startup | 开始执行双塔全量构建任务
+2026-04-01 20:25:13 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-04-01 20:25:13 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-01 20:25:13 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
+2026-04-01 20:25:13 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-01 20:32:51 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-01 20:32:51 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260401_123251_4b0986, component=ranking, model=mmoe
+2026-04-01 20:32:51 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260401_123251_4b0986, name=train:ranking.mmoe
+2026-04-01 20:32:51 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260401_123251_4b0986, name=train:ranking.mmoe
+2026-04-01 20:32:51 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260401_123251_4b0986
+2026-04-01 20:32:51 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260401_123251_4b0986
+2026-04-01 20:32:51 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260401_123251_4b0986
+2026-04-01 20:32:51 | INFO | werkzeug | 127.0.0.1 - - [01/Apr/2026 20:32:51] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-01 20:34:22 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:34:22 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:34:22 | INFO | app.reco.startup | 启动后台工作线程
+2026-04-01 20:34:22 | INFO | app.reco.startup | 开始执行双塔全量构建任务
+2026-04-01 20:34:22 | INFO | app.reco.startup | 后台工作线程已启动，thread_name=reco-startup-worker
+2026-04-01 20:34:22 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-01 20:34:22 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-04-01 20:34:22 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-01 20:34:22 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
+2026-04-01 20:34:22 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-01 20:34:27 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-01 20:34:27 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260401_123427_e3b315, component=ranking, model=mmoe
+2026-04-01 20:34:27 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260401_123427_e3b315, name=train:ranking.mmoe
+2026-04-01 20:34:27 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260401_123427_e3b315, name=train:ranking.mmoe
+2026-04-01 20:34:27 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260401_123427_e3b315
+2026-04-01 20:34:27 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260401_123427_e3b315
+2026-04-01 20:34:27 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260401_123427_e3b315
+2026-04-01 20:34:27 | INFO | werkzeug | 127.0.0.1 - - [01/Apr/2026 20:34:27] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-01 20:37:51 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:37:51 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-01 20:37:51 | INFO | app.reco.startup | 启动后台工作线程
+2026-04-01 20:37:51 | INFO | app.reco.startup | 后台工作线程已启动，thread_name=reco-startup-worker
+2026-04-01 20:37:51 | INFO | app.reco.startup | 开始执行双塔全量构建任务
+2026-04-01 20:37:51 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-01 20:37:51 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-04-01 20:37:51 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-01 20:37:51 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
+2026-04-01 20:37:51 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-01 20:38:11 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-01 20:38:11 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260401_123811_6955c4, component=ranking, model=mmoe
+2026-04-01 20:38:11 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260401_123811_6955c4, name=train:ranking.mmoe
+2026-04-01 20:38:11 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260401_123811_6955c4, name=train:ranking.mmoe
+2026-04-01 20:38:11 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260401_123811_6955c4
+2026-04-01 20:38:11 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260401_123811_6955c4
+2026-04-01 20:38:11 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260401_123811_6955c4
+2026-04-01 20:38:11 | INFO | werkzeug | 127.0.0.1 - - [01/Apr/2026 20:38:11] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-01 20:38:11 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260401_123811_6955c4, train_job_id=28
+2026-04-01 20:38:11 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=28
+2026-04-01 20:38:11 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260401_123811.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-02 10:07:14 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:07:14 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:07:14 | INFO | app.reco.startup | 启动后台工作线程
+2026-04-02 10:07:14 | INFO | app.reco.startup | 后台工作线程已启动，thread_name=reco-startup-worker
+2026-04-02 10:07:14 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 10:07:14 | INFO | app.reco.startup | 开始执行双塔全量构建任务
+2026-04-02 10:07:14 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.77.195:5000
+2026-04-02 10:07:14 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-02 10:07:14 | INFO | werkzeug |  * Restarting with stat
+2026-04-02 10:07:14 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 10:07:14 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400
+2026-04-02 10:07:17 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:07:17 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-02 10:07:17 | INFO | app.reco.startup | 启动后台工作线程
+2026-04-02 10:07:17 | INFO | app.reco.startup | 后台工作线程已启动，thread_name=reco-startup-worker
+2026-04-02 10:07:17 | INFO | app.reco.startup | 开始执行双塔全量构建任务
+2026-04-02 10:07:17 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-02 10:07:17 | WARNING | werkzeug |  * Debugger is active!
+2026-04-02 10:07:17 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-02 10:07:17 | INFO | app.reco.startup | 双塔全量构建完成，索引条数=9724, index_path=data/two_tower_items.hnsw
+2026-04-02 10:07:17 | INFO | app.reco.startup | 进入双塔日更循环，间隔秒数=86400

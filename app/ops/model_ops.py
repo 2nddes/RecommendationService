@@ -160,8 +160,16 @@ def train_current_models(
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    ranking_method = str(settings.ranking_method or "").strip().lower()
-    recall_channels = [str(ch).strip().lower() for ch in (settings.recall_channels or [])]
+    if settings.ranking_method is None:
+        err = RuntimeError("ranking_method_undefined")
+        _log_exception("refresh.current_models.config_missing", err, key="ranking_method")
+        raise err
+    if settings.recall_channels is None:
+        err = RuntimeError("recall_channels_undefined")
+        _log_exception("refresh.current_models.config_missing", err, key="recall_channels")
+        raise err
+    ranking_method = str(settings.ranking_method).strip().lower()
+    recall_channels = [str(ch).strip().lower() for ch in settings.recall_channels]
 
     try:
         if ranking_method == "xgb":
@@ -187,7 +195,8 @@ def refresh_current_models(settings: Settings) -> Dict[str, Any]:
 
         return {"status": "completed", "reason": None}
     except Exception as e:  # noqa: BLE001
-        return {"status": "failed", "reason": f"{type(e).__name__}: {e}"}
+        _log_exception("refresh.current_models.failed", e)
+        raise RuntimeError(f"refresh_current_models_failed: {type(e).__name__}: {e}") from e
 
 
 
@@ -199,22 +208,29 @@ def refresh_current_models(settings: Settings) -> Dict[str, Any]:
 def _get_mysql_engine(mysql_dsn: str | None) -> Engine | None:
     dsn = mysql_dsn
     if not dsn:
-        return None
+        err = RuntimeError("mysql_dsn_missing")
+        _log_exception("mysql.engine.dsn_missing", err)
+        raise err
     try:
         return create_engine(str(dsn), pool_pre_ping=True)
-    except Exception:
-        return None
+    except Exception as e:
+        _log_exception("mysql.engine.create_failed", e, mysql_dsn_set=bool(str(dsn).strip()))
+        raise RuntimeError(f"mysql_engine_create_failed: {type(e).__name__}: {e}") from e
 
 
-def _binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float | None:
+def _binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float:
     if len(y_true) != len(y_score) or len(y_true) == 0:
-        return None
+        err = ValueError("invalid_auc_input")
+        _log_exception("train.metric.auc_invalid_input", err, y_true_len=len(y_true), y_score_len=len(y_score))
+        raise err
 
     pairs = [(float(y), float(s)) for y, s in zip(y_true, y_score)]
     pos_count = sum(1 for y, _ in pairs if y > 0.5)
     neg_count = len(pairs) - pos_count
     if pos_count == 0 or neg_count == 0:
-        return None
+        err = ValueError("auc_requires_both_classes")
+        _log_exception("train.metric.auc_class_undefined", err, pos_count=pos_count, neg_count=neg_count)
+        raise err
 
     pairs.sort(key=lambda x: x[1])
 
@@ -232,20 +248,21 @@ def _binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float | No
         i = j
 
     auc = (rank_sum_pos - (pos_count * (pos_count + 1) / 2.0)) / (pos_count * neg_count)
-    return float(max(min(auc, 1.0), 0.0))
+    return float(auc)
 
 
-def _binary_train_test_split_indices(y: Sequence[float], train_ratio: float = 0.8) -> tuple[List[int], List[int]] | None:
+def _binary_train_test_split_indices(y: Sequence[float], train_ratio: float = 0.8) -> tuple[List[int], List[int]]:
     pos = [i for i, v in enumerate(y) if float(v) > 0.5]
     neg = [i for i, v in enumerate(y) if float(v) <= 0.5]
     if not pos or not neg:
-        return None
+        err = ValueError("split_requires_both_classes")
+        _log_exception("train.split.binary_invalid", err, pos_count=len(pos), neg_count=len(neg))
+        raise err
 
     def _split(group: List[int]) -> tuple[List[int], List[int]]:
         if len(group) <= 1:
             return group[:], []
         cut = int(len(group) * float(train_ratio))
-        cut = min(max(cut, 1), len(group) - 1)
         return group[:cut], group[cut:]
 
     pos_train, pos_test = _split(pos)
@@ -254,27 +271,32 @@ def _binary_train_test_split_indices(y: Sequence[float], train_ratio: float = 0.
     train_idx = pos_train + neg_train
     test_idx = pos_test + neg_test
     if not train_idx or not test_idx:
-        return None
+        err = ValueError("split_result_empty")
+        _log_exception("train.split.binary_empty", err, train_rows=len(train_idx), test_rows=len(test_idx))
+        raise err
     return train_idx, test_idx
 
 
-def _simple_train_test_split_indices(total: int, train_ratio: float = 0.8) -> tuple[List[int], List[int]] | None:
+def _simple_train_test_split_indices(total: int, train_ratio: float = 0.8) -> tuple[List[int], List[int]]:
     n = int(total)
     if n <= 1:
-        return None
+        err = ValueError("split_requires_more_rows")
+        _log_exception("train.split.simple_invalid", err, rows=n)
+        raise err
     cut = int(n * float(train_ratio))
-    cut = min(max(cut, 1), n - 1)
     train_idx = list(range(0, cut))
     test_idx = list(range(cut, n))
     if not train_idx or not test_idx:
-        return None
+        err = ValueError("split_result_empty")
+        _log_exception("train.split.simple_empty", err, train_rows=len(train_idx), test_rows=len(test_idx))
+        raise err
     return train_idx, test_idx
 
 
 def _interaction_strength(*, action_type: str, rating: int | None, source_kind: str) -> float:
     if source_kind == "rating" and rating is not None:
         # map 1~10 to [-0.8, 1.0], keep low-score ratings as hard negatives
-        return max(min((float(rating) - 5.0) / 5.0, 1.0), -0.8)
+        return (float(rating) - 5.0) / 5.0
 
     if source_kind == "action" and action_type == "rate":
         # explicit score should come from rating table only
@@ -289,15 +311,23 @@ def _interaction_strength(*, action_type: str, rating: int | None, source_kind: 
         "rate": 0.9,
         "dislike": -0.8,
     }
-    return float(action_weight.get(str(action_type), 0.1))
+    if str(action_type) not in action_weight:
+        err = ValueError("unknown_action_type")
+        _log_exception("train.interaction.unknown_action", err, action_type=action_type)
+        raise err
+    return float(action_weight[str(action_type)])
 
 
-def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> List[Tuple[int, int, str, int | None, str, float]]:
+def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str, int | None, str, float]]:
     """Return tuples: (user_id, movie_id, action_type, rating, source_kind, strength)."""
 
-    engine = _get_mysql_engine(mysql_dsn)
+    engine = _get_mysql_engine(settings.mysql_dsn)
     if engine is None:
-        return []
+        err = RuntimeError("mysql_not_configured")
+        _log_exception("train.xgb.mysql_unavailable", err, stage="dataset")
+        raise err
+
+    limit_n = int(settings.xgb_train_limit)
 
     sql = """
     SELECT t.user_id,
@@ -307,37 +337,49 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
            t.source_kind,
            t.event_time
     FROM (
-        SELECT ua.user_id AS user_id,
-               ua.movie_id AS movie_id,
-               ua.action_type AS action_type,
-               NULL AS rating,
-               'action' AS source_kind,
-               ua.created_at AS event_time
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL
-                    AND ua.action_type <> 'rate'
+         SELECT * FROM (
+             SELECT ua.user_id AS user_id,
+                 ua.movie_id AS movie_id,
+                 ua.action_type AS action_type,
+                 NULL AS rating,
+                 'action' AS source_kind,
+                 ua.created_at AS event_time
+             FROM user_action ua
+             WHERE ua.movie_id IS NOT NULL
+                   AND ua.action_type <> 'rate'
+             ORDER BY ua.created_at DESC
+             LIMIT :limit
+         ) ua_recent
 
         UNION ALL
 
-        SELECT r.user_id AS user_id,
-               r.movie_id AS movie_id,
-               'rate' AS action_type,
-               r.rating AS rating,
-               'rating' AS source_kind,
-               r.updated_at AS event_time
-        FROM rating r
-        WHERE r.movie_id IS NOT NULL
+         SELECT * FROM (
+             SELECT r.user_id AS user_id,
+                 r.movie_id AS movie_id,
+                 'rate' AS action_type,
+                 r.rating AS rating,
+                 'rating' AS source_kind,
+                 r.updated_at AS event_time
+             FROM rating r
+             WHERE r.movie_id IS NOT NULL
+             ORDER BY r.updated_at DESC
+             LIMIT :limit
+         ) rating_recent
 
         UNION ALL
 
-        SELECT ucm.user_id AS user_id,
-               ucm.movie_id AS movie_id,
-               'collect' AS action_type,
-               NULL AS rating,
-               'collect' AS source_kind,
-               ucm.created_at AS event_time
-        FROM user_collect_movie ucm
-        WHERE ucm.movie_id IS NOT NULL
+         SELECT * FROM (
+             SELECT ucm.user_id AS user_id,
+                 ucm.movie_id AS movie_id,
+                 'collect' AS action_type,
+                 NULL AS rating,
+                 'collect' AS source_kind,
+                 ucm.created_at AS event_time
+             FROM user_collect_movie ucm
+             WHERE ucm.movie_id IS NOT NULL
+             ORDER BY ucm.created_at DESC
+             LIMIT :limit
+         ) collect_recent
     ) t
     ORDER BY t.event_time DESC
     LIMIT :limit
@@ -345,7 +387,7 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
 
     try:
         with engine.connect() as conn:
-            rs = conn.execute(text(sql), {"limit": int(limit)})
+            rs = conn.execute(text(sql), {"limit": limit_n})
             best_by_pair: Dict[Tuple[int, int], Dict[str, Any]] = {}
             for row in rs:
                 d = dict(row._mapping)
@@ -398,12 +440,13 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
                                     "event_time": event_time,
                                 }
                             )
-                except Exception:
-                    continue
+                except Exception as e:
+                    _log_exception("train.xgb.row_parse_failed", e, stage="dataset")
+                    raise RuntimeError(f"xgb_training_row_parse_failed: {type(e).__name__}: {e}") from e
 
             dedup_rows = list(best_by_pair.values())
-            dedup_rows.sort(key=lambda x: x.get("event_time") or datetime.min, reverse=True)
-            dedup_rows = dedup_rows[: max(int(limit), 1)]
+            dedup_rows.sort(key=lambda x: x["event_time"], reverse=True)
+            dedup_rows = dedup_rows[: limit_n]
 
             out: List[Tuple[int, int, str, int | None, str, float]] = []
             for row in dedup_rows:
@@ -418,8 +461,9 @@ def _fetch_xgb_training_rows(*, mysql_dsn: str | None, limit: int = 5000) -> Lis
                     )
                 )
             return out
-    except SQLAlchemyError:
-        return []
+    except SQLAlchemyError as e:
+        _log_exception("train.xgb.fetch_rows_failed", e, stage="dataset", train_limit=limit_n)
+        raise RuntimeError(f"xgb_fetch_training_rows_failed: {type(e).__name__}: {e}") from e
 
 
 def _train_xgb(settings: Settings) -> TrainOutcome:
@@ -449,15 +493,10 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         from app.reco.ranking.xgb_features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
         from app.reco.types import Candidate, RequestContext
     except Exception as e:  # noqa: BLE001
-        return TrainOutcome(
-            component="ranking",
-            name="xgb",
-            artifact_path=None,
-            trained=False,
-            details={"skipped": True, "reason": f"deps_not_available: {type(e).__name__}: {e}"},
-        )
+        _log_exception("train.xgb.deps_failed", e, stage="prepare", status="failed")
+        raise RuntimeError(f"xgb_dependency_failed: {type(e).__name__}: {e}") from e
 
-    rows = _fetch_xgb_training_rows(mysql_dsn=settings.mysql_dsn, limit=int(settings.xgb_train_limit))
+    rows = _fetch_xgb_training_rows(settings=settings)
     if not rows:
         _log_event("warning", "train.xgb.empty_data", reason="no_training_data_or_mysql_not_configured", status="skipped")
         return TrainOutcome(
@@ -478,7 +517,7 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
     for i, (_user_id, movie_id, action_type, rating, source_kind, strength) in enumerate(rows):
         src = sources[i % len(sources)]
         # treat action intensity as recall score proxy
-        base = max(float(strength), 0.05)
+        base = float(strength)
         candidates.append(Candidate(item_id=int(movie_id), score=float(base), source=src))
 
         # explicit negative feedback and low ratings become hard negatives
@@ -534,17 +573,10 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
     X = np.asarray(builder.to_matrix(feat_rows), dtype=float)
     y = np.asarray(labels, dtype=float)
 
-    split_idx = _binary_train_test_split_indices(y.tolist(), train_ratio=0.8)
-    if split_idx is None:
+    try:
+        split_idx = _binary_train_test_split_indices(y.tolist(), train_ratio=0.8)
+    except Exception:
         split_idx = _simple_train_test_split_indices(len(y), train_ratio=0.8)
-    if split_idx is None:
-        return TrainOutcome(
-            component="ranking",
-            name="xgb",
-            artifact_path=None,
-            trained=False,
-            details={"skipped": True, "reason": "insufficient_data_for_train_test_split"},
-        )
 
     train_idx, test_idx = split_idx
     _log_event(
@@ -573,7 +605,7 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         "seed": 20260106,
     }
 
-    num_boost_round = max(int(settings.xgb_train_rounds), 1)
+    num_boost_round = int(settings.xgb_train_rounds)
     _log_event("info", "train.xgb.fit_start", boost_rounds=int(num_boost_round), stage="fit")
     booster = xgb.train(params, dtrain, num_boost_round=num_boost_round)
     test_pred = booster.predict(dtest)
@@ -605,7 +637,7 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
             "boost_rounds": int(num_boost_round),
             "train_rows": int(len(train_idx)),
             "test_rows": int(len(test_idx)),
-            "test_auc": float(test_auc) if test_auc is not None else None,
+            "test_auc": float(test_auc),
         },
     )
 
@@ -618,7 +650,6 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
 def _fetch_mmoe_training_rows(
     *,
     settings: Settings,
-    limit: int = 100000,
 ) -> List[Dict[str, Any]]:
     """Build multi-task labels from most recent interactions by configured sample size.
 
@@ -628,38 +659,57 @@ def _fetch_mmoe_training_rows(
 
     try:
         import numpy as np
-    except Exception:
-        return []
+    except Exception as e:
+        _log_exception("train.mmoe.deps_failed", e, stage="dataset")
+        raise RuntimeError(f"mmoe_dataset_dependency_failed: {type(e).__name__}: {e}") from e
 
     engine = _get_mysql_engine(settings.mysql_dsn)
     if engine is None:
-        return []
+        err = RuntimeError("mysql_not_configured")
+        _log_exception("train.mmoe.mysql_unavailable", err, stage="dataset")
+        raise err
 
-    limit_n = max(int(limit), 1)
+    limit_n = int(settings.mmoe_train_limit)
     sql_recent = """
     SELECT t.user_id, t.movie_id, t.kind
     FROM (
-      SELECT ua.user_id, ua.movie_id, 'click' AS kind, ua.created_at AS ts
-      FROM user_action ua
-      WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'view'
+            SELECT * FROM (
+                SELECT ua.user_id, ua.movie_id, 'click' AS kind, ua.created_at AS ts
+                FROM user_action ua
+                WHERE ua.movie_id IS NOT NULL AND ua.action_type = 'view'
+                ORDER BY ua.created_at DESC
+                LIMIT :limit
+            ) click_recent
 
       UNION ALL
 
-      SELECT c.user_id, c.movie_id, 'collect' AS kind, c.created_at AS ts
-      FROM user_collect_movie c
-      WHERE c.movie_id IS NOT NULL
+            SELECT * FROM (
+                SELECT c.user_id, c.movie_id, 'collect' AS kind, c.created_at AS ts
+                FROM user_collect_movie c
+                WHERE c.movie_id IS NOT NULL
+                ORDER BY c.created_at DESC
+                LIMIT :limit
+            ) collect_recent
 
       UNION ALL
 
-      SELECT r.user_id, r.movie_id, 'rate' AS kind, r.updated_at AS ts
-      FROM rating r
-      WHERE r.movie_id IS NOT NULL
+            SELECT * FROM (
+                SELECT r.user_id, r.movie_id, 'rate' AS kind, r.updated_at AS ts
+                FROM rating r
+                WHERE r.movie_id IS NOT NULL
+                ORDER BY r.updated_at DESC
+                LIMIT :limit
+            ) rate_recent
 
       UNION ALL
 
-      SELECT mc.user_id, mc.movie_id, 'comment' AS kind, mc.created_at AS ts
-      FROM movie_comment mc
-      WHERE mc.movie_id IS NOT NULL AND mc.deleted_at IS NULL
+            SELECT * FROM (
+                SELECT mc.user_id, mc.movie_id, 'comment' AS kind, mc.created_at AS ts
+                FROM movie_comment mc
+                WHERE mc.movie_id IS NOT NULL AND mc.deleted_at IS NULL
+                ORDER BY mc.created_at DESC
+                LIMIT :limit
+            ) comment_recent
     ) t
     ORDER BY t.ts DESC
     LIMIT :limit
@@ -681,8 +731,9 @@ def _fetch_mmoe_training_rows(
                     uid = int(d.get("user_id") or 0)
                     mid = int(d.get("movie_id") or 0)
                     kind = str(d.get("kind") or "")
-                except Exception:
-                    continue
+                except Exception as e:
+                    _log_exception("train.mmoe.row_parse_failed", e, stage="dataset")
+                    raise RuntimeError(f"mmoe_training_row_parse_failed: {type(e).__name__}: {e}") from e
                 if uid <= 0 or mid <= 0:
                     continue
 
@@ -717,21 +768,25 @@ def _fetch_mmoe_training_rows(
             for row in movie_rows:
                 try:
                     mid = int(dict(row._mapping).get("movie_id") or 0)
-                except Exception:
-                    continue
+                except Exception as e:
+                    _log_exception("train.mmoe.movie_row_parse_failed", e, stage="dataset")
+                    raise RuntimeError(f"mmoe_movie_row_parse_failed: {type(e).__name__}: {e}") from e
                 if mid > 0:
                     global_movies.append(mid)
-    except SQLAlchemyError:
-        return []
+    except SQLAlchemyError as e:
+        _log_exception("train.mmoe.fetch_rows_failed", e, stage="dataset", train_limit=limit_n)
+        raise RuntimeError(f"mmoe_fetch_training_rows_failed: {type(e).__name__}: {e}") from e
 
     positives = list(by_pair.values())
     if not positives:
-        return []
+        err = RuntimeError("mmoe_training_rows_empty")
+        _log_exception("train.mmoe.empty_rows", err, stage="dataset")
+        raise err
 
     if not global_movies:
         global_movies = sorted({int(r["movie_id"]) for r in positives})
 
-    neg_ratio = max(int(settings.mmoe_global_neg_ratio), 0)
+    neg_ratio = int(settings.mmoe_global_neg_ratio)
     negatives: List[Dict[str, Any]] = []
     if neg_ratio > 0 and global_movies:
         rng = np.random.default_rng(20260401)
@@ -740,14 +795,17 @@ def _fetch_mmoe_training_rows(
         for row in positives:
             uid = int(row["user_id"])
             mid = int(row["movie_id"])
-            user_pos[uid] = user_pos.get(uid, 0) + 1
+            if uid in user_pos:
+                user_pos[uid] += 1
+            else:
+                user_pos[uid] = 1
             seen_by_user.setdefault(uid, set()).add(mid)
 
         for uid, pos_cnt in user_pos.items():
             need = int(pos_cnt) * neg_ratio
             if need <= 0:
                 continue
-            seen = seen_by_user.get(uid, set())
+            seen = seen_by_user[uid]
             candidates = [mid for mid in global_movies if mid not in seen]
             if not candidates:
                 continue
@@ -778,12 +836,12 @@ def _fetch_mmoe_training_rows(
     _log_event(
         "info",
         "train.mmoe.dataset_built",
-        click_positive=int(sum(1 for r in out if float(r.get("click") or 0.0) > 0.5)),
-        collect_positive=int(sum(1 for r in out if float(r.get("collect") or 0.0) > 0.5)),
-        comment_positive=int(sum(1 for r in out if float(r.get("comment") or 0.0) > 0.5)),
+        click_positive=int(sum(1 for r in out if float(r["click"]) > 0.5)),
+        collect_positive=int(sum(1 for r in out if float(r["collect"]) > 0.5)),
+        comment_positive=int(sum(1 for r in out if float(r["comment"]) > 0.5)),
         global_movie_pool=len(global_movies),
         global_neg_ratio=neg_ratio,
-        rate_positive=int(sum(1 for r in out if float(r.get("rating") or 0.0) > 0.5)),
+        rate_positive=int(sum(1 for r in out if float(r["rating"]) > 0.5)),
         rows=len(out),
         stage="dataset",
     )
@@ -792,49 +850,22 @@ def _fetch_mmoe_training_rows(
 
 def _fetch_mmoe_aux_training_features(
     *,
-    mysql_dsn: str | None,
+    settings: Settings,
     user_ids: Sequence[int],
     movie_ids: Sequence[int],
 ) -> Dict[str, Any]:
-    engine = _get_mysql_engine(mysql_dsn)
+    engine = _get_mysql_engine(settings.mysql_dsn)
     if engine is None:
-        _log_event(
-            "warning",
-            "train.mmoe.aux_fallback",
-            mysql_dsn_set=bool(str(mysql_dsn or "").strip()),
-            reason="mysql_engine_unavailable",
-            stage="aux_features",
-        )
-        return {
-            "movie_stats_by_id": {},
-            "item_static_tags_by_movie": {},
-            "user_profile_by_id": {},
-            "short_hist_by_user": {},
-            "long_interest_tags_by_user": {},
-            "user_clicked_static_tag_count_by_user": {},
-            "user_total_click_by_user": {},
-        }
+        err = RuntimeError("mysql_engine_unavailable")
+        _log_exception("train.mmoe.aux_mysql_unavailable", err, stage="aux_features")
+        raise err
 
     uid_list = sorted({int(x) for x in user_ids if int(x) > 0})
     mid_list = sorted({int(x) for x in movie_ids if int(x) > 0})
     if not uid_list or not mid_list:
-        _log_event(
-            "warning",
-            "train.mmoe.aux_fallback",
-            movies=len(mid_list),
-            reason="empty_user_or_movie_ids",
-            stage="aux_features",
-            users=len(uid_list),
-        )
-        return {
-            "movie_stats_by_id": {},
-            "item_static_tags_by_movie": {},
-            "user_profile_by_id": {},
-            "short_hist_by_user": {},
-            "long_interest_tags_by_user": {},
-            "user_clicked_static_tag_count_by_user": {},
-            "user_total_click_by_user": {},
-        }
+        err = ValueError("empty_user_or_movie_ids")
+        _log_exception("train.mmoe.aux_invalid_ids", err, users=len(uid_list), movies=len(mid_list), stage="aux_features")
+        raise err
 
     movie_stats_sql = text(
         """
@@ -1013,9 +1044,9 @@ def _fetch_mmoe_aux_training_features(
                 int(dict(r._mapping).get("user_id") or 0): int(dict(r._mapping).get("total_click") or 0)
                 for r in rs
             }
-    except SQLAlchemyError:
-        _log_event("warning", "train.mmoe.aux_fallback", reason="query_aux_features_failed", stage="aux_features")
-        return out
+    except SQLAlchemyError as e:
+        _log_exception("train.mmoe.aux_query_failed", e, stage="aux_features")
+        raise RuntimeError(f"mmoe_aux_feature_query_failed: {type(e).__name__}: {e}") from e
 
     return out
 
@@ -1056,18 +1087,10 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             safe_float,
         )
     except Exception as e:  # noqa: BLE001
-        return TrainOutcome(
-            component="ranking",
-            name="mmoe",
-            artifact_path=None,
-            trained=False,
-            details={"skipped": True, "reason": f"deps_not_available: {type(e).__name__}: {e}"},
-        )
+        _log_exception("train.mmoe.deps_failed", e, stage="prepare", status="failed")
+        raise RuntimeError(f"mmoe_dependency_failed: {type(e).__name__}: {e}") from e
 
-    rows = _fetch_mmoe_training_rows(
-        settings=settings,
-        limit=int(settings.mmoe_train_limit),
-    )
+    rows = _fetch_mmoe_training_rows(settings=settings)
     if not rows:
         _log_event("warning", "train.mmoe.empty_data", reason="no_training_data_or_mysql_not_configured", status="skipped")
         return TrainOutcome(
@@ -1088,14 +1111,14 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         unique_items=len(set(movie_ids_all)),
         unique_users=len(set(user_ids_all)),
     )
-    aux = _fetch_mmoe_aux_training_features(mysql_dsn=settings.mysql_dsn, user_ids=user_ids_all, movie_ids=movie_ids_all)
-    movie_stats_by_id = aux.get("movie_stats_by_id") or {}
-    item_static_tags_by_movie = aux.get("item_static_tags_by_movie") or {}
-    user_profile_by_id = aux.get("user_profile_by_id") or {}
-    short_hist_by_user = aux.get("short_hist_by_user") or {}
-    long_interest_tags_by_user = aux.get("long_interest_tags_by_user") or {}
-    user_clicked_static_tag_count_by_user = aux.get("user_clicked_static_tag_count_by_user") or {}
-    user_total_click_by_user = aux.get("user_total_click_by_user") or {}
+    aux = _fetch_mmoe_aux_training_features(settings=settings, user_ids=user_ids_all, movie_ids=movie_ids_all)
+    movie_stats_by_id = aux["movie_stats_by_id"]
+    item_static_tags_by_movie = aux["item_static_tags_by_movie"]
+    user_profile_by_id = aux["user_profile_by_id"]
+    short_hist_by_user = aux["short_hist_by_user"]
+    long_interest_tags_by_user = aux["long_interest_tags_by_user"]
+    user_clicked_static_tag_count_by_user = aux["user_clicked_static_tag_count_by_user"]
+    user_total_click_by_user = aux["user_total_click_by_user"]
     _log_event(
         "info",
         "train.mmoe.aux_loaded",
@@ -1125,79 +1148,85 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     short_hist_raw_rows: List[List[int]] = []
     long_interest_tag_raw_rows: List[List[int]] = []
 
-    rating_avg_vals = [safe_float(v.get("rating_avg"), 0.0) for v in movie_stats_by_id.values()]
-    rating_count_vals = [safe_float(v.get("rating_count"), 0.0) for v in movie_stats_by_id.values()]
-    comment_count_vals = [safe_float(v.get("comment_count"), 0.0) for v in movie_stats_by_id.values()]
-    click_count_vals = [safe_float(v.get("click_count"), 0.0) for v in movie_stats_by_id.values()]
-    click_1h_vals = [safe_float(v.get("click_1h"), 0.0) for v in movie_stats_by_id.values()]
-    click_24h_vals = [safe_float(v.get("click_24h"), 0.0) for v in movie_stats_by_id.values()]
-    year_vals = [safe_float(v.get("year"), 0.0) for v in movie_stats_by_id.values()]
-    duration_vals = [safe_float(v.get("duration_min"), 0.0) for v in movie_stats_by_id.values()]
-
-    defaults = {
-        "movie_rating_avg": sum(rating_avg_vals) / max(len(rating_avg_vals), 1),
-        "movie_rating_count": sum(rating_count_vals) / max(len(rating_count_vals), 1),
-        "movie_comment_count": sum(comment_count_vals) / max(len(comment_count_vals), 1),
-        "movie_click_count": sum(click_count_vals) / max(len(click_count_vals), 1),
-        "movie_click_1h": sum(click_1h_vals) / max(len(click_1h_vals), 1),
-        "movie_click_24h": sum(click_24h_vals) / max(len(click_24h_vals), 1),
-        "movie_year": sum(year_vals) / max(len(year_vals), 1),
-        "movie_duration_min": sum(duration_vals) / max(len(duration_vals), 1),
-        "user_static_tag_ctr": 0.0,
-    }
     if not movie_stats_by_id:
-        _log_event(
-            "warning",
-            "train.mmoe.default_feature_used",
-            reason="movie_stats_empty",
-            rows=len(rows),
-            stage="feature_build",
-        )
+        err = RuntimeError("movie_stats_empty")
+        _log_exception("train.mmoe.movie_stats_missing", err, rows=len(rows), stage="feature_build")
+        raise err
 
-    missing_movie_stats_cnt = 0
     padded_long_interest_cnt = 0
     for row in rows:
         uid = int(row["user_id"])
         mid = int(row["movie_id"])
-        mf = movie_stats_by_id.get(mid) or {}
-        if not mf:
-            missing_movie_stats_cnt += 1
-        item_tags = [int(x) for x in (item_static_tags_by_movie.get(mid) or []) if int(x) > 0]
+        if mid not in movie_stats_by_id:
+            err = RuntimeError("movie_stats_missing_for_item")
+            _log_exception("train.mmoe.movie_stats_missing_item", err, item_id=mid, stage="feature_build")
+            raise err
+        mf = movie_stats_by_id[mid]
+        if mid not in item_static_tags_by_movie:
+            err = RuntimeError("item_static_tags_missing")
+            _log_exception("train.mmoe.item_tags_missing", err, item_id=mid, stage="feature_build")
+            raise err
+        item_tags = [int(x) for x in item_static_tags_by_movie[mid] if int(x) > 0]
         all_tag_ids.update(item_tags)
 
-        user_profile = user_profile_by_id.get(uid) or {}
-        user_gender = normalize_gender(str(user_profile.get("gender") or "unknown"))
-        birth = user_profile.get("birth")
+        if uid not in user_profile_by_id:
+            err = RuntimeError("user_profile_missing")
+            _log_exception("train.mmoe.user_profile_missing", err, user_id=uid, stage="feature_build")
+            raise err
+        user_profile = user_profile_by_id[uid]
+        user_gender = normalize_gender(str(user_profile["gender"]))
+        birth = user_profile["birth"]
         user_age = None
         if birth is not None:
             try:
                 now = datetime.utcnow().date()
-                user_age = max(now.year - birth.year - ((now.month, now.day) < (birth.month, birth.day)), 0)
-            except Exception:
-                user_age = None
+                user_age = now.year - birth.year - ((now.month, now.day) < (birth.month, birth.day))
+            except Exception as e:
+                _log_exception("train.mmoe.birth_parse_failed", e, user_id=uid, stage="feature_build")
+                raise RuntimeError(f"mmoe_birth_parse_failed: {type(e).__name__}: {e}") from e
         user_age_bucket = bucketize_age(user_age)
 
-        short_hist_items = [int(x) for x in (short_hist_by_user.get(uid) or []) if int(x) > 0]
-        long_interest_tags = [int(x) for x in (long_interest_tags_by_user.get(uid) or []) if int(x) > 0]
+        if uid not in short_hist_by_user:
+            err = RuntimeError("short_hist_missing")
+            _log_exception("train.mmoe.short_hist_missing", err, user_id=uid, stage="feature_build")
+            raise err
+        if uid not in long_interest_tags_by_user:
+            err = RuntimeError("long_interest_tags_missing")
+            _log_exception("train.mmoe.long_interest_tags_missing", err, user_id=uid, stage="feature_build")
+            raise err
+        short_hist_items = [int(x) for x in short_hist_by_user[uid] if int(x) > 0]
+        long_interest_tags = [int(x) for x in long_interest_tags_by_user[uid] if int(x) > 0]
         all_tag_ids.update(long_interest_tags)
 
-        user_tag_click_map = user_clicked_static_tag_count_by_user.get(uid) or {}
-        user_total_click = max(int(user_total_click_by_user.get(uid) or 0), 1)
-        ctr_vals = [float(user_tag_click_map.get(tag_id, 0)) / float(user_total_click) for tag_id in item_tags]
-        user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals)) if ctr_vals else defaults["user_static_tag_ctr"]
+        if uid not in user_clicked_static_tag_count_by_user:
+            err = RuntimeError("user_static_tag_click_map_missing")
+            _log_exception("train.mmoe.user_static_tag_click_map_missing", err, user_id=uid, stage="feature_build")
+            raise err
+        user_tag_click_map = user_clicked_static_tag_count_by_user[uid]
+        user_total_click = int(user_total_click_by_user[uid])
+        if user_total_click <= 0:
+            err = RuntimeError("user_total_click_non_positive")
+            _log_exception("train.mmoe.user_total_click_invalid", err, user_id=uid, stage="feature_build")
+            raise err
+        ctr_vals = [float(user_tag_click_map[tag_id]) / float(user_total_click) for tag_id in item_tags if tag_id in user_tag_click_map]
+        if not ctr_vals:
+            err = RuntimeError("user_static_tag_ctr_empty")
+            _log_exception("train.mmoe.user_static_tag_ctr_empty", err, user_id=uid, item_id=mid, stage="feature_build")
+            raise err
+        user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals))
 
-        source = str(row.get("source") or "")
+        source = str(row["source"])
         raw = {
-            "recall_score": float(row.get("recall_score") or 0.0),
-            "movie_rating_avg": safe_float(mf.get("rating_avg"), defaults["movie_rating_avg"]),
-            "movie_rating_count": safe_float(mf.get("rating_count"), defaults["movie_rating_count"]),
-            "movie_comment_count": safe_float(mf.get("comment_count"), defaults["movie_comment_count"]),
-            "movie_click_count": safe_float(mf.get("click_count"), defaults["movie_click_count"]),
-            "movie_click_1h": safe_float(mf.get("click_1h"), defaults["movie_click_1h"]),
-            "movie_click_24h": safe_float(mf.get("click_24h"), defaults["movie_click_24h"]),
-            "movie_year": safe_float(mf.get("year"), defaults["movie_year"]),
-            "movie_duration_min": safe_float(mf.get("duration_min"), defaults["movie_duration_min"]),
-            "user_static_tag_ctr": safe_float(user_static_tag_ctr, defaults["user_static_tag_ctr"]),
+            "recall_score": float(row["recall_score"]),
+            "movie_rating_avg": safe_float(mf["rating_avg"]),
+            "movie_rating_count": safe_float(mf["rating_count"]),
+            "movie_comment_count": safe_float(mf["comment_count"]),
+            "movie_click_count": safe_float(mf["click_count"]),
+            "movie_click_1h": safe_float(mf["click_1h"]),
+            "movie_click_24h": safe_float(mf["click_24h"]),
+            "movie_year": safe_float(mf["year"]),
+            "movie_duration_min": safe_float(mf["duration_min"]),
+            "user_static_tag_ctr": safe_float(user_static_tag_ctr),
             "src_user_collection": 1.0 if source == "user_collection" else 0.0,
             "src_user_high_rating_similar": 1.0 if source == "user_high_rating_similar" else 0.0,
             "src_user_interest_tag": 1.0 if source in {"user_interest_tag", "recent_interaction"} else 0.0,
@@ -1205,13 +1234,13 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             "src_two_tower": 1.0 if source == "two_tower" else 0.0,
         }
 
-        numeric_raw.append([float(raw.get(name, 0.0)) for name in feature_names])
+        numeric_raw.append([float(raw[name]) for name in feature_names])
         labels.append(
             [
-                float(row.get("click") or 0.0),
-                float(row.get("collect") or 0.0),
-                float(row.get("comment") or 0.0),
-                float(row.get("rating") or 0.0),
+                float(row["click"]),
+                float(row["collect"]),
+                float(row["comment"]),
+                float(row["rating"]),
             ]
         )
         user_values.append(uid)
@@ -1226,14 +1255,6 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             padded_long_interest_cnt += 1
         long_interest_tag_raw_rows.append(pad_or_truncate(long_interest_tags, size=LONG_INTEREST_TAG_SEQ_LEN))
 
-    if missing_movie_stats_cnt > 0:
-        _log_event(
-            "warning",
-            "train.mmoe.missing_movie_stats",
-            missing=missing_movie_stats_cnt,
-            stage="feature_build",
-            total=len(rows),
-        )
     if padded_long_interest_cnt > 0:
         _log_event(
             "warning",
@@ -1316,24 +1337,38 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     gender_index = default_gender_index()
     age_bucket_index = default_age_bucket_index()
 
-    item_tag_rows = [
-        [int(tag_index.get(tag_id, 1)) if int(tag_id) > 0 else 0 for tag_id in row]
-        for row in item_tag_raw_rows
-    ]
-    short_hist_rows = [
-        [int(item_index.get(mid, 1)) if int(mid) > 0 else 0 for mid in row]
-        for row in short_hist_raw_rows
-    ]
-    long_interest_tag_rows = [
-        [int(tag_index.get(tag_id, 1)) if int(tag_id) > 0 else 0 for tag_id in row]
-        for row in long_interest_tag_raw_rows
-    ]
+    def _map_sequence_ids(rows_raw: List[List[int]], id_index: Dict[int, int], *, sequence_name: str) -> List[List[int]]:
+        mapped: List[List[int]] = []
+        for row in rows_raw:
+            row_mapped: List[int] = []
+            for raw_id in row:
+                rid = int(raw_id)
+                if rid <= 0:
+                    row_mapped.append(0)
+                    continue
+                if rid not in id_index:
+                    err = RuntimeError(f"{sequence_name}_id_unmapped")
+                    _log_exception(
+                        "train.mmoe.sequence_id_unmapped",
+                        err,
+                        sequence=sequence_name,
+                        raw_id=rid,
+                        stage="feature_build",
+                    )
+                    raise err
+                row_mapped.append(int(id_index[rid]))
+            mapped.append(row_mapped)
+        return mapped
+
+    item_tag_rows = _map_sequence_ids(item_tag_raw_rows, tag_index, sequence_name="item_tag")
+    short_hist_rows = _map_sequence_ids(short_hist_raw_rows, item_index, sequence_name="short_hist")
+    long_interest_tag_rows = _map_sequence_ids(long_interest_tag_raw_rows, tag_index, sequence_name="long_interest_tag")
 
     feature_stats: Dict[str, Dict[str, float]] = {}
     for col_i, name in enumerate(feature_names):
         col = [float(r[col_i]) for r in numeric_raw]
-        mean = sum(col) / max(len(col), 1)
-        var = sum((x - mean) ** 2 for x in col) / max(len(col), 1)
+        mean = sum(col) / len(col)
+        var = sum((x - mean) ** 2 for x in col) / len(col)
         std = var ** 0.5
         if name in src_features:
             mean = 0.0
@@ -1350,20 +1385,33 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         for row in numeric_raw
     ]
 
-    user_idx = [int(user_index.get(uid, 0)) for uid in user_values]
-    item_idx = [int(item_index.get(mid, 0)) for mid in item_values]
-    gender_idx = [int(gender_index.get(g, gender_index["unknown"])) for g in gender_values]
-    age_bucket_idx = [int(age_bucket_index.get(a, age_bucket_index["unknown"])) for a in age_bucket_values]
+    user_idx: List[int] = []
+    item_idx: List[int] = []
+    gender_idx: List[int] = []
+    age_bucket_idx: List[int] = []
+    for uid, mid, g, a in zip(user_values, item_values, gender_values, age_bucket_values):
+        if uid not in user_index:
+            err = RuntimeError("user_index_missing")
+            _log_exception("train.mmoe.user_index_missing", err, user_id=uid, stage="feature_build")
+            raise err
+        if mid not in item_index:
+            err = RuntimeError("item_index_missing")
+            _log_exception("train.mmoe.item_index_missing", err, item_id=mid, stage="feature_build")
+            raise err
+        if g not in gender_index:
+            err = RuntimeError("gender_index_missing")
+            _log_exception("train.mmoe.gender_index_missing", err, gender=g, stage="feature_build")
+            raise err
+        if a not in age_bucket_index:
+            err = RuntimeError("age_bucket_index_missing")
+            _log_exception("train.mmoe.age_bucket_index_missing", err, age_bucket=a, stage="feature_build")
+            raise err
+        user_idx.append(int(user_index[uid]))
+        item_idx.append(int(item_index[mid]))
+        gender_idx.append(int(gender_index[g]))
+        age_bucket_idx.append(int(age_bucket_index[a]))
 
     split_idx = _simple_train_test_split_indices(len(labels), train_ratio=0.8)
-    if split_idx is None:
-        return TrainOutcome(
-            component="ranking",
-            name="mmoe",
-            artifact_path=None,
-            trained=False,
-            details={"skipped": True, "reason": "insufficient_data_for_train_test_split"},
-        )
     train_idx, test_idx = split_idx
     _log_event(
         "info",
@@ -1402,13 +1450,13 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
     optimizer = torch.optim.Adam(model.parameters(), lr=float(settings.mmoe_train_lr))
     bce = nn.BCELoss()
 
-    epochs = max(int(settings.mmoe_train_epochs), 1)
-    batch_size = max(int(settings.mmoe_train_batch_size), 16)
-    in_batch_neg_ratio = max(int(settings.mmoe_in_batch_neg_ratio), 0)
-    w_click = max(float(settings.mmoe_loss_weight_click), 0.0)
-    w_collect = max(float(settings.mmoe_loss_weight_collect), 0.0)
-    w_rate = max(float(settings.mmoe_loss_weight_rate), 0.0)
-    w_comment = max(float(settings.mmoe_loss_weight_comment), 0.0)
+    epochs = int(settings.mmoe_train_epochs)
+    batch_size = int(settings.mmoe_train_batch_size)
+    in_batch_neg_ratio = int(settings.mmoe_in_batch_neg_ratio)
+    w_click = float(settings.mmoe_loss_weight_click)
+    w_collect = float(settings.mmoe_loss_weight_collect)
+    w_rate = float(settings.mmoe_loss_weight_rate)
+    w_comment = float(settings.mmoe_loss_weight_comment)
     n = len(train_idx)
     train_idx_tensor = torch.tensor(train_idx, dtype=torch.long)
     test_idx_tensor = torch.tensor(test_idx, dtype=torch.long)
@@ -1502,7 +1550,7 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             epoch_loss_sum += float(loss.item())
             epoch_steps += 1
 
-        avg_loss = (epoch_loss_sum / max(epoch_steps, 1))
+        avg_loss = (epoch_loss_sum / epoch_steps)
         _log_event(
             "info",
             "train.mmoe.epoch_done",
@@ -1642,13 +1690,8 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
             train_two_tower_model,
         )
     except Exception as e:  # noqa: BLE001
-        return TrainOutcome(
-            component="recall",
-            name="two_tower",
-            artifact_path=None,
-            trained=False,
-            details={"skipped": True, "reason": f"deps_not_available: {type(e).__name__}: {e}"},
-        )
+        _log_exception("train.two_tower.deps_failed", e, stage="prepare", status="failed")
+        raise RuntimeError(f"two_tower_dependency_failed: {type(e).__name__}: {e}") from e
 
     cfg = load_config_from_settings(settings)
     _log_event(
@@ -1675,13 +1718,7 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
         _log_event("info", "train.two_tower.index_done", items_indexed=int(count), stage="finalize")
     except Exception as e:  # noqa: BLE001
         _log_exception("train.two_tower.failed", e, stage="fit", status="failed")
-        return TrainOutcome(
-            component="recall",
-            name="two_tower",
-            artifact_path=None,
-            trained=False,
-            details={"failed": True, "reason": f"{type(e).__name__}: {e}"},
-        )
+        raise RuntimeError(f"two_tower_train_failed: {type(e).__name__}: {e}") from e
 
     store.set("recall.two_tower.latest_model_artifact_path", artifact_model_path)
     store.set("recall.two_tower.latest_index_artifact_path", artifact_index_path)
@@ -1759,7 +1796,9 @@ def update_model_train_job(
 def get_model_train_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any] | None:
     engine = _get_mysql_engine(mysql_dsn)
     if engine is None:
-        return None
+        err = RuntimeError("mysql_not_configured_for_model_train_job")
+        _log_exception("train.job.mysql_unavailable", err, job_id=job_id)
+        raise err
 
     sql = """
     SELECT id, mode, status, metrics, created_at, finished_at
@@ -1771,20 +1810,28 @@ def get_model_train_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any]
     try:
         with engine.connect() as conn:
             row = conn.execute(text(sql), {"job_id": int(job_id)}).mappings().first()
-    except SQLAlchemyError:
-        return None
+    except SQLAlchemyError as e:
+        _log_exception("train.job.get_failed", e, job_id=job_id)
+        raise RuntimeError(f"get_model_train_job_failed: {type(e).__name__}: {e}") from e
 
     if row is None:
-        return None
+        err = RuntimeError("model_train_job_not_found")
+        _log_exception("train.job.not_found", err, job_id=job_id)
+        raise err
 
     created_at = row.get("created_at")
     finished_at = row.get("finished_at")
-    metrics = row.get("metrics") or {}
+    metrics = row.get("metrics")
+    if metrics is None:
+        err = RuntimeError("model_train_job_metrics_missing")
+        _log_exception("train.job.metrics_missing", err, job_id=job_id)
+        raise err
     if isinstance(metrics, str):
         try:
             metrics = json.loads(metrics)
-        except Exception:
-            metrics = {"raw": metrics}
+        except Exception as e:
+            _log_exception("train.job.metrics_parse_failed", e, job_id=job_id)
+            raise RuntimeError(f"model_train_job_metrics_parse_failed: {type(e).__name__}: {e}") from e
 
     return {
         "id": int(row.get("id")),
@@ -1805,12 +1852,14 @@ def list_model_train_jobs(
 ) -> List[Dict[str, Any]]:
     engine = _get_mysql_engine(mysql_dsn)
     if engine is None:
-        return []
+        err = RuntimeError("mysql_not_configured_for_model_train_job")
+        _log_exception("train.job.list_mysql_unavailable", err, limit=limit, offset=offset, status=status)
+        raise err
 
     clauses = []
     params: Dict[str, Any] = {
-        "limit": max(int(limit), 0),
-        "offset": max(int(offset), 0),
+        "limit": int(limit),
+        "offset": int(offset),
     }
 
     if status:
@@ -1829,19 +1878,25 @@ def list_model_train_jobs(
     try:
         with engine.connect() as conn:
             rows = conn.execute(text(sql), params).mappings().all()
-    except SQLAlchemyError:
-        return []
+    except SQLAlchemyError as e:
+        _log_exception("train.job.list_failed", e, limit=limit, offset=offset, status=status)
+        raise RuntimeError(f"list_model_train_jobs_failed: {type(e).__name__}: {e}") from e
 
     out: List[Dict[str, Any]] = []
     for row in rows:
         created_at = row.get("created_at")
         finished_at = row.get("finished_at")
-        metrics = row.get("metrics") or {}
+        metrics = row.get("metrics")
+        if metrics is None:
+            err = RuntimeError("model_train_job_metrics_missing")
+            _log_exception("train.job.list_metrics_missing", err, row_id=row.get("id"))
+            raise err
         if isinstance(metrics, str):
             try:
                 metrics = json.loads(metrics)
-            except Exception:
-                metrics = {"raw": metrics}
+            except Exception as e:
+                _log_exception("train.job.list_metrics_parse_failed", e, row_id=row.get("id"))
+                raise RuntimeError(f"model_train_job_list_metrics_parse_failed: {type(e).__name__}: {e}") from e
 
         out.append(
             {

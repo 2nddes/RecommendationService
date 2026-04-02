@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any, Iterable, List, Mapping, Sequence
 
 from sqlalchemy import Engine, bindparam, create_engine, text
@@ -11,28 +12,36 @@ from app.reco.types import Candidate, RequestContext
 
 
 _engine_by_dsn: dict[str, Engine] = {}
+logger = logging.getLogger(__name__)
 
 
 def _get_engine(mysql_dsn: str | None) -> Engine | None:
     if not mysql_dsn:
-        return None
+        err = RuntimeError("mysql_dsn_missing")
+        logger.exception("mysql recall dsn is missing")
+        raise err
     dsn = str(mysql_dsn).strip()
     if not dsn:
-        return None
+        err = RuntimeError("mysql_dsn_empty")
+        logger.exception("mysql recall dsn is empty")
+        raise err
     cached = _engine_by_dsn.get(dsn)
     if cached is not None:
         return cached
     try:
         _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
         return _engine_by_dsn[dsn]
-    except Exception:
-        return None
+    except Exception as e:
+        logger.exception("mysql recall engine create failed, dsn_set=%s", bool(dsn))
+        raise RuntimeError(f"mysql_recall_engine_create_failed: {type(e).__name__}: {e}") from e
 
 
 def _execute(mysql_dsn: str | None, sql: str, params: Mapping[str, Any], *, expanding: Sequence[str] = ()) -> List[dict]:
     engine = _get_engine(mysql_dsn)
     if engine is None:
-        return []
+        err = RuntimeError("mysql_recall_engine_unavailable")
+        logger.exception("mysql recall execute failed: engine unavailable")
+        raise err
 
     try:
         with engine.connect() as conn:
@@ -41,30 +50,29 @@ def _execute(mysql_dsn: str | None, sql: str, params: Mapping[str, Any], *, expa
                 stmt = stmt.bindparams(bindparam(key, expanding=True))
             rs = conn.execute(stmt, dict(params))
             return [dict(row._mapping) for row in rs]
-    except SQLAlchemyError:
-        return []
-
-
-def _clamp_positive(value: int, default: int) -> int:
-    return value if value > 0 else default
+    except SQLAlchemyError as e:
+        logger.exception("mysql recall execute query failed")
+        raise RuntimeError(f"mysql_recall_query_failed: {type(e).__name__}: {e}") from e
 
 
 def _as_float(value: Any, default: float = 0.0) -> float:
     try:
         if value is None:
-            return default
+            raise ValueError("value_is_none")
         return float(value)
-    except Exception:
-        return default
+    except Exception as e:
+        logger.exception("mysql recall float parse failed")
+        raise RuntimeError(f"mysql_recall_float_parse_failed: {type(e).__name__}: {e}") from e
 
 
 def _as_int(value: Any, default: int = 0) -> int:
     try:
         if value is None:
-            return default
+            raise ValueError("value_is_none")
         return int(value)
-    except Exception:
-        return default
+    except Exception as e:
+        logger.exception("mysql recall int parse failed")
+        raise RuntimeError(f"mysql_recall_int_parse_failed: {type(e).__name__}: {e}") from e
 
 
 def _collect_user_exclusions(mysql_dsn: str | None, user_id: int) -> set[int]:
@@ -148,13 +156,16 @@ class UserCollectionRecall(Recaller):
 
     def recall(self, ctx: RequestContext) -> List[Candidate]:
         if ctx.user_id is None:
-            return []
+            err = ValueError("user_id_undefined")
+            logger.exception("user_collection recall input invalid: user_id is None")
+            raise err
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
-            return []
+            err = RuntimeError("user_not_found")
+            logger.exception("user_collection recall user not found, user_id=%s", ctx.user_id)
+            raise err
 
-        topk = _clamp_positive(int(self.topk), 200)
+        topk = int(self.topk)
 
         seed_sql = """
         SELECT movie_id
@@ -173,8 +184,9 @@ class UserCollectionRecall(Recaller):
         seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id)})
         seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
-            return []
+            err = RuntimeError("seed_ids_empty")
+            logger.exception("user_collection recall seed ids empty, user_id=%s", ctx.user_id)
+            raise err
 
         sim_sql = """
         SELECT
@@ -193,7 +205,7 @@ class UserCollectionRecall(Recaller):
         rows = _execute(
             self.mysql_dsn,
             sim_sql,
-            {"seed_ids": list(seed_ids), "limit": int(max(topk, self.per_seed_topk * max(len(seed_ids), 1)))},
+            {"seed_ids": list(seed_ids), "limit": int(max(topk, self.per_seed_topk * len(seed_ids)))},
             expanding=("seed_ids",),
         )
 
@@ -201,7 +213,7 @@ class UserCollectionRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=excluded)
         if candidates:
             return candidates[:topk]
-        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        logger.warning("user_collection recall produced no candidates, user_id=%s", ctx.user_id)
         return []
 
 
@@ -222,13 +234,16 @@ class UserHighRatingSimilarRecall(Recaller):
 
     def recall(self, ctx: RequestContext) -> List[Candidate]:
         if ctx.user_id is None:
-            return []
+            err = ValueError("user_id_undefined")
+            logger.exception("user_high_rating_similar recall input invalid: user_id is None")
+            raise err
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
-            return []
+            err = RuntimeError("user_not_found")
+            logger.exception("user_high_rating_similar recall user not found, user_id=%s", ctx.user_id)
+            raise err
 
-        topk = _clamp_positive(int(self.topk), 300)
+        topk = int(self.topk)
         thr = int(self.rating_threshold)
 
         seed_sql = """
@@ -241,8 +256,9 @@ class UserHighRatingSimilarRecall(Recaller):
         seed_rows = _execute(self.mysql_dsn, seed_sql, {"user_id": int(ctx.user_id), "thr": thr})
         seed_ids = [_as_int(r.get("movie_id")) for r in seed_rows if _as_int(r.get("movie_id")) > 0]
         if not seed_ids:
-            # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_cold_start")
-            return []
+            err = RuntimeError("seed_ids_empty")
+            logger.exception("user_high_rating_similar recall seed ids empty, user_id=%s", ctx.user_id)
+            raise err
 
         cf_sql = """
         SELECT
@@ -271,7 +287,7 @@ class UserHighRatingSimilarRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=excluded)
         if candidates:
             return candidates[:topk]
-        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        logger.warning("user_high_rating_similar recall produced no candidates, user_id=%s", ctx.user_id)
         return []
 
 
@@ -291,13 +307,16 @@ class UserInterestTagRecall(Recaller):
 
     def recall(self, ctx: RequestContext) -> List[Candidate]:
         if ctx.user_id is None:
-            return []
+            err = ValueError("user_id_undefined")
+            logger.exception("user_interest_tag recall input invalid: user_id is None")
+            raise err
 
         if not _user_exists(self.mysql_dsn, int(ctx.user_id)):
-            # return _trending_candidates(self.mysql_dsn, topk=self.topk, source=f"{self.name}_unknown_user")
-            return []
+            err = RuntimeError("user_not_found")
+            logger.exception("user_interest_tag recall user not found, user_id=%s", ctx.user_id)
+            raise err
 
-        topk = _clamp_positive(int(self.topk), 300)
+        topk = int(self.topk)
 
         sql = """
         SELECT
@@ -319,7 +338,7 @@ class UserInterestTagRecall(Recaller):
 
         if candidates:
             return candidates[:topk]
-        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        logger.warning("user_interest_tag recall produced no candidates, user_id=%s", ctx.user_id)
         return []
 
 
@@ -336,9 +355,11 @@ class ItemSimilarByTagsRecall(Recaller):
 
     def recall(self, ctx: RequestContext) -> List[Candidate]:
         if ctx.movie_id is None:
-            return []
+            err = ValueError("movie_id_undefined")
+            logger.exception("item_similar_by_tags recall input invalid: movie_id is None")
+            raise err
 
-        topk = _clamp_positive(int(self.topk), 200)
+        topk = int(self.topk)
 
         sql = """
         SELECT
@@ -359,5 +380,5 @@ class ItemSimilarByTagsRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=set())
         if candidates:
             return candidates[:topk]
-        # return _trending_candidates(self.mysql_dsn, topk=topk, source=f"{self.name}_fallback")
+        logger.warning("item_similar_by_tags recall produced no candidates, movie_id=%s", ctx.movie_id)
         return []

@@ -30,8 +30,8 @@ class MMoENet(nn.Module):
         use_long_interest_pooling: bool = False,
     ) -> None:
         super().__init__()
-        self.user_emb = nn.Embedding(max(user_vocab_size, 1), emb_dim, padding_idx=0)
-        self.item_emb = nn.Embedding(max(item_vocab_size, 1), emb_dim, padding_idx=0)
+        self.user_emb = nn.Embedding(user_vocab_size, emb_dim, padding_idx=0)
+        self.item_emb = nn.Embedding(item_vocab_size, emb_dim, padding_idx=0)
 
         self.use_item_tag_pooling = bool(use_item_tag_pooling)
         self.use_target_attention = bool(use_target_attention)
@@ -39,15 +39,15 @@ class MMoENet(nn.Module):
 
         self.gender_emb: nn.Embedding | None = None
         if int(gender_vocab_size) > 0:
-            self.gender_emb = nn.Embedding(max(int(gender_vocab_size), 1), emb_dim, padding_idx=0)
+            self.gender_emb = nn.Embedding(int(gender_vocab_size), emb_dim, padding_idx=0)
 
         self.age_bucket_emb: nn.Embedding | None = None
         if int(age_bucket_vocab_size) > 0:
-            self.age_bucket_emb = nn.Embedding(max(int(age_bucket_vocab_size), 1), emb_dim, padding_idx=0)
+            self.age_bucket_emb = nn.Embedding(int(age_bucket_vocab_size), emb_dim, padding_idx=0)
 
         self.tag_emb: nn.Embedding | None = None
         if int(tag_vocab_size) > 0 and (self.use_item_tag_pooling or self.use_long_interest_pooling):
-            self.tag_emb = nn.Embedding(max(int(tag_vocab_size), 1), emb_dim, padding_idx=0)
+            self.tag_emb = nn.Embedding(int(tag_vocab_size), emb_dim, padding_idx=0)
 
         d_in = emb_dim * 2 + int(num_numeric_features)
         if self.gender_emb is not None:

@@ -35,7 +35,7 @@ def age_bucket_index(raw_birth: object) -> int:
     dt = parse_datetime_like(raw_birth)
     if dt is None:
         return 0
-    age = max(int((datetime.utcnow().date() - dt.date()).days // 365), 0)
+    age = int((datetime.utcnow().date() - dt.date()).days // 365)
     if age <= 17:
         return 1
     if age <= 24:
@@ -53,7 +53,7 @@ def register_bucket_index(raw_created_at: object) -> int:
     dt = parse_datetime_like(raw_created_at)
     if dt is None:
         return 0
-    days = max(int((datetime.utcnow() - dt).days), 0)
+    days = int((datetime.utcnow() - dt).days)
     if days < 30:
         return 1
     if days < 180:

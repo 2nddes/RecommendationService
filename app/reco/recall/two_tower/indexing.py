@@ -101,7 +101,7 @@ def _index_refresh_state(cfg: TwoTowerConfig) -> _IndexState:
 
 
 def ann_search(vec: np.ndarray, k: int, cfg: TwoTowerConfig) -> List[Tuple[int, float]]:
-    k = max(int(k), 0)
+    k = int(k)
     if k <= 0:
         return []
 
@@ -150,7 +150,7 @@ def _index_persist_hnsw_from_vectors(*, cfg: TwoTowerConfig, vectors: Mapping[in
     matrix = np.stack([np.asarray(vectors[mid], dtype=np.float32) for mid in item_ids], axis=0)
 
     idx = hnswlib.Index(space=cfg.space, dim=cfg.dim)
-    idx.init_index(max_elements=max(len(item_ids), 1), ef_construction=200, M=16)
+    idx.init_index(max_elements=len(item_ids), ef_construction=200, M=16)
     idx.add_items(matrix, np.asarray(item_ids, dtype=np.int64))
     idx.set_ef(min(200, max(10, int(cfg.recall_topk))))
 

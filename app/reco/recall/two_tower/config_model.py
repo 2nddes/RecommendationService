@@ -48,45 +48,25 @@ class TwoTowerModel:
 
 def load_config_from_settings(settings: Settings) -> TwoTowerConfig:
     cfg = TwoTowerConfig(
-        dim=max(int(settings.two_tower_dim), 1),
+        dim=int(settings.two_tower_dim),
         seed=int(settings.two_tower_seed),
-        alpha=min(max(float(settings.two_tower_alpha), 0.0), 1.0),
-        recent_item_limit=max(int(settings.two_tower_recent_item_limit), 0),
-        recall_topk=max(int(settings.recall_topk_two_tower), 0),
-        hr_eval_k=max(int(settings.two_tower_hr_eval_k), 1),
+        alpha=float(settings.two_tower_alpha),
+        recent_item_limit=int(settings.two_tower_recent_item_limit),
+        recall_topk=int(settings.recall_topk_two_tower),
+        hr_eval_k=int(settings.two_tower_hr_eval_k),
         space=str(settings.two_tower_space or "cosine"),
-        reload_interval_s=max(float(settings.two_tower_reload_interval_s), 0.1),
+        reload_interval_s=float(settings.two_tower_reload_interval_s),
         index_path=str(settings.two_tower_index_path or os.path.join("data", "two_tower_items.hnsw")),
         vector_db_path=str(settings.two_tower_vector_db_path or os.path.join("data", "two_tower_vectors.db")),
         model_path=str(settings.two_tower_model_path or os.path.join("data", "models", "two_tower_latest.pt")),
-        train_epochs=max(int(settings.two_tower_train_epochs), 1),
-        train_batch_size=max(int(settings.two_tower_train_batch_size), 128),
-        train_lr=max(float(settings.two_tower_train_lr), 1e-5),
-        train_reg=max(float(settings.two_tower_train_reg), 0.0),
-        train_negatives=max(int(settings.two_tower_train_negatives), 1),
-        train_limit=max(int(settings.two_tower_train_limit), 1000),
+        train_epochs=int(settings.two_tower_train_epochs),
+        train_batch_size=int(settings.two_tower_train_batch_size),
+        train_lr=float(settings.two_tower_train_lr),
+        train_reg=float(settings.two_tower_train_reg),
+        train_negatives=int(settings.two_tower_train_negatives),
+        train_limit=int(settings.two_tower_train_limit),
     )
-
-    space = cfg.space if cfg.space in {"cosine", "ip", "l2"} else "cosine"
-    return TwoTowerConfig(
-        dim=cfg.dim,
-        seed=cfg.seed,
-        alpha=cfg.alpha,
-        recent_item_limit=cfg.recent_item_limit,
-        recall_topk=cfg.recall_topk,
-        hr_eval_k=cfg.hr_eval_k,
-        space=space,
-        reload_interval_s=cfg.reload_interval_s,
-        index_path=cfg.index_path,
-        vector_db_path=cfg.vector_db_path,
-        model_path=cfg.model_path,
-        train_epochs=cfg.train_epochs,
-        train_batch_size=cfg.train_batch_size,
-        train_lr=cfg.train_lr,
-        train_reg=cfg.train_reg,
-        train_negatives=cfg.train_negatives,
-        train_limit=cfg.train_limit,
-    )
+    return cfg
 
 
 def l2_normalize(v: np.ndarray) -> np.ndarray:

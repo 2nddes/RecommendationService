@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 import numpy as np
 import torch
@@ -21,33 +22,48 @@ from .features import (
 )
 
 
-def _train_fetch_interactions(mysql_dsn: str | None, *, limit: int) -> list[tuple[int, int, float]]:
+logger = logging.getLogger(__name__)
+
+
+def _train_fetch_interactions(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> list[tuple[int, int, float]]:
     from .db import execute
 
     sql = """
     SELECT t.user_id, t.movie_id, t.action_type, t.rating
     FROM (
-      SELECT ua.user_id, ua.movie_id, ua.action_type, NULL AS rating, ua.created_at AS ts
-      FROM user_action ua
-      WHERE ua.movie_id IS NOT NULL
+            SELECT * FROM (
+                SELECT ua.user_id, ua.movie_id, ua.action_type, NULL AS rating, ua.created_at AS ts
+                FROM user_action ua
+                WHERE ua.movie_id IS NOT NULL
+                ORDER BY ua.created_at DESC
+                LIMIT :limit
+            ) action_recent
 
       UNION ALL
 
-      SELECT r.user_id, r.movie_id, 'rate' AS action_type, r.rating AS rating, r.updated_at AS ts
-      FROM rating r
-      WHERE r.movie_id IS NOT NULL
+            SELECT * FROM (
+                SELECT r.user_id, r.movie_id, 'rate' AS action_type, r.rating AS rating, r.updated_at AS ts
+                FROM rating r
+                WHERE r.movie_id IS NOT NULL
+                ORDER BY r.updated_at DESC
+                LIMIT :limit
+            ) rating_recent
 
       UNION ALL
 
-      SELECT c.user_id, c.movie_id, 'collect' AS action_type, NULL AS rating, c.created_at AS ts
-      FROM user_collect_movie c
-      WHERE c.movie_id IS NOT NULL
+            SELECT * FROM (
+                SELECT c.user_id, c.movie_id, 'collect' AS action_type, NULL AS rating, c.created_at AS ts
+                FROM user_collect_movie c
+                WHERE c.movie_id IS NOT NULL
+                ORDER BY c.created_at DESC
+                LIMIT :limit
+            ) collect_recent
     ) t
     ORDER BY t.ts DESC
     LIMIT :limit
     """
 
-    rows = execute(mysql_dsn, sql, {"limit": int(limit)})
+    rows = execute(mysql_dsn, sql, {"limit": int(cfg.train_limit)})
 
     action_weight = {
         "view": 0.2,
@@ -64,15 +80,24 @@ def _train_fetch_interactions(mysql_dsn: str | None, *, limit: int) -> list[tupl
         try:
             uid = int(row["user_id"])
             iid = int(row["movie_id"])
-            action_type = str(row.get("action_type") or "view")
-            rating = float(row.get("rating") or 0.0)
-        except Exception:
-            continue
+            action_type_raw = row.get("action_type")
+            if action_type_raw is None:
+                raise ValueError("action_type_missing")
+            action_type = str(action_type_raw)
+            rating_raw = row.get("rating")
+            if action_type == "rate" and rating_raw is None:
+                raise ValueError("rating_missing_for_rate_action")
+            rating = float(rating_raw) if rating_raw is not None else 0.0
+        except Exception as e:
+            logger.exception("two_tower interaction parse failed, row=%s", row)
+            raise RuntimeError(f"two_tower_interaction_parse_failed: {type(e).__name__}: {e}") from e
 
         if action_type == "rate":
             w = max((rating - 5.0) / 5.0, 0.0)
         else:
-            w = float(action_weight.get(action_type, 0.1))
+            if action_type not in action_weight:
+                raise RuntimeError(f"two_tower_unknown_action_type: {action_type}")
+            w = float(action_weight[action_type])
 
         if w > 0:
             out.append((uid, iid, w))
@@ -117,7 +142,7 @@ def _train_sample_negative_items(
 
 
 def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tuple[TwoTowerModel, dict[str, int | float]]:
-    interactions = _train_fetch_interactions(mysql_dsn, limit=cfg.train_limit)
+    interactions = _train_fetch_interactions(cfg, mysql_dsn=mysql_dsn)
     if not interactions:
         raise RuntimeError("no_training_interactions")
 
@@ -164,7 +189,7 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
         raise RuntimeError("no_positive_pairs")
 
     user_profiles = fetch_user_profiles(mysql_dsn, user_ids)
-    user_sequences = fetch_user_recent_sequences(mysql_dsn, user_ids, recent_limit=max(int(cfg.recent_item_limit), 1))
+    user_sequences = fetch_user_recent_sequences(mysql_dsn, user_ids, recent_limit=int(cfg.recent_item_limit))
 
     raw_item_tags = fetch_item_tags(mysql_dsn, all_item_ids)
     unique_tag_ids = sorted({tid for tags in raw_item_tags.values() for tid in tags})
@@ -174,7 +199,7 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
     item_stats_by_id = fetch_item_stats(mysql_dsn, all_item_ids)
     stats_dim = 14
 
-    seq_len = max(int(cfg.recent_item_limit), 1)
+    seq_len = int(cfg.recent_item_limit)
     max_tags = 12
 
     user_gender_idx = torch.zeros((user_count,), dtype=torch.long)
@@ -229,7 +254,7 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
     prob = pair_weights / torch.clamp(pair_weights.sum(), min=1e-12)
 
     dataset = _PositivePairDataset(pair_users=pair_users, pair_items=pair_items)
-    sampled_size = max(len(train_pairs), int(cfg.train_batch_size))
+    sampled_size = int(cfg.train_batch_size)
     sampler = torch.utils.data.WeightedRandomSampler(
         weights=prob,
         num_samples=sampled_size,
@@ -328,7 +353,7 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
         },
     )
 
-    eval_k = max(1, min(int(cfg.hr_eval_k), len(all_item_ids)))
+    eval_k = int(cfg.hr_eval_k)
     hr_at_k: float | None = None
     if test_pairs:
         hits = 0
@@ -347,7 +372,7 @@ def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tupl
                 topk_idx = np.argpartition(scores, -eval_k)[-eval_k:]
             if int(test_ii) in set(int(x) for x in topk_idx.tolist()):
                 hits += 1
-        hr_at_k = float(hits / max(len(test_pairs), 1))
+        hr_at_k = float(hits / len(test_pairs))
 
     metrics = {
         "users": len(user_ids),

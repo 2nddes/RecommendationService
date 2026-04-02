@@ -190,7 +190,7 @@ class MovieRagService:
         force_rebuild: bool = False,
     ) -> Iterator[RagMovieItem]:
         store = self._load_or_build_store(force_rebuild=force_rebuild)
-        pairs = store.similarity_search_with_score(query, k=max(int(n), 1))
+        pairs = store.similarity_search_with_score(query, k=int(n))
 
         seen: set[int] = set()
         emitted = 0

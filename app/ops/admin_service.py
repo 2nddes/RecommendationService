@@ -44,13 +44,8 @@ def start_train_task(
             _train_task_job_map[task_id] = int(train_job_id)
             logger.info("训练任务已创建数据库记录，task_id=%s, train_job_id=%s", task_id, train_job_id)
         except Exception as e:  # noqa: BLE001
-            # Do not block or fail the whole training flow when DB side bookkeeping is unavailable.
-            logger.warning(
-                "创建数据库训练记录失败，继续执行内存任务，task_id=%s, error=%s: %s",
-                task_id,
-                type(e).__name__,
-                e,
-            )
+            logger.exception("创建数据库训练记录失败，task_id=%s", task_id)
+            raise RuntimeError(f"create_model_train_job_failed: {type(e).__name__}: {e}") from e
         return train_current_models(settings, component=component, model=model, train_job_id=train_job_id)
 
     try:
@@ -187,7 +182,7 @@ def get_tasks(
             }
             db_status = reverse.get(status_value)
 
-        db_jobs = list_model_train_jobs(mysql_dsn=settings.mysql_dsn, limit=max(int(limit), 1), offset=max(int(offset), 0), status=db_status)
+        db_jobs = list_model_train_jobs(mysql_dsn=settings.mysql_dsn, limit=int(limit), offset=int(offset), status=db_status)
         for job in db_jobs:
             metrics = job.get("metrics") or {}
             error = metrics.get("error") if isinstance(metrics, dict) else None
@@ -213,14 +208,14 @@ def get_tasks(
     items.sort(key=lambda x: str(x.get("created_at") or ""), reverse=True)
 
     total = len(items)
-    start = max(int(offset), 0)
-    end = start + max(int(limit), 1)
+    start = int(offset)
+    end = start + int(limit)
     paged = items[start:end]
 
     return {
         "items": paged,
         "total": total,
-        "limit": max(int(limit), 1),
+        "limit": int(limit),
         "offset": start,
         "source": source_value,
         "status": status_value,

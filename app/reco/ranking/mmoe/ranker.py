@@ -195,7 +195,7 @@ class MMoERanker(Ranker):
         movie_stats_by_id = aux.get("movie_stats_by_id") or {}
         item_static_tags_by_movie = aux.get("item_static_tags_by_movie") or {}
         user_clicked_static_tag_count = aux.get("user_clicked_static_tag_count") or {}
-        user_total_click = max(int(aux.get("user_total_click") or 0), 1)
+        user_total_click = int(aux.get("user_total_click") or 0)
         padded_long_interest_cnt = 0
         missing_movie_stats_cnt = 0
 

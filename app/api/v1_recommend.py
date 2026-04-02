@@ -81,7 +81,7 @@ def _fetch_trending_items(mysql_dsn: str | None, *, window: str, n: int) -> list
         text(sql),
         {
           "window_start": _window_start(window),
-          "limit": max(int(n), 0),
+          "limit": int(n),
         },
       )
       out: list[int] = []

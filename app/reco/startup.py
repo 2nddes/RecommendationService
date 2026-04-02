@@ -66,7 +66,7 @@ def _startup_worker(settings: Settings) -> None:
             logger.exception("启动阶段 CF 模型预热失败")
 
     # 3) 常驻日更：离线每日更新物品向量库
-    interval = max(float(settings.two_tower_daily_update_interval_hours), 1.0) * 3600.0
+    interval = float(settings.two_tower_daily_update_interval_hours) * 3600.0
     logger.info("进入双塔日更循环，间隔秒数=%s", int(interval))
     while True:
         _safe_sleep(interval)
