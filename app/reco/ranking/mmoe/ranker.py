@@ -355,7 +355,10 @@ class MMoERanker(Ranker):
             SELECT mt.movie_id, mt.tag_id
             FROM movie_tag mt
             JOIN tag_dict td ON td.tag_id = mt.tag_id
-            WHERE mt.movie_id IN :ids AND td.type = 'static'
+            WHERE mt.movie_id IN :ids
+              AND td.type = 'static'
+              AND td.status = 'show'
+            ORDER BY mt.movie_id ASC, mt.weight DESC, mt.hot_score DESC, mt.tag_id DESC
             """
         ).bindparams(bindparam("ids", expanding=True))
 
@@ -363,41 +366,83 @@ class MMoERanker(Ranker):
             """
             SELECT u.gender, u.birth
             FROM user u
-            WHERE u.user_id = :uid AND u.deleted_at IS NULL
+            WHERE u.user_id = :uid
+              AND u.deleted_at IS NULL
+              AND u.status = 'active'
             LIMIT 1
             """
         )
 
         short_hist_sql = text(
             """
-            SELECT ua.movie_id
-            FROM user_action ua
-            WHERE ua.user_id = :uid AND ua.action_type = 'view'
-            ORDER BY ua.created_at DESC
-            LIMIT :lim
+            SELECT t.movie_id
+            FROM (
+                SELECT ua.movie_id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY ua.created_at DESC, ua.id DESC
+                       ) AS rn
+                FROM user_action ua
+                WHERE ua.user_id = :uid
+                  AND ua.action_type = 'view'
+            ) t
+            WHERE t.rn <= :lim
+            ORDER BY t.rn ASC
             """
         )
 
         long_interest_sql = text(
             """
-            SELECT mt.tag_id
-            FROM rating r
-            JOIN movie_tag mt ON mt.movie_id = r.movie_id
-            JOIN tag_dict td ON td.tag_id = mt.tag_id
-            WHERE r.user_id = :uid AND r.rating >= 8 AND td.type = 'static'
-            ORDER BY r.updated_at DESC
+            SELECT y.tag_id
+            FROM (
+                SELECT x.tag_id,
+                       MAX(x.priority) AS max_priority,
+                       MAX(x.event_time) AS last_event_time
+                FROM (
+                    SELECT uct.tag_id,
+                           3 AS priority,
+                           uct.created_at AS event_time
+                    FROM user_collect_tag uct
+                    JOIN tag_dict td
+                      ON td.tag_id = uct.tag_id
+                    WHERE uct.user_id = :uid
+                      AND uct.is_static = 1
+                      AND td.type = 'static'
+                      AND td.status = 'show'
+
+                    UNION ALL
+
+                    SELECT mt.tag_id,
+                           2 AS priority,
+                           r.updated_at AS event_time
+                    FROM rating r
+                    JOIN movie_tag mt ON mt.movie_id = r.movie_id
+                    JOIN tag_dict td ON td.tag_id = mt.tag_id
+                    WHERE r.user_id = :uid
+                      AND r.rating >= 8
+                      AND td.type = 'static'
+                      AND td.status = 'show'
+                ) x
+                GROUP BY x.tag_id
+            ) y
+            ORDER BY y.max_priority DESC, y.last_event_time DESC, y.tag_id DESC
             LIMIT :lim
             """
         )
 
         user_click_tag_sql = text(
             """
-            SELECT mt.tag_id, COUNT(*) AS click_cnt
-            FROM user_action ua
-            JOIN movie_tag mt ON mt.movie_id = ua.movie_id
-            JOIN tag_dict td ON td.tag_id = mt.tag_id
-            WHERE ua.user_id = :uid AND ua.action_type = 'view' AND td.type = 'static'
-            GROUP BY mt.tag_id
+            SELECT x.tag_id, COUNT(*) AS click_cnt
+            FROM (
+                SELECT mt.tag_id
+                FROM user_action ua
+                JOIN movie_tag mt ON mt.movie_id = ua.movie_id
+                JOIN tag_dict td ON td.tag_id = mt.tag_id
+                WHERE ua.user_id = :uid
+                  AND ua.action_type = 'view'
+                  AND td.type = 'static'
+                  AND td.status = 'show'
+            ) x
+            GROUP BY x.tag_id
             """
         )
 
@@ -405,7 +450,8 @@ class MMoERanker(Ranker):
             """
             SELECT COUNT(*) AS total_click
             FROM user_action ua
-            WHERE ua.user_id = :uid AND ua.action_type = 'view'
+            WHERE ua.user_id = :uid
+              AND ua.action_type = 'view'
             """
         )
 

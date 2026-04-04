@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import List
 
 from app.reco.recall.base import Recaller
@@ -12,6 +13,9 @@ from app.reco.recall.two_tower import (
     fetch_user_excluded_items,
 )
 from app.reco.types import Candidate, RequestContext
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -30,16 +34,28 @@ class TwoTowerRecall(Recaller):
         excluded: set[int] = set()
 
         if ctx.user_id is not None:
-            query_vec = build_user_vector(int(ctx.user_id), self.cfg, None, mysql_dsn=self.mysql_dsn)
-            excluded = fetch_user_excluded_items(int(ctx.user_id), mysql_dsn=self.mysql_dsn)
+            user_id = int(ctx.user_id)
+            query_vec = build_user_vector(user_id, self.cfg, None, mysql_dsn=self.mysql_dsn)
+            excluded = fetch_user_excluded_items(user_id, mysql_dsn=self.mysql_dsn)
         else:
-            print("用户ID为空，双塔无法构建向量")
+            logger.warning(
+                "用户ID为空，双塔无法构建向量，user_id=%s, movie_id=%s, n=%s",
+                ctx.user_id,
+                ctx.movie_id,
+                ctx.n,
+            )
         # if query_vec is None and ctx.movie_id is not None:
         #     query_vec = build_item_vector(int(ctx.movie_id), self.cfg, None, mysql_dsn=self.mysql_dsn)
         #     excluded = {int(ctx.movie_id)}
 
         if query_vec is None:
-            print("用户向量不可用，无法进行 Two-Tower recall")
+            logger.warning(
+                "用户向量不可用，无法进行 Two-Tower recall，user_id=%s, movie_id=%s, n=%s, recall_topk=%s",
+                ctx.user_id,
+                ctx.movie_id,
+                ctx.n,
+                self.cfg.recall_topk,
+            )
             return []
 
         pairs = ann_search(query_vec, k=self.cfg.recall_topk, cfg=self.cfg)

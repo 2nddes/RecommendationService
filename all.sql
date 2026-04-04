@@ -5,13 +5,13 @@
  Source Server Type    : MySQL
  Source Server Version : 80407 (8.4.7)
  Source Host           : localhost:3306
- Source Schema         : movie_recommend
+ Source Schema         : movie_rec
 
  Target Server Type    : MySQL
  Target Server Version : 80407 (8.4.7)
  File Encoding         : 65001
 
- Date: 24/02/2026 13:05:35
+ Date: 02/04/2026 10:45:26
 */
 
 SET NAMES utf8mb4;
@@ -29,7 +29,7 @@ CREATE TABLE `comment_like`  (
   INDEX `comment_id`(`comment_id` ASC) USING BTREE,
   CONSTRAINT `comment_like_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `comment_like_ibfk_2` FOREIGN KEY (`comment_id`) REFERENCES `movie_comment` (`comment_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for dict_language
@@ -42,7 +42,7 @@ CREATE TABLE `dict_language`  (
   `name_cn` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '中文名',
   PRIMARY KEY (`lang_id`) USING BTREE,
   UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '语言标准字典表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 856 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '语言标准字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for dict_region
@@ -55,7 +55,7 @@ CREATE TABLE `dict_region`  (
   `name_cn` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '中文名',
   PRIMARY KEY (`region_id`) USING BTREE,
   UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '国家地区标准字典表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 512 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '国家地区标准字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for idempotency_key
@@ -72,7 +72,7 @@ CREATE TABLE `idempotency_key`  (
   UNIQUE INDEX `idempotency_key`(`idempotency_key` ASC) USING BTREE,
   INDEX `idx_idempotency_key`(`idempotency_key` ASC) USING BTREE,
   INDEX `idx_expires_at`(`expires_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '幂等键表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '幂等键表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for model_train_job
@@ -87,7 +87,7 @@ CREATE TABLE `model_train_job`  (
   `finished_at` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '模型训练任务表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 30 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '模型训练任务表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie
@@ -101,6 +101,7 @@ CREATE TABLE `movie`  (
   `duration_min` int NULL DEFAULT NULL COMMENT '时长(分钟)',
   `poster` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '海报URL',
   `summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '简介',
+  `ai_summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'ai生成的简介',
   `rating_sum` bigint NOT NULL DEFAULT 0 COMMENT '评分总和',
   `rating_count` int NOT NULL DEFAULT 0 COMMENT '评分人数',
   `rating_1_count` int NOT NULL DEFAULT 0 COMMENT '评分1的人数',
@@ -123,7 +124,7 @@ CREATE TABLE `movie`  (
   INDEX `idx_rating_avg`(`rating_sum` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
   FULLTEXT INDEX `ft_title_summary`(`title`, `summary`)
-) ENGINE = InnoDB AUTO_INCREMENT = 193610 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视主表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 34782623 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视主表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_comment
@@ -149,9 +150,10 @@ CREATE TABLE `movie_comment`  (
   INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE,
   INDEX `idx_movie_created`(`movie_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_root_id`(`root_id` ASC) USING BTREE,
+  INDEX `deleted_at`(`deleted_at` ASC, `created_at` DESC) USING BTREE,
   CONSTRAINT `movie_comment_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_comment_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1725 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1942011793 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_language
@@ -165,7 +167,7 @@ CREATE TABLE `movie_language`  (
   INDEX `idx_lang_id`(`lang_id` ASC) USING BTREE,
   CONSTRAINT `fk_mlr_lang` FOREIGN KEY (`lang_id`) REFERENCES `dict_language` (`lang_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `fk_mlr_movie` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '电影语言关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '电影语言关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_person
@@ -184,7 +186,7 @@ CREATE TABLE `movie_person`  (
   INDEX `idx_person_id`(`person_id` ASC) USING BTREE,
   CONSTRAINT `movie_person_ibfk_1` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_person_ibfk_2` FOREIGN KEY (`person_id`) REFERENCES `person` (`person_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 163502 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视人员表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 249753 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视人员表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_region
@@ -197,7 +199,7 @@ CREATE TABLE `movie_region`  (
   INDEX `idx_region_id`(`region_id` ASC) USING BTREE,
   CONSTRAINT `fk_mrr_movie` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_mrr_region` FOREIGN KEY (`region_id`) REFERENCES `dict_region` (`region_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '电影地区关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '电影地区关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_tag
@@ -216,7 +218,7 @@ CREATE TABLE `movie_tag`  (
   INDEX `idx_weight`(`weight` ASC) USING BTREE,
   CONSTRAINT `movie_tag_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_tag_ibfk_4` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视动态标签关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视动态标签关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for notification
@@ -237,7 +239,7 @@ CREATE TABLE `notification`  (
   INDEX `idx_user_id`(`user_id` ASC, `is_readed` ASC) USING BTREE,
   CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `notification_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2587 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2587 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for person
@@ -252,7 +254,7 @@ CREATE TABLE `person`  (
   `bio` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '简介',
   PRIMARY KEY (`person_id`) USING BTREE,
   INDEX `idx_person_id`(`person_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '工作人员' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '工作人员' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rating
@@ -266,9 +268,10 @@ CREATE TABLE `rating`  (
   PRIMARY KEY (`user_id`, `movie_id`) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `updated_at`(`updated_at` DESC) USING BTREE,
   CONSTRAINT `rating_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `rating_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户评分' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户评分' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rec_log
@@ -283,7 +286,7 @@ CREATE TABLE `rec_log`  (
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '推荐时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 62 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '推荐请求日志表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 62 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '推荐请求日志表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for tag_dict
@@ -303,7 +306,7 @@ CREATE TABLE `tag_dict`  (
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `tag_name`(`tag_name` ASC) USING BTREE,
   CONSTRAINT `tag_dict_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 203198 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '动态标签字典表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 203198 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '动态标签字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for tag_vote
@@ -321,7 +324,7 @@ CREATE TABLE `tag_vote`  (
   CONSTRAINT `tag_vote_ibfk_1` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `tag_vote_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `tag_vote_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '标签投票表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '标签投票表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user
@@ -347,7 +350,7 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `email`(`email` ASC) USING BTREE,
   INDEX `idx_email`(`email` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 613 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户账号表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 649125 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户账号表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_action
@@ -364,9 +367,10 @@ CREATE TABLE `user_action`  (
   INDEX `idx_movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `idx_action_type`(`action_type` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` ASC) USING BTREE,
+  INDEX `action_type`(`action_type` ASC, `created_at` DESC) USING BTREE,
   CONSTRAINT `user_action_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `user_action_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 209231 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户行为表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 37553235 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户行为表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_collect_movie
@@ -379,9 +383,10 @@ CREATE TABLE `user_collect_movie`  (
   PRIMARY KEY (`user_id`, `movie_id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC) USING BTREE,
+  INDEX `created_at`(`created_at` DESC) USING BTREE,
   CONSTRAINT `user_collect_movie_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `user_collect_movie_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户收藏表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户收藏表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_collect_tag
@@ -397,7 +402,7 @@ CREATE TABLE `user_collect_tag`  (
   INDEX `tag_id`(`tag_id` ASC) USING BTREE,
   CONSTRAINT `user_collect_tag_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `user_collect_tag_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户兴趣标签表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户兴趣标签表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_follow
@@ -412,7 +417,7 @@ CREATE TABLE `user_follow`  (
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `user_follow_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `user_follow_ibfk_2` FOREIGN KEY (`follow_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户关注' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户关注' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_token
@@ -428,6 +433,6 @@ CREATE TABLE `user_token`  (
   UNIQUE INDEX `idx_token`(`token` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `user_token_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 125 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户Token表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 126 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户Token表' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

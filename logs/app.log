@@ -491,3 +491,142 @@ RuntimeError: item_static_tags_missing
 2026-04-02 20:35:24 | INFO | werkzeug |  * Debugger PIN: 165-747-606
 2026-04-02 20:35:24 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
 2026-04-02 20:35:24 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 09:16:10 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 09:16:10 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 09:16:10 | INFO | app.reco.startup | Startup worker begins
+2026-04-04 09:16:10 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-04 09:16:10 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 09:16:10 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 09:16:10 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-04 09:16:10 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 09:16:10 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.5.220:5000
+2026-04-04 09:16:10 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-04 09:16:10 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 09:16:13 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 09:16:13 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 09:16:13 | INFO | app.reco.startup | Startup worker begins
+2026-04-04 09:16:13 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-04 09:16:13 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 09:16:13 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 09:16:13 | WARNING | werkzeug |  * Debugger is active!
+2026-04-04 09:16:13 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-04 09:16:13 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-04 09:16:13 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 09:17:35 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-04 09:17:35 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260404_011735_4054df, component=ranking, model=mmoe
+2026-04-04 09:17:35 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260404_011735_4054df, name=train:ranking.mmoe
+2026-04-04 09:17:35 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260404_011735_4054df, name=train:ranking.mmoe
+2026-04-04 09:17:35 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260404_011735_4054df
+2026-04-04 09:17:35 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260404_011735_4054df
+2026-04-04 09:17:35 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260404_011735_4054df
+2026-04-04 09:17:35 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 09:17:35] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-04 09:17:36 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260404_011735_4054df, train_job_id=34
+2026-04-04 09:17:36 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=34
+2026-04-04 09:17:36 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260404_011736.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-04 09:17:47 | INFO | app.ops.model_ops | event=train.mmoe.target_rows_fetched | click_rows=50000 | collect_rows=50000 | comment_rows=50000 | rating_rows=50000 | stage=dataset | train_limit=50000
+2026-04-04 09:17:49 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=171229 | collect_positive=50000 | comment_positive=50000 | global_movie_pool=22678 | global_neg_ratio=2 | global_negative=342458 | rate_positive=26900 | rows=513687 | stage=dataset
+2026-04-04 09:17:49 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=513687 | stage=dataset | unique_items=22678 | unique_users=61765
+2026-04-04 09:17:49 | INFO | app.ops.model_ops | event=train.mmoe.aux_query_plan | movie_chunks=23 | movie_ids=22678 | stage=aux_features | user_chunks=62 | user_ids=61765
+2026-04-04 10:38:38 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 10:38:38 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 10:38:38 | INFO | app.reco.startup | Startup worker begins
+2026-04-04 10:38:38 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 10:38:38 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-04 10:38:38 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 10:38:38 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-04 10:38:38 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 10:38:38 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.5.220:5000
+2026-04-04 10:38:38 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-04 10:38:38 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 10:38:41 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 10:38:41 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 10:38:41 | INFO | app.reco.startup | Startup worker begins
+2026-04-04 10:38:41 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-worker
+2026-04-04 10:38:41 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 10:38:41 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 10:38:41 | WARNING | werkzeug |  * Debugger is active!
+2026-04-04 10:38:41 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-04 10:38:41 | INFO | app.reco.startup | Two-tower rebuild finished, items=9724, index_path=data/two_tower_items.hnsw
+2026-04-04 10:38:41 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 10:44:15 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-04 10:44:15 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260404_024415_1fe753, component=ranking, model=mmoe
+2026-04-04 10:44:15 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260404_024415_1fe753, name=train:ranking.mmoe
+2026-04-04 10:44:15 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260404_024415_1fe753, name=train:ranking.mmoe
+2026-04-04 10:44:15 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260404_024415_1fe753
+2026-04-04 10:44:15 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260404_024415_1fe753
+2026-04-04 10:44:15 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260404_024415_1fe753
+2026-04-04 10:44:15 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 10:44:15] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-04 10:44:16 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260404_024415_1fe753, train_job_id=35
+2026-04-04 10:44:16 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=35
+2026-04-04 10:44:16 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260404_024416.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-04 10:44:26 | INFO | app.ops.model_ops | event=train.mmoe.target_rows_fetched | click_rows=50000 | collect_rows=50000 | comment_rows=50000 | rating_rows=50000 | stage=dataset | train_limit=50000
+2026-04-04 10:44:28 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=171229 | collect_positive=50000 | comment_positive=50000 | global_movie_pool=22678 | global_neg_ratio=2 | global_negative=342458 | rate_positive=26900 | rows=513687 | stage=dataset
+2026-04-04 10:44:28 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=513687 | stage=dataset | unique_items=22678 | unique_users=61765
+2026-04-04 10:44:28 | INFO | app.ops.model_ops | event=train.mmoe.aux_query_plan | movie_chunks=23 | movie_ids=22678 | stage=aux_features | user_chunks=62 | user_ids=61765
+2026-04-04 10:44:32 | INFO | app.ops.model_ops | event=train.mmoe.aux_query_summary | elapsed_ms=3569.48 | item_static_tag_rows=146657 | movie_base_rows=22678 | stage=aux_features | user_profile_rows=61765
+2026-04-04 10:44:32 | INFO | app.ops.model_ops | event=train.mmoe.aux_loaded | movie_stats=22678 | rows=513687 | stage=aux_features | user_profiles=61765
+2026-04-04 10:44:35 | INFO | app.ops.model_ops | event=train.mmoe.aux_defaults_applied | long_interest_defaulted=513687 | short_hist_defaulted=513687 | stage=feature_build | user_static_tag_ctr_defaulted=513687
+2026-04-04 10:44:35 | WARNING | app.ops.model_ops | event=train.mmoe.item_static_tags_missing_summary | missing_items=15744 | stage=feature_build | total=513687
+2026-04-04 10:44:35 | INFO | app.ops.model_ops | event=train.mmoe.sample_features_built | rows=513687 | stage=feature_build | tags_vocab=308 | users_with_profile=61765
+2026-04-04 10:44:35 | INFO | app.ops.model_ops | event=train.mmoe.label_distribution | click_negative=342458 | click_positive=171229 | collect_negative=463687 | collect_positive=50000 | comment_negative=463687 | comment_positive=50000 | rating_negative=486787 | rating_positive=26900 | rows=513687 | stage=dataset
+2026-04-04 10:44:40 | INFO | app.ops.model_ops | event=train.mmoe.split_done | feature_count=15 | stage=split | test_rows=102738 | train_rows=410949
+2026-04-04 10:44:53 | INFO | app.ops.model_ops | event=train.mmoe.task_weight_adjusted | click_enabled=true | collect_enabled=true | comment_enabled=true | rating_enabled=true | stage=fit
+2026-04-04 10:44:53 | INFO | app.ops.model_ops | event=train.mmoe.neg_sampling_config | in_batch_neg_ratio=1 | loss_weight_click=1.0 | loss_weight_collect=5.0 | loss_weight_comment=20.0 | loss_weight_rate=10.0 | stage=fit
+2026-04-04 10:45:13 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=9.163770 | epoch=1 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:45:34 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=5.182291 | epoch=2 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:45:54 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=5.018135 | epoch=3 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:46:16 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=4.938948 | epoch=4 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:46:18 | INFO | app.ops.model_ops | event=train.mmoe.eval_done | auc_click=1.0 | auc_collect=0.9962798453085735 | auc_comment=0.9985232058272772 | auc_mean=0.9987007627839627 | auc_rating=1.0 | stage=evaluate
+2026-04-04 10:46:18 | INFO | app.ops.model_ops | event=train.mmoe.model_saved | artifact_path=data\artifacts\mmoe\mmoe_20260404_024416.pt | stage=finalize
+2026-04-04 10:46:18 | INFO | app.ops.model_ops | event=train.mmoe.done | elapsed_ms=122835 | stage=finalize | status=completed
+2026-04-04 10:46:19 | INFO | app.ops.model_ops | event=train.task.done | artifact_path=data\artifacts\mmoe\mmoe_20260404_024416.pt | component=ranking | model=mmoe | status=completed | train_job_id=35
+2026-04-04 10:46:19 | INFO | app.ops.tasks | 后台任务执行成功，task_id=train_20260404_024415_1fe753
+2026-04-04 10:48:48 | INFO | app.api.v1_admin | 收到训练任务请求，component=ranking, model=mmoe
+2026-04-04 10:48:48 | INFO | app.ops.admin_service | 开始创建训练任务，task_id=train_20260404_024848_c33c64, component=ranking, model=mmoe
+2026-04-04 10:48:48 | INFO | app.ops.tasks | 创建后台任务，task_id=train_20260404_024848_c33c64, name=train:ranking.mmoe
+2026-04-04 10:48:48 | INFO | app.ops.tasks | 准备启动后台任务，task_id=train_20260404_024848_c33c64, name=train:ranking.mmoe
+2026-04-04 10:48:48 | INFO | app.ops.tasks | 后台任务开始执行，task_id=train_20260404_024848_c33c64
+2026-04-04 10:48:48 | INFO | app.ops.admin_service | 训练任务启动成功，task_id=train_20260404_024848_c33c64
+2026-04-04 10:48:48 | INFO | app.api.v1_admin | 训练任务已提交，task_id=train_20260404_024848_c33c64
+2026-04-04 10:48:48 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 10:48:48] "POST /api/v1/admin/train HTTP/1.1" 200 -
+2026-04-04 10:48:48 | INFO | app.ops.admin_service | 训练任务已创建数据库记录，task_id=train_20260404_024848_c33c64, train_job_id=36
+2026-04-04 10:48:48 | INFO | app.ops.model_ops | event=train.task.start | component=ranking | model=mmoe | stage=dispatch | status=processing | train_job_id=36
+2026-04-04 10:48:48 | INFO | app.ops.model_ops | event=train.mmoe.start | artifact_path=data\artifacts\mmoe\mmoe_20260404_024848.pt | batch_size=1024 | epochs=4 | lr=0.001 | stage=prepare | train_limit=50000
+2026-04-04 10:48:58 | INFO | app.ops.model_ops | event=train.mmoe.target_rows_fetched | click_rows=50000 | collect_rows=50000 | comment_rows=50000 | rating_rows=50000 | stage=dataset | train_limit=50000
+2026-04-04 10:48:59 | INFO | app.ops.model_ops | event=train.mmoe.dataset_built | click_positive=171229 | collect_positive=50000 | comment_positive=50000 | global_movie_pool=22678 | global_neg_ratio=2 | global_negative=342458 | rate_positive=26900 | rows=513687 | stage=dataset
+2026-04-04 10:49:00 | INFO | app.ops.model_ops | event=train.mmoe.sample_overview | rows=513687 | stage=dataset | unique_items=22678 | unique_users=61765
+2026-04-04 10:49:00 | INFO | app.ops.model_ops | event=train.mmoe.aux_query_plan | movie_chunks=23 | movie_ids=22678 | stage=aux_features | user_chunks=62 | user_ids=61765
+2026-04-04 10:49:04 | INFO | app.ops.model_ops | event=train.mmoe.aux_query_summary | elapsed_ms=3926.42 | item_static_tag_rows=146657 | movie_base_rows=22678 | stage=aux_features | user_profile_rows=61765
+2026-04-04 10:49:04 | INFO | app.ops.model_ops | event=train.mmoe.aux_loaded | movie_stats=22678 | rows=513687 | stage=aux_features | user_profiles=61765
+2026-04-04 10:49:04 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 10:49:04 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 10:49:07 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=0, 累计候选=0
+2026-04-04 10:49:07 | INFO | app.reco.pipeline | 召回阶段完成，候选数=0
+2026-04-04 10:49:07 | INFO | app.reco.pipeline | 排序阶段完成，结果数=0, 排序器=mmoe
+2026-04-04 10:49:07 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=0, 重排器=random_shuffle
+2026-04-04 10:49:07 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=0
+2026-04-04 10:49:07 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 10:49:07] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 10:49:08 | INFO | app.ops.model_ops | event=train.mmoe.aux_defaults_applied | long_interest_defaulted=513687 | short_hist_defaulted=513687 | stage=feature_build | user_static_tag_ctr_defaulted=513687
+2026-04-04 10:49:08 | WARNING | app.ops.model_ops | event=train.mmoe.item_static_tags_missing_summary | missing_items=15744 | stage=feature_build | total=513687
+2026-04-04 10:49:08 | INFO | app.ops.model_ops | event=train.mmoe.sample_features_built | rows=513687 | stage=feature_build | tags_vocab=308 | users_with_profile=61765
+2026-04-04 10:49:08 | INFO | app.ops.model_ops | event=train.mmoe.label_distribution | click_negative=342458 | click_positive=171229 | collect_negative=463687 | collect_positive=50000 | comment_negative=463687 | comment_positive=50000 | rating_negative=486787 | rating_positive=26900 | rows=513687 | stage=dataset
+2026-04-04 10:49:13 | INFO | app.ops.model_ops | event=train.mmoe.split_done | feature_count=15 | stage=split | test_rows=102738 | train_rows=410949
+2026-04-04 10:49:16 | INFO | app.ops.model_ops | event=train.mmoe.task_weight_adjusted | click_enabled=true | collect_enabled=true | comment_enabled=true | rating_enabled=true | stage=fit
+2026-04-04 10:49:16 | INFO | app.ops.model_ops | event=train.mmoe.neg_sampling_config | in_batch_neg_ratio=1 | loss_weight_click=1.0 | loss_weight_collect=5.0 | loss_weight_comment=20.0 | loss_weight_rate=10.0 | stage=fit
+2026-04-04 10:49:37 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=9.270814 | epoch=1 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:50:01 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=5.178035 | epoch=2 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:50:23 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=5.022494 | epoch=3 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:50:48 | INFO | app.ops.model_ops | event=train.mmoe.epoch_done | avg_loss=4.941645 | epoch=4 | epochs=4 | in_batch_click_negatives=410949 | in_batch_collect_negatives=410949 | in_batch_comment_negatives=410949 | in_batch_rating_negatives=410949 | stage=fit | step_count=402
+2026-04-04 10:50:50 | INFO | app.ops.model_ops | event=train.mmoe.eval_done | auc_click=1.0 | auc_collect=0.9962762704114688 | auc_comment=0.9987223215615735 | auc_mean=0.9987496479932606 | auc_rating=1.0 | stage=evaluate
+2026-04-04 10:50:50 | INFO | app.ops.model_ops | event=train.mmoe.model_saved | artifact_path=data\artifacts\mmoe\mmoe_20260404_024848.pt | stage=finalize
+2026-04-04 10:50:50 | INFO | app.ops.model_ops | event=train.mmoe.done | elapsed_ms=122001 | stage=finalize | status=completed
+2026-04-04 10:50:51 | INFO | app.ops.model_ops | event=train.task.done | artifact_path=data\artifacts\mmoe\mmoe_20260404_024848.pt | component=ranking | model=mmoe | status=completed | train_job_id=36
+2026-04-04 10:50:51 | INFO | app.ops.tasks | 后台任务执行成功，task_id=train_20260404_024848_c33c64
+2026-04-04 10:51:06 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\reco\\recall\\two_tower_recall.py', reloading
+2026-04-04 10:51:07 | INFO | werkzeug |  * Restarting with stat
