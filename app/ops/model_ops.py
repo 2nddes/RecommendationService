@@ -19,6 +19,18 @@ from app.ops.artifact_store import get_artifact_store
 logger = logging.getLogger(__name__)
 
 
+def _rebuild_global_pipeline_singleton(*, reason: str) -> None:
+    """Best-effort refresh of global recommendation runtime after model changes."""
+
+    try:
+        from app.reco.runtime import rebuild_pipeline
+
+        rebuild_pipeline(reason=reason)
+        _log_event("info", "train.runtime.pipeline_rebuilt", reason=reason)
+    except Exception as e:  # noqa: BLE001
+        _log_exception("train.runtime.pipeline_rebuild_failed", e, reason=reason)
+
+
 def _fmt_log_value(value: Any) -> str:
     if value is None:
         return "null"
@@ -95,7 +107,7 @@ def train_current_models(
 
     if train_job_id is not None:
         update_model_train_job(
-            mysql_dsn=settings.mysql_dsn,
+            mysql_dsn=settings.core.mysql_dsn,
             job_id=train_job_id,
             status="processing",
         )
@@ -129,7 +141,7 @@ def train_current_models(
 
         if train_job_id is not None:
             update_model_train_job(
-                mysql_dsn=settings.mysql_dsn,
+                mysql_dsn=settings.core.mysql_dsn,
                 job_id=train_job_id,
                 status="completed",
                 metrics=result,
@@ -144,11 +156,12 @@ def train_current_models(
             status="completed",
             train_job_id=train_job_id,
         )
+        _rebuild_global_pipeline_singleton(reason=f"train_current_models:{component}.{model}")
         return result
     except Exception as e:  # noqa: BLE001
         if train_job_id is not None:
             update_model_train_job(
-                mysql_dsn=settings.mysql_dsn,
+                mysql_dsn=settings.core.mysql_dsn,
                 job_id=train_job_id,
                 status="failed",
                 metrics={
@@ -171,13 +184,15 @@ def train_current_models(
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
     try:
-        from app.reco.ranking.mmoe_ranker import load_latest_local_model as load_latest_mmoe_local_model
+        from app.reco.ranking.mmoe import load_latest_local_model as load_latest_mmoe_local_model
         from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
 
         if not load_latest_mmoe_local_model(settings):
             return {"status": "failed", "reason": "mmoe_model_not_found"}
         if not load_latest_two_tower_local_model(settings):
             return {"status": "failed", "reason": "two_tower_model_not_found"}
+
+        _rebuild_global_pipeline_singleton(reason="refresh_current_models")
 
         return {"status": "completed", "reason": None}
     except Exception as e:  # noqa: BLE001
@@ -330,13 +345,13 @@ def _interaction_strength(*, action_type: str, rating: int | None, source_kind: 
 def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str, int | None, str, float]]:
     """Return tuples: (user_id, movie_id, action_type, rating, source_kind, strength)."""
 
-    engine = _get_mysql_engine(settings.mysql_dsn)
+    engine = _get_mysql_engine(settings.core.mysql_dsn)
     if engine is None:
         err = RuntimeError("mysql_not_configured")
         _log_exception("train.xgb.mysql_unavailable", err, stage="dataset")
         raise err
 
-    limit_n = settings.xgb_train_limit
+    limit_n = settings.xgb.train_limit
 
     sql = """
     SELECT t.user_id,
@@ -485,11 +500,11 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
         "info",
         "train.xgb.start",
         artifact_path=artifact_path,
-        eta=settings.xgb_train_eta,
-        max_depth=settings.xgb_train_max_depth,
-        rounds=settings.xgb_train_rounds,
+        eta=settings.xgb.train_eta,
+        max_depth=settings.xgb.train_max_depth,
+        rounds=settings.xgb.train_rounds,
         stage="prepare",
-        train_limit=settings.xgb_train_limit,
+        train_limit=settings.xgb.train_limit,
     )
 
     try:
@@ -567,10 +582,10 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
 
     movie_ids = [c.item_id for c in candidates]
     movie_features = (
-        fetch_movie_features(movie_ids, mysql_dsn=settings.mysql_dsn) if settings.xgb_use_mysql_features else {}
+        fetch_movie_features(movie_ids, mysql_dsn=settings.core.mysql_dsn) if settings.xgb.use_mysql_features else {}
     )
 
-    builder = ManualFeatureBuilder(config=ManualFeatureConfig(include_mysql_movie_features=settings.xgb_use_mysql_features))
+    builder = ManualFeatureBuilder(config=ManualFeatureConfig(include_mysql_movie_features=settings.xgb.use_mysql_features))
 
     # We build per-user contexts. For simplicity, use a single ctx with has_user=1.
     ctx = RequestContext(user_id=rows[0][0], n=10)
@@ -603,14 +618,14 @@ def _train_xgb(settings: Settings) -> TrainOutcome:
     params = {
         "objective": "binary:logistic",
         "eval_metric": "logloss",
-        "max_depth": settings.xgb_train_max_depth,
-        "eta": settings.xgb_train_eta,
-        "subsample": settings.xgb_train_subsample,
-        "colsample_bytree": settings.xgb_train_colsample,
+        "max_depth": settings.xgb.train_max_depth,
+        "eta": settings.xgb.train_eta,
+        "subsample": settings.xgb.train_subsample,
+        "colsample_bytree": settings.xgb.train_colsample,
         "seed": 20260106,
     }
 
-    num_boost_round = settings.xgb_train_rounds
+    num_boost_round = settings.xgb.train_rounds
     _log_event("info", "train.xgb.fit_start", boost_rounds=num_boost_round, stage="fit")
     booster = xgb.train(params, dtrain, num_boost_round=num_boost_round)
     test_pred = booster.predict(dtest)
@@ -669,14 +684,14 @@ def _fetch_mmoe_training_rows(
         _log_exception("train.mmoe.deps_failed", e, stage="dataset")
         raise RuntimeError(f"mmoe_dataset_dependency_failed: {type(e).__name__}: {e}") from e
 
-    engine = _get_mysql_engine(settings.mysql_dsn)
+    engine = _get_mysql_engine(settings.core.mysql_dsn)
     if engine is None:
         err = RuntimeError("mysql_not_configured")
         _log_exception("train.mmoe.mysql_unavailable", err, stage="dataset")
         raise err
 
-    limit_n = settings.mmoe_train_limit
-    neg_ratio = settings.mmoe_global_neg_ratio
+    limit_n = settings.mmoe.train_limit
+    neg_ratio = settings.mmoe.global_neg_ratio
     dataset_seed = 20260402
 
     sql_click_recent = text(
@@ -919,7 +934,7 @@ def _fetch_mmoe_aux_training_features(
     user_ids: Sequence[int],
     movie_ids: Sequence[int],
 ) -> Dict[str, Any]:
-    engine = _get_mysql_engine(settings.mysql_dsn)
+    engine = _get_mysql_engine(settings.core.mysql_dsn)
     if engine is None:
         err = RuntimeError("mysql_engine_unavailable")
         _log_exception("train.mmoe.aux_mysql_unavailable", err, stage="aux_features")
@@ -1077,18 +1092,18 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         "info",
         "train.mmoe.start",
         artifact_path=artifact_path,
-        batch_size=settings.mmoe_train_batch_size,
-        epochs=settings.mmoe_train_epochs,
-        lr=settings.mmoe_train_lr,
+        batch_size=settings.mmoe.train_batch_size,
+        epochs=settings.mmoe.train_epochs,
+        lr=settings.mmoe.train_lr,
         stage="prepare",
-        train_limit=settings.mmoe_train_limit,
+        train_limit=settings.mmoe.train_limit,
     )
 
     try:
         import torch
         from torch import nn
 
-        from app.reco.ranking.mmoe_ranker import MMoENet, bundle_feature_order
+        from app.reco.ranking.mmoe import MMoENet, bundle_feature_order
         from app.reco.ranking.mmoe.features import (
             ITEM_TAG_SEQ_LEN,
             LONG_INTEREST_TAG_SEQ_LEN,
@@ -1406,10 +1421,10 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         user_vocab_size=len(user_index) + 1,
         item_vocab_size=len(item_index) + 1,
         num_numeric_features=len(feature_names),
-        emb_dim=settings.mmoe_emb_dim,
-        num_experts=settings.mmoe_num_experts,
-        expert_hidden_dim=settings.mmoe_expert_hidden_dim,
-        tower_hidden_dim=settings.mmoe_tower_hidden_dim,
+        emb_dim=settings.mmoe.emb_dim,
+        num_experts=settings.mmoe.num_experts,
+        expert_hidden_dim=settings.mmoe.expert_hidden_dim,
+        tower_hidden_dim=settings.mmoe.tower_hidden_dim,
         gender_vocab_size=max(gender_index.values()) + 1,
         age_bucket_vocab_size=max(age_bucket_index.values()) + 1,
         tag_vocab_size=max(tag_index.values()) + 1,
@@ -1417,16 +1432,16 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
         use_target_attention=True,
         use_long_interest_pooling=True,
     )
-    optimizer = torch.optim.Adam(model.parameters(), lr=settings.mmoe_train_lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=settings.mmoe.train_lr)
     bce = nn.BCELoss()
 
-    epochs = settings.mmoe_train_epochs
-    batch_size = settings.mmoe_train_batch_size
-    in_batch_neg_ratio = settings.mmoe_in_batch_neg_ratio
-    w_click = settings.mmoe_loss_weight_click if pos_click > 0 else 0.0
-    w_collect = settings.mmoe_loss_weight_collect if pos_collect > 0 else 0.0
-    w_rate = settings.mmoe_loss_weight_rate if pos_rating > 0 else 0.0
-    w_comment = settings.mmoe_loss_weight_comment if pos_comment > 0 else 0.0
+    epochs = settings.mmoe.train_epochs
+    batch_size = settings.mmoe.train_batch_size
+    in_batch_neg_ratio = settings.mmoe.in_batch_neg_ratio
+    w_click = settings.mmoe.loss_weight_click if pos_click > 0 else 0.0
+    w_collect = settings.mmoe.loss_weight_collect if pos_collect > 0 else 0.0
+    w_rate = settings.mmoe.loss_weight_rate if pos_rating > 0 else 0.0
+    w_comment = settings.mmoe.loss_weight_comment if pos_comment > 0 else 0.0
     n = len(train_idx)
     train_idx_tensor = torch.tensor(train_idx, dtype=torch.long)
     test_idx_tensor = torch.tensor(test_idx, dtype=torch.long)
@@ -1609,10 +1624,10 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
             "user_vocab_size": len(user_index) + 1,
             "item_vocab_size": len(item_index) + 1,
             "num_numeric_features": len(feature_names),
-            "emb_dim": settings.mmoe_emb_dim,
-            "num_experts": settings.mmoe_num_experts,
-            "expert_hidden_dim": settings.mmoe_expert_hidden_dim,
-            "tower_hidden_dim": settings.mmoe_tower_hidden_dim,
+            "emb_dim": settings.mmoe.emb_dim,
+            "num_experts": settings.mmoe.num_experts,
+            "expert_hidden_dim": settings.mmoe.expert_hidden_dim,
+            "tower_hidden_dim": settings.mmoe.tower_hidden_dim,
             "gender_vocab_size": max(gender_index.values()) + 1,
             "age_bucket_vocab_size": max(age_bucket_index.values()) + 1,
             "tag_vocab_size": max(tag_index.values()) + 1,
@@ -1667,7 +1682,7 @@ def _train_mmoe(settings: Settings) -> TrainOutcome:
 
 
 def _two_tower_active_index_path(settings: Settings) -> str:
-    return settings.two_tower_index_path or os.path.join("data", "two_tower_items.hnsw")
+    return settings.two_tower.index_path
 
 
 def _train_two_tower_index(settings: Settings) -> TrainOutcome:
@@ -1691,7 +1706,6 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
 
     try:
         from app.reco.recall.two_tower import (
-            load_config_from_settings,
             materialize_item_vectors_from_model,
             save_model_weights,
             train_two_tower_model,
@@ -1700,7 +1714,7 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
         _log_exception("train.two_tower.deps_failed", e, stage="prepare", status="failed")
         raise RuntimeError(f"two_tower_dependency_failed: {type(e).__name__}: {e}") from e
 
-    cfg = load_config_from_settings(settings)
+    cfg = settings.two_tower
     _log_event(
         "info",
         "train.two_tower.config_loaded",
@@ -1712,7 +1726,7 @@ def _train_two_tower_index(settings: Settings) -> TrainOutcome:
     )
 
     try:
-        model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.mysql_dsn)
+        model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.core.mysql_dsn)
         _log_event("info", "train.two_tower.fit_done", metrics=train_metrics, stage="fit")
         save_model_weights(model, artifact_model_path)
         _log_event("info", "train.two_tower.model_saved", model_path=artifact_model_path, stage="finalize")
@@ -1917,3 +1931,4 @@ def list_model_train_jobs(
         )
 
     return out
+

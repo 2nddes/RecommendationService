@@ -8,7 +8,9 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
-from .config_model import TwoTowerConfig, TwoTowerModel
+from app.common.settings import TwoTowerSettings
+
+from .config_model import TwoTowerModel
 from .encoder import FeatureTwoTowerEncoder
 from .features import (
     age_bucket_index,
@@ -25,7 +27,7 @@ from .features import (
 logger = logging.getLogger(__name__)
 
 
-def _train_fetch_interactions(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> list[tuple[int, int, float]]:
+def _train_fetch_interactions(cfg: TwoTowerSettings, *, mysql_dsn: str | None) -> list[tuple[int, int, float]]:
     from .db import execute
 
     sql = """
@@ -141,7 +143,7 @@ def _train_sample_negative_items(
     return neg
 
 
-def train_two_tower_model(cfg: TwoTowerConfig, *, mysql_dsn: str | None) -> tuple[TwoTowerModel, dict[str, int | float]]:
+def train_two_tower_model(cfg: TwoTowerSettings, *, mysql_dsn: str | None) -> tuple[TwoTowerModel, dict[str, int | float]]:
     interactions = _train_fetch_interactions(cfg, mysql_dsn=mysql_dsn)
     if not interactions:
         raise RuntimeError("no_training_interactions")

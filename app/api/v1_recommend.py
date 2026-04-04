@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from time import perf_counter
 
 from flask import Blueprint, request
 from sqlalchemy import Engine, create_engine, text
@@ -9,9 +10,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.responses import ok, fail
 from app.common.validation import as_int
-from app.common.settings import Settings
-from app.reco.factory import build_pipeline
-from app.reco.recall.two_tower import ann_search, build_item_vector, load_config_from_settings
+from app.reco.runtime import get_pipeline, get_settings
+from app.reco.recall.two_tower import ann_search, build_item_vector
 from app.reco.types import RequestContext
 
 recommend_bp = Blueprint("recommend", __name__)
@@ -113,16 +113,20 @@ def recommend_user():
     user_id = as_int(user_id_raw, name="user_id")
     n = as_int(request.args.get("n", 10), name="n")
     logger.info("收到个性化推荐请求，user_id=%s, n=%s", user_id, n)
+    req_start = perf_counter()
 
-    # 召回/排序/重排：由 pipeline 统一编排。
-    settings = Settings.from_config()
-    pipeline = build_pipeline(settings)
-    ctx = RequestContext(user_id=user_id, n=n)
-    items = pipeline.recommend(ctx)
-    logger.info("个性化推荐完成，user_id=%s, 返回条数=%s", user_id, len(items))
+    try:
+      # 召回/排序/重排：由 pipeline 统一编排（单例复用）。
+      pipeline = get_pipeline()
+      ctx = RequestContext(user_id=user_id, n=n)
+      items = pipeline.recommend(ctx)
+      logger.info("个性化推荐完成，user_id=%s, 返回条数=%s, elapsed_ms=%.2f", user_id, len(items), (perf_counter() - req_start) * 1000.0)
 
-    data = {"user_id": user_id, "items": items, "n": n}
-    return ok(data)
+      data = {"user_id": user_id, "items": items, "n": n}
+      return ok(data)
+    except Exception as e:
+      logger.exception("个性化推荐执行过程中发生异常")
+      return fail(message=f"Internal Server Error: {e}", code=500)
 
 
 @recommend_bp.get("/recommend/item")
@@ -143,10 +147,10 @@ def recommend_item():
     n = as_int(request.args.get("n", 8), name="n")
     logger.info("收到相似影片推荐请求，movie_id=%s, n=%s", movie_id, n)
 
-    settings = Settings.from_config()
+    settings = get_settings()
 
-    cfg = load_config_from_settings(settings)
-    item_vec = build_item_vector(movie_id, cfg, None, mysql_dsn=settings.mysql_dsn)
+    cfg = settings.two_tower
+    item_vec = build_item_vector(movie_id, cfg, mysql_dsn=settings.core.mysql_dsn)
     if item_vec is None:
       logger.warning("相似影片推荐失败：未找到物品向量，movie_id=%s", movie_id)
       return fail(message="Item vector not found for movie_id: {}".format(movie_id))
@@ -183,8 +187,8 @@ def recommend_trending():
       logger.warning("趋势推荐请求参数非法，window=%s", window)
       return fail(message="invalid 'window'")
 
-    settings = Settings.from_config()
-    items = _fetch_trending_items(settings.mysql_dsn, window=window, n=n)
+    settings = get_settings()
+    items = _fetch_trending_items(settings.core.mysql_dsn, window=window, n=n)
     logger.info("趋势推荐完成，window=%s, n=%s, 返回条数=%s", window, n, len(items))
 
     data = {
@@ -193,3 +197,4 @@ def recommend_trending():
         "n": n,
     }
     return ok(data)
+

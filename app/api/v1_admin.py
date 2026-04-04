@@ -5,10 +5,10 @@ import logging
 from flask import Blueprint, request
 
 from app.common.responses import ok, fail
-from app.common.settings import Settings
 from app.common.validation import as_int, as_str
 from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_train_task
 from app.ops.model_ops import refresh_current_models
+from app.reco.runtime import get_settings
 
 admin_bp = Blueprint("admin", __name__)
 logger = logging.getLogger(__name__)
@@ -26,14 +26,14 @@ def admin_train():
     component = body.get("component")
     model = body.get("model")
     if component is None or model is None:
-        print("未指定 component 或 model")
+        logger.warning("训练任务缺少参数，component=%s, model=%s", component, model)
         return fail(message="Please specify 'component' and 'model' in the request body")
 
     component = as_str(component, name="component")
     model = as_str(model, name="model")
     logger.info("收到训练任务请求，component=%s, model=%s", component, model)
 
-    settings = Settings.from_config()
+    settings = get_settings()
     try:
         data = start_train_task(
             settings,
@@ -55,7 +55,7 @@ def admin_refresh():
     文档: POST /api/v1/admin/refresh
     """
 
-    settings = Settings.from_config()
+    settings = get_settings()
     logger.info("收到模型刷新请求")
     data = refresh_current_models(settings)
     if str(data.get("status")) == "completed":
@@ -72,7 +72,7 @@ def admin_task(task_id: str):
     文档: GET /api/v1/admin/tasks/<task_id>
     """
 
-    settings = Settings.from_config()
+    settings = get_settings()
     t = get_task(settings, task_id)
     if t is None:
         return fail(message=f"Task not found: {task_id}")
@@ -108,7 +108,7 @@ def admin_tasks():
     if offset < 0:
         return fail(message="invalid 'offset', expected non-negative integer")
 
-    settings = Settings.from_config()
+    settings = get_settings()
     data = get_tasks(settings, source=source, status=status, limit=limit, offset=offset)
     return ok(data)
 
@@ -120,5 +120,5 @@ def admin_status():
     文档: GET /api/v1/admin/status
     """
 
-    settings = Settings.from_config()
+    settings = get_settings()
     return ok(get_admin_status(settings))

@@ -1,8 +1,8 @@
+from app.common.settings import TwoTowerSettings
+
 from .config_model import (
-    TwoTowerConfig,
     TwoTowerModel,
     invalidate_model_cache,
-    load_config_from_settings,
     load_model_weights,
     save_model_weights,
 )
@@ -20,7 +20,7 @@ from .train import train_two_tower_model
 
 __all__ = [
     "ItemVectorStore",
-    "TwoTowerConfig",
+    "TwoTowerSettings",
     "TwoTowerModel",
     "ann_search",
     "build_hnsw_index",
@@ -29,7 +29,6 @@ __all__ = [
     "fetch_user_excluded_items",
     "invalidate_index_cache",
     "invalidate_model_cache",
-    "load_config_from_settings",
     "load_latest_local_model",
     "load_model_weights",
     "materialize_item_vectors_from_model",

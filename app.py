@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from app import create_app
+from app.reco.runtime import get_settings
 
-app = create_app()
+app = create_app(get_settings())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 import os
 import threading
 import time
@@ -13,10 +14,13 @@ try:
 except Exception:  # pragma: no cover
     hnswlib = None
 
-from app.common.settings import Settings
+from app.common.settings import Settings, TwoTowerSettings
 
-from .config_model import TwoTowerConfig, l2_normalize, load_config_from_settings, load_model_weights
+from .config_model import l2_normalize, load_model_weights
 from .store import ItemVectorStore
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -43,19 +47,19 @@ def invalidate_index_cache() -> None:
         _index_state = None
 
 
-def _index_load_hnsw_from_disk(cfg: TwoTowerConfig) -> object | None:
+def _index_load_hnsw_from_disk(cfg: TwoTowerSettings) -> object | None:
     if hnswlib is None:
         return None
     try:
         idx = hnswlib.Index(space=cfg.space, dim=cfg.dim)
         idx.load_index(cfg.index_path)
-        idx.set_ef(min(200, max(10, int(cfg.recall_topk))))
+        idx.set_ef(cfg.recall_topk)
         return idx
     except Exception:
         return None
 
 
-def _index_refresh_state(cfg: TwoTowerConfig) -> _IndexState:
+def _index_refresh_state(cfg: TwoTowerSettings) -> _IndexState:
     global _index_state
 
     if (
@@ -100,49 +104,50 @@ def _index_refresh_state(cfg: TwoTowerConfig) -> _IndexState:
     return st
 
 
-def ann_search(vec: np.ndarray, k: int, cfg: TwoTowerConfig) -> List[Tuple[int, float]]:
-    k = int(k)
-    if k <= 0:
-        return []
+def ann_search(vec: np.ndarray, k: int, cfg: TwoTowerSettings) -> List[Tuple[int, float]]:
 
     query = vec.astype(np.float32, copy=False)
     if query.ndim == 1:
         query = query.reshape(1, -1)
 
     with _index_lock:
-        st = _index_refresh_state(cfg)
+        try:
+            st = _index_refresh_state(cfg)
 
-        if st.index is not None:
-            labels, distances = st.index.knn_query(query, k=k)
-            out: List[Tuple[int, float]] = []
-            for label, dist in zip(labels[0].tolist(), distances[0].tolist()):
-                try:
-                    item_id = int(label)
-                    d = float(dist)
-                except Exception:
-                    continue
-                if cfg.space == "cosine":
-                    score = 1.0 - d
-                else:
-                    score = -d
-                out.append((item_id, score))
-            return out
+            if st.index is not None:
+                labels, distances = st.index.knn_query(query, k=k)
+                out: List[Tuple[int, float]] = []
+                for label, dist in zip(labels[0].tolist(), distances[0].tolist()):
+                    try:
+                        item_id = int(label)
+                        d = float(dist)
+                    except Exception:
+                        continue
+                    if cfg.space == "cosine":
+                        score = 1.0 - d
+                    else:
+                        score = -d
+                    out.append((item_id, score))
+                return out
 
-        if st.ids is None or st.vectors is None or st.ids.size == 0:
+            if st.ids is None or st.vectors is None or st.ids.size == 0:
+                return []
+
+            if cfg.space == "cosine":
+                q = l2_normalize(query[0])
+                sims = st.vectors @ q
+                top_idx = np.argsort(sims)[::-1][:k]
+                return [(int(st.ids[i]), float(sims[i])) for i in top_idx.tolist()]
+
+            dists = np.linalg.norm(st.vectors - query[0], axis=1)
+            top_idx = np.argsort(dists)[:k]
+            return [(int(st.ids[i]), float(-dists[i])) for i in top_idx.tolist()]
+        except Exception:
+            logger.exception("ann_search failed, k=%s, space=%s, dim=%s", k, cfg.space, cfg.dim)
             return []
 
-        if cfg.space == "cosine":
-            q = l2_normalize(query[0])
-            sims = st.vectors @ q
-            top_idx = np.argsort(sims)[::-1][:k]
-            return [(int(st.ids[i]), float(sims[i])) for i in top_idx.tolist()]
 
-        dists = np.linalg.norm(st.vectors - query[0], axis=1)
-        top_idx = np.argsort(dists)[:k]
-        return [(int(st.ids[i]), float(-dists[i])) for i in top_idx.tolist()]
-
-
-def _index_persist_hnsw_from_vectors(*, cfg: TwoTowerConfig, vectors: Mapping[int, np.ndarray], index_path: str) -> None:
+def _index_persist_hnsw_from_vectors(*, cfg: TwoTowerSettings, vectors: Mapping[int, np.ndarray], index_path: str) -> None:
     if hnswlib is None or not vectors:
         return
 
@@ -162,7 +167,7 @@ def _index_persist_hnsw_from_vectors(*, cfg: TwoTowerConfig, vectors: Mapping[in
 
 def materialize_item_vectors_from_model(
     *,
-    cfg: TwoTowerConfig,
+    cfg: TwoTowerSettings,
     model_path: str,
     vector_db_path: str | None = None,
     index_path: str | None = None,
@@ -188,7 +193,7 @@ def materialize_item_vectors_from_model(
 def build_hnsw_index(
     *,
     index_path: str,
-    cfg: TwoTowerConfig,
+    cfg: TwoTowerSettings,
     mysql_dsn: str | None,
     movie_ids: Sequence[int] | None = None,
     max_elements: int | None = None,
@@ -205,25 +210,30 @@ def build_hnsw_index(
 
 
 def load_latest_local_model(settings: Settings) -> str | None:
-    cfg = load_config_from_settings(settings)
-
-    if os.path.exists(cfg.model_path):
-        load_model_weights(cfg.model_path)
-        return cfg.model_path
-
+    cfg = settings.two_tower
     artifact_dir = os.path.join("data", "artifacts", "two_tower")
-    if not os.path.isdir(artifact_dir):
+    active_exists = os.path.exists(cfg.model_path)
+
+    latest: str | None = None
+    if os.path.isdir(artifact_dir):
+        candidates = [os.path.join(artifact_dir, name) for name in os.listdir(artifact_dir) if name.endswith(".pt")]
+        if candidates:
+            latest = max(candidates, key=lambda p: os.path.getmtime(p))
+
+    if latest is not None:
+        latest_mtime = os.path.getmtime(latest)
+        active_mtime = os.path.getmtime(cfg.model_path) if active_exists else -1.0
+        if (not active_exists) or latest_mtime > active_mtime:
+            os.makedirs(os.path.dirname(cfg.model_path) or ".", exist_ok=True)
+            tmp = cfg.model_path + ".tmp"
+            with open(latest, "rb") as src, open(tmp, "wb") as dst:
+                dst.write(src.read())
+            os.replace(tmp, cfg.model_path)
+            active_exists = True
+            logger.info("Two-tower latest artifact promoted to active model, source=%s, target=%s", latest, cfg.model_path)
+
+    if not active_exists:
         return None
 
-    candidates = [os.path.join(artifact_dir, name) for name in os.listdir(artifact_dir) if name.endswith(".pt")]
-    if not candidates:
-        return None
-
-    latest = max(candidates, key=lambda p: os.path.getmtime(p))
-    os.makedirs(os.path.dirname(cfg.model_path) or ".", exist_ok=True)
-    tmp = cfg.model_path + ".tmp"
-    with open(latest, "rb") as src, open(tmp, "wb") as dst:
-        dst.write(src.read())
-    os.replace(tmp, cfg.model_path)
     load_model_weights(cfg.model_path)
     return cfg.model_path

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from time import perf_counter
 from typing import Iterable, List
 
 from app.reco.types import Candidate, RankedItem, RequestContext
@@ -20,14 +21,35 @@ class RecommendationPipeline:
     reranker: Reranker
 
     def recommend(self, ctx: RequestContext) -> List[int]:
+        pipeline_start = perf_counter()
         logger.info("推荐流水线开始，user_id=%s, movie_id=%s, n=%s", ctx.user_id, ctx.movie_id, ctx.n)
+        recall_start = perf_counter()
         candidates = self._recall(ctx)
-        logger.info("召回阶段完成，候选数=%s", len(candidates))
+        recall_ms = (perf_counter() - recall_start) * 1000.0
+        logger.info("召回阶段完成，候选数=%s, elapsed_ms=%.2f", len(candidates), recall_ms)
+
+        rank_start = perf_counter()
         ranked = self.ranker.rank(ctx, candidates)
-        logger.info("排序阶段完成，结果数=%s, 排序器=%s", len(ranked), self.ranker.name)
+        rank_ms = (perf_counter() - rank_start) * 1000.0
+        logger.info("排序阶段完成，结果数=%s, 排序器=%s, elapsed_ms=%.2f", len(ranked), self.ranker.name, rank_ms)
+
+        rerank_start = perf_counter()
         reranked = self.reranker.rerank(ctx, ranked)
         final_items = [x.item_id for x in reranked[: max(ctx.n, 0)]]
-        logger.info("重排阶段完成，返回条数=%s, 重排器=%s", len(final_items), self.reranker.name)
+        rerank_ms = (perf_counter() - rerank_start) * 1000.0
+        total_ms = (perf_counter() - pipeline_start) * 1000.0
+        logger.info("重排阶段完成，返回条数=%s, 重排器=%s, elapsed_ms=%.2f", len(final_items), self.reranker.name, rerank_ms)
+        logger.info(
+            "推荐流水线完成，user_id=%s, candidate_count=%s, ranked_count=%s, returned_count=%s, recall_ms=%.2f, rank_ms=%.2f, rerank_ms=%.2f, elapsed_ms=%.2f",
+            ctx.user_id,
+            len(candidates),
+            len(ranked),
+            len(final_items),
+            recall_ms,
+            rank_ms,
+            rerank_ms,
+            total_ms,
+        )
         return final_items
 
     def _recall(self, ctx: RequestContext) -> List[Candidate]:

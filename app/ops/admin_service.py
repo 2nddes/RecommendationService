@@ -39,7 +39,7 @@ def start_train_task(
     def _fn() -> Dict[str, Any]:
         train_job_id: int | None = None
         try:
-            train_job_id = create_model_train_job(mysql_dsn=settings.mysql_dsn, mode="full")
+            train_job_id = create_model_train_job(mysql_dsn=settings.core.mysql_dsn, mode="full")
             _train_task_job_map[task_id] = int(train_job_id)
             logger.info("训练任务已创建数据库记录，task_id=%s, train_job_id=%s", task_id, train_job_id)
         except Exception as e:  # noqa: BLE001
@@ -84,7 +84,7 @@ def get_task(settings: Settings, task_id: str) -> Dict[str, Any] | None:
 
         linked_job_id = _train_task_job_map.get(task_id)
         if linked_job_id is not None:
-            job = get_model_train_job(mysql_dsn=settings.mysql_dsn, job_id=int(linked_job_id))
+            job = get_model_train_job(mysql_dsn=settings.core.mysql_dsn, job_id=int(linked_job_id))
             if job is not None:
                 metrics = job.get("metrics") or {}
                 payload["status"] = _map_model_train_job_status(job.get("status"))
@@ -102,7 +102,7 @@ def get_task(settings: Settings, task_id: str) -> Dict[str, Any] | None:
     if not str(task_id).isdigit():
         return None
 
-    job = get_model_train_job(mysql_dsn=settings.mysql_dsn, job_id=int(task_id))
+    job = get_model_train_job(mysql_dsn=settings.core.mysql_dsn, job_id=int(task_id))
     if job is None:
         return None
 
@@ -152,7 +152,7 @@ def get_tasks(
 
             linked_job_id = _train_task_job_map.get(str(item.get("id")))
             if linked_job_id is not None:
-                job = get_model_train_job(mysql_dsn=settings.mysql_dsn, job_id=int(linked_job_id))
+                job = get_model_train_job(mysql_dsn=settings.core.mysql_dsn, job_id=int(linked_job_id))
                 if job is not None:
                     item["status"] = _map_model_train_job_status(job.get("status"))
                     metrics = job.get("metrics") or {}
@@ -181,7 +181,7 @@ def get_tasks(
             }
             db_status = reverse.get(status_value)
 
-        db_jobs = list_model_train_jobs(mysql_dsn=settings.mysql_dsn, limit=int(limit), offset=int(offset), status=db_status)
+        db_jobs = list_model_train_jobs(mysql_dsn=settings.core.mysql_dsn, limit=int(limit), offset=int(offset), status=db_status)
         for job in db_jobs:
             metrics = job.get("metrics") or {}
             error = metrics.get("error") if isinstance(metrics, dict) else None
@@ -230,12 +230,13 @@ def get_admin_status(settings: Settings) -> Dict[str, Any]:
                 "ranking": "mmoe",
                 "reranking": "random_shuffle",
             },
-            "mmoe_model_path": settings.mmoe_model_path,
-            "two_tower_model_path": settings.two_tower_model_path,
-            "two_tower_index_path": settings.two_tower_index_path,
-            "two_tower_vector_db_path": settings.two_tower_vector_db_path,
-            "two_tower_startup_build": settings.two_tower_startup_build,
-            "two_tower_daily_update_interval_hours": settings.two_tower_daily_update_interval_hours,
+            "mmoe_model_path": settings.mmoe.model_path,
+            "two_tower_model_path": settings.two_tower.model_path,
+            "two_tower_index_path": settings.two_tower.index_path,
+            "two_tower_vector_db_path": settings.two_tower.vector_db_path,
+            "two_tower_startup_build": settings.two_tower.startup_build,
+            "two_tower_daily_update_interval_hours": settings.two_tower.daily_update_interval_hours,
         },
         "artifacts": store.get_all(),
     }
+

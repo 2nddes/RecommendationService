@@ -15,9 +15,8 @@ from app.reco.startup import start_startup_jobs
 logger = logging.getLogger(__name__)
 
 
-def create_app(settings: Settings | None = None) -> Flask:
+def create_app(settings: Settings) -> Flask:
     log_file = configure_logging()
-    settings = settings or Settings.from_config()
 
     app = Flask(__name__)
     app.config["JSON_AS_ASCII"] = False
@@ -36,10 +35,10 @@ def create_app(settings: Settings | None = None) -> Flask:
         # 文档提到: X-Internal-Secret
         from flask import request
 
-        if not settings.internal_secret:
+        if not settings.core.internal_secret:
             return None
 
-        if request.headers.get("X-Internal-Secret") != settings.internal_secret:
+        if request.headers.get("X-Internal-Secret") != settings.core.internal_secret:
             from app.common.responses import fail
 
             logger.warning("内部鉴权失败，path=%s", request.path)
@@ -48,3 +47,4 @@ def create_app(settings: Settings | None = None) -> Flask:
         return None
 
     return app
+

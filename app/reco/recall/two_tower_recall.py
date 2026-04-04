@@ -4,9 +4,9 @@ from dataclasses import dataclass
 import logging
 from typing import List
 
+from app.common.settings import TwoTowerSettings
 from app.reco.recall.base import Recaller
 from app.reco.recall.two_tower import (
-    TwoTowerConfig,
     ann_search,
     build_item_vector,
     build_user_vector,
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class TwoTowerRecall(Recaller):
     """Two-Tower 召回（基于真实数据库在线用户向量 + 离线物品向量库）。"""
 
-    cfg: TwoTowerConfig
+    cfg: TwoTowerSettings
     mysql_dsn: str | None = None
 
     @property
@@ -35,8 +35,12 @@ class TwoTowerRecall(Recaller):
 
         if ctx.user_id is not None:
             user_id = int(ctx.user_id)
-            query_vec = build_user_vector(user_id, self.cfg, None, mysql_dsn=self.mysql_dsn)
-            excluded = fetch_user_excluded_items(user_id, mysql_dsn=self.mysql_dsn)
+            query_vec = build_user_vector(user_id, self.cfg, mysql_dsn=self.mysql_dsn)
+            excluded = fetch_user_excluded_items(
+                user_id,
+                mysql_dsn=self.mysql_dsn,
+                recent_limit=self.cfg.exclude_recent_n,
+            )
         else:
             logger.warning(
                 "用户ID为空，双塔无法构建向量，user_id=%s, movie_id=%s, n=%s",
@@ -45,7 +49,7 @@ class TwoTowerRecall(Recaller):
                 ctx.n,
             )
         # if query_vec is None and ctx.movie_id is not None:
-        #     query_vec = build_item_vector(int(ctx.movie_id), self.cfg, None, mysql_dsn=self.mysql_dsn)
+        #     query_vec = build_item_vector(int(ctx.movie_id), self.cfg, mysql_dsn=self.mysql_dsn)
         #     excluded = {int(ctx.movie_id)}
 
         if query_vec is None:

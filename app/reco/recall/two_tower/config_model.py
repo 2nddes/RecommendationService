@@ -9,65 +9,35 @@ from typing import Any
 import numpy as np
 import torch
 
-from app.common.settings import Settings
-
-
-@dataclass(frozen=True)
-class TwoTowerConfig:
-    dim: int = 64
-    seed: int = 20260105
-    alpha: float = 0.7
-    recent_item_limit: int = 50
-    recall_topk: int = 300
-    hr_eval_k: int = 20
-    space: str = "cosine"
-    reload_interval_s: float = 2.0
-    index_path: str = os.path.join("data", "two_tower_items.hnsw")
-    vector_db_path: str = os.path.join("data", "two_tower_vectors.db")
-    model_path: str = os.path.join("data", "models", "two_tower_latest.pt")
-
-    train_epochs: int = 6
-    train_batch_size: int = 2048
-    train_lr: float = 0.03
-    train_reg: float = 1e-4
-    train_negatives: int = 2
-    train_limit: int = 300000
+from app.common.settings import TwoTowerSettings
 
 
 @dataclass
 class TwoTowerModel:
+    """In-memory Two-Tower model bundle used by recall runtime.
+
+    Arrays are expected to be aligned by index:
+    - user_ids[i] <-> user_emb[i]
+    - item_ids[i] <-> item_emb[i]
+    This alignment is required for fast id-to-vector lookup.
+    """
+
+    # Embedding dimension; must match user_emb/item_emb second axis.
     dim: int
+    # User ids aligned with user_emb rows, shape: [num_users].
     user_ids: np.ndarray
+    # Item ids aligned with item_emb rows, shape: [num_items].
     item_ids: np.ndarray
+    # User embedding matrix, shape: [num_users, dim].
     user_emb: np.ndarray
+    # Item embedding matrix, shape: [num_items, dim].
     item_emb: np.ndarray
+    # Fast lookup map: user_id -> row index in user_ids/user_emb.
     user_id_to_index: dict[int, int]
+    # Fast lookup map: item_id -> row index in item_ids/item_emb.
     item_id_to_index: dict[int, int]
+    # Optional training/runtime metadata (encoder state, schema, etc.).
     metadata: dict[str, Any] | None = None
-
-
-def load_config_from_settings(settings: Settings) -> TwoTowerConfig:
-    cfg = TwoTowerConfig(
-        dim=int(settings.two_tower_dim),
-        seed=int(settings.two_tower_seed),
-        alpha=float(settings.two_tower_alpha),
-        recent_item_limit=int(settings.two_tower_recent_item_limit),
-        recall_topk=int(settings.recall_topk_two_tower),
-        hr_eval_k=int(settings.two_tower_hr_eval_k),
-        space=str(settings.two_tower_space or "cosine"),
-        reload_interval_s=float(settings.two_tower_reload_interval_s),
-        index_path=str(settings.two_tower_index_path or os.path.join("data", "two_tower_items.hnsw")),
-        vector_db_path=str(settings.two_tower_vector_db_path or os.path.join("data", "two_tower_vectors.db")),
-        model_path=str(settings.two_tower_model_path or os.path.join("data", "models", "two_tower_latest.pt")),
-        train_epochs=int(settings.two_tower_train_epochs),
-        train_batch_size=int(settings.two_tower_train_batch_size),
-        train_lr=float(settings.two_tower_train_lr),
-        train_reg=float(settings.two_tower_train_reg),
-        train_negatives=int(settings.two_tower_train_negatives),
-        train_limit=int(settings.two_tower_train_limit),
-    )
-    return cfg
-
 
 def l2_normalize(v: np.ndarray) -> np.ndarray:
     denom = float(np.linalg.norm(v) + 1e-12)

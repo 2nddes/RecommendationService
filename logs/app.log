@@ -630,3 +630,295 @@ RuntimeError: item_static_tags_missing
 2026-04-04 10:50:51 | INFO | app.ops.tasks | 后台任务执行成功，task_id=train_20260404_024848_c33c64
 2026-04-04 10:51:06 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\reco\\recall\\two_tower_recall.py', reloading
 2026-04-04 10:51:07 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 15:36:32 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:32 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:32 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:36:32 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:36:32 | INFO | app.reco.recall.two_tower.indexing | Two-tower latest artifact promoted to active model, source=data\artifacts\two_tower\two_tower_20260316_152913.pt, target=data/models/two_tower_latest.pt
+2026-04-04 15:36:33 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:36:33 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:36:33 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:36:33 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:36:33 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:36:33 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:36:33 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:36:33 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:36:33 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.5.220:5000
+2026-04-04 15:36:33 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-04 15:36:33 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 15:36:36 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:36 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:36 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:36:36 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:36:37 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:36:37 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:36:37 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:36:37 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:36:37 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:36:37 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:36:37 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:36:37 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:36:37 | WARNING | werkzeug |  * Debugger is active!
+2026-04-04 15:36:37 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-04 15:36:52 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:52 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:52 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:36:52 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:36:53 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:36:53 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:36:53 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:36:53 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:36:53 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:36:53 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:36:53 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:36:53 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:36:53 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.5.220:5000
+2026-04-04 15:36:53 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-04 15:36:53 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 15:36:56 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:56 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:36:56 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:36:56 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:36:57 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:36:57 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:36:57 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:36:57 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:36:57 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:36:57 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:36:57 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:36:57 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:36:57 | WARNING | werkzeug |  * Debugger is active!
+2026-04-04 15:36:57 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-04 15:37:36 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:37:36 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:37:37 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:37:37 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298
+2026-04-04 15:40:51 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe
+2026-04-04 15:40:51 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle
+2026-04-04 15:40:51 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10
+2026-04-04 15:40:51 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:40:51] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:12 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:59:12 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:59:12 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:59:12 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:59:14 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:59:14 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:59:14 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:59:14 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:59:14 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:59:14 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:59:14 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:59:14 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:59:14 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.5.220:5000
+2026-04-04 15:59:14 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-04 15:59:14 | INFO | werkzeug |  * Restarting with stat
+2026-04-04 15:59:16 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:59:16 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-04 15:59:16 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-04 15:59:16 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-04 15:59:17 | INFO | app.reco.startup | Two-tower rebuild finished, items=75050, index_path=data/two_tower_items.hnsw
+2026-04-04 15:59:17 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-04 15:59:17 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-04 15:59:17 | INFO | app.reco.startup | Startup init tasks completed, thread_name=reco-startup-init
+2026-04-04 15:59:17 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-04 15:59:17 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-04 15:59:17 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-04 15:59:17 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-04 15:59:17 | WARNING | werkzeug |  * Debugger is active!
+2026-04-04 15:59:17 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-04 15:59:33 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:33 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:34 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:34 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=913.28
+2026-04-04 15:59:35 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=400.17 | item_static_tags_ms=118.60 | user_profile_ms=1.18 | short_hist_ms=10.80 | long_interest_ms=11.21 | user_click_tag_ms=107.67 | user_click_total_ms=6.00 | elapsed_ms=671.72
+2026-04-04 15:59:35 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=870.69 | infer_ms=8.46 | sort_ms=0.04 | elapsed_ms=879.52
+2026-04-04 15:59:35 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=879.69
+2026-04-04 15:59:35 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.09
+2026-04-04 15:59:35 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=913.28, rank_ms=879.69, rerank_ms=0.09, elapsed_ms=1793.60
+2026-04-04 15:59:35 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=1793.83
+2026-04-04 15:59:35 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:35] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:47 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:47 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:48 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:48 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=360.42
+2026-04-04 15:59:48 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=107.63 | item_static_tags_ms=19.23 | user_profile_ms=0.60 | short_hist_ms=8.12 | long_interest_ms=1.96 | user_click_tag_ms=108.34 | user_click_total_ms=8.12 | elapsed_ms=254.57
+2026-04-04 15:59:48 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=260.20 | infer_ms=8.29 | sort_ms=0.03 | elapsed_ms=268.73
+2026-04-04 15:59:48 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=268.87
+2026-04-04 15:59:48 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 15:59:48 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=360.42, rank_ms=268.87, rerank_ms=0.07, elapsed_ms=629.58
+2026-04-04 15:59:48 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=629.70
+2026-04-04 15:59:48 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:48] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:49 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:49 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:50 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:50 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=367.38
+2026-04-04 15:59:50 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=113.93 | item_static_tags_ms=28.93 | user_profile_ms=0.75 | short_hist_ms=10.67 | long_interest_ms=3.87 | user_click_tag_ms=105.96 | user_click_total_ms=8.37 | elapsed_ms=273.05
+2026-04-04 15:59:50 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=279.77 | infer_ms=9.39 | sort_ms=0.03 | elapsed_ms=289.41
+2026-04-04 15:59:50 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=289.65
+2026-04-04 15:59:50 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 15:59:50 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=367.38, rank_ms=289.65, rerank_ms=0.07, elapsed_ms=657.28
+2026-04-04 15:59:50 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=657.41
+2026-04-04 15:59:50 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:50] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:52 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=314.28
+2026-04-04 15:59:52 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=100.56 | item_static_tags_ms=29.42 | user_profile_ms=0.64 | short_hist_ms=9.80 | long_interest_ms=2.14 | user_click_tag_ms=94.14 | user_click_total_ms=5.08 | elapsed_ms=242.30
+2026-04-04 15:59:52 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=247.65 | infer_ms=7.22 | sort_ms=0.04 | elapsed_ms=255.10
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=255.35
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.08
+2026-04-04 15:59:52 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=314.28, rank_ms=255.35, rerank_ms=0.08, elapsed_ms=570.02
+2026-04-04 15:59:52 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=570.19
+2026-04-04 15:59:52 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:52] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:54 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=380.09
+2026-04-04 15:59:54 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=129.70 | item_static_tags_ms=21.31 | user_profile_ms=0.65 | short_hist_ms=10.16 | long_interest_ms=4.48 | user_click_tag_ms=68.84 | user_click_total_ms=12.36 | elapsed_ms=248.41
+2026-04-04 15:59:54 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=253.53 | infer_ms=8.94 | sort_ms=0.03 | elapsed_ms=262.72
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=262.85
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 15:59:54 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=380.09, rank_ms=262.85, rerank_ms=0.07, elapsed_ms=643.28
+2026-04-04 15:59:54 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=643.40
+2026-04-04 15:59:54 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:54] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:56 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=296.20
+2026-04-04 15:59:56 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=110.27 | item_static_tags_ms=21.47 | user_profile_ms=0.62 | short_hist_ms=9.49 | long_interest_ms=2.34 | user_click_tag_ms=100.52 | user_click_total_ms=8.04 | elapsed_ms=253.54
+2026-04-04 15:59:56 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=259.03 | infer_ms=10.37 | sort_ms=0.04 | elapsed_ms=269.68
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=270.01
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.08
+2026-04-04 15:59:56 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=296.20, rank_ms=270.01, rerank_ms=0.08, elapsed_ms=566.49
+2026-04-04 15:59:56 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=566.75
+2026-04-04 15:59:56 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:56] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 15:59:57 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10001, n=10
+2026-04-04 15:59:57 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10001, movie_id=None, n=10
+2026-04-04 15:59:58 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=298, 累计候选=298
+2026-04-04 15:59:58 | INFO | app.reco.pipeline | 召回阶段完成，候选数=298, elapsed_ms=287.94
+2026-04-04 15:59:58 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10001 | candidate_movie_count=298 | movie_stats_rows=298 | item_static_tag_rows=1687 | user_profile_found=True | short_hist_len=10 | long_interest_len=67 | movie_stats_ms=122.49 | item_static_tags_ms=19.81 | user_profile_ms=0.59 | short_hist_ms=13.01 | long_interest_ms=2.40 | user_click_tag_ms=102.94 | user_click_total_ms=6.98 | elapsed_ms=268.91
+2026-04-04 15:59:58 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10001 | candidate_count=298 | tensor_build_ms=276.81 | infer_ms=7.58 | sort_ms=0.03 | elapsed_ms=284.60
+2026-04-04 15:59:58 | INFO | app.reco.pipeline | 排序阶段完成，结果数=298, 排序器=mmoe, elapsed_ms=284.74
+2026-04-04 15:59:58 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.06
+2026-04-04 15:59:58 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10001, candidate_count=298, ranked_count=298, returned_count=10, recall_ms=287.94, rank_ms=284.74, rerank_ms=0.06, elapsed_ms=573.00
+2026-04-04 15:59:58 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10001, 返回条数=10, elapsed_ms=573.09
+2026-04-04 15:59:58 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 15:59:58] "GET /api/v1/recommend/user?user_id=10001&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:26 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:26 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:27 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:27 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=285.27
+2026-04-04 16:00:27 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=457.69 | item_static_tags_ms=69.88 | user_profile_ms=0.92 | short_hist_ms=2.70 | long_interest_ms=19.20 | user_click_tag_ms=109.02 | user_click_total_ms=1.72 | elapsed_ms=661.79
+2026-04-04 16:00:27 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=667.66 | infer_ms=9.16 | sort_ms=0.02 | elapsed_ms=677.08
+2026-04-04 16:00:27 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=677.23
+2026-04-04 16:00:27 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:27 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=285.27, rank_ms=677.23, rerank_ms=0.07, elapsed_ms=962.95
+2026-04-04 16:00:27 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=963.09
+2026-04-04 16:00:27 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:27] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:30 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:30 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:30 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:30 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=242.10
+2026-04-04 16:00:31 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=336.71 | item_static_tags_ms=25.67 | user_profile_ms=0.82 | short_hist_ms=1.90 | long_interest_ms=6.38 | user_click_tag_ms=39.80 | user_click_total_ms=4.05 | elapsed_ms=415.79
+2026-04-04 16:00:31 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=420.88 | infer_ms=7.72 | sort_ms=0.02 | elapsed_ms=428.82
+2026-04-04 16:00:31 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=428.96
+2026-04-04 16:00:31 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:31 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=242.10, rank_ms=428.96, rerank_ms=0.07, elapsed_ms=671.29
+2026-04-04 16:00:31 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=671.41
+2026-04-04 16:00:31 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:31] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:32 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:32 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:32 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:32 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=229.74
+2026-04-04 16:00:33 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=319.68 | item_static_tags_ms=31.85 | user_profile_ms=1.12 | short_hist_ms=2.07 | long_interest_ms=6.32 | user_click_tag_ms=30.07 | user_click_total_ms=1.73 | elapsed_ms=393.59
+2026-04-04 16:00:33 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=398.98 | infer_ms=8.62 | sort_ms=0.02 | elapsed_ms=407.94
+2026-04-04 16:00:33 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=408.10
+2026-04-04 16:00:33 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.06
+2026-04-04 16:00:33 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=229.74, rank_ms=408.10, rerank_ms=0.06, elapsed_ms=638.07
+2026-04-04 16:00:33 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=638.17
+2026-04-04 16:00:33 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:33] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:34 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:34 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:34 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:34 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=299.92
+2026-04-04 16:00:35 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=315.30 | item_static_tags_ms=28.05 | user_profile_ms=0.99 | short_hist_ms=2.11 | long_interest_ms=5.67 | user_click_tag_ms=24.00 | user_click_total_ms=1.81 | elapsed_ms=378.54
+2026-04-04 16:00:35 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=384.12 | infer_ms=7.62 | sort_ms=0.02 | elapsed_ms=391.95
+2026-04-04 16:00:35 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=392.10
+2026-04-04 16:00:35 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:35 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=299.92, rank_ms=392.10, rerank_ms=0.07, elapsed_ms=692.33
+2026-04-04 16:00:35 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=692.44
+2026-04-04 16:00:35 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:35] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:36 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=245.05
+2026-04-04 16:00:36 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=296.37 | item_static_tags_ms=22.99 | user_profile_ms=0.69 | short_hist_ms=3.01 | long_interest_ms=5.21 | user_click_tag_ms=28.35 | user_click_total_ms=2.72 | elapsed_ms=360.19
+2026-04-04 16:00:36 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=365.37 | infer_ms=8.83 | sort_ms=0.02 | elapsed_ms=374.43
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=374.57
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.06
+2026-04-04 16:00:36 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=245.05, rank_ms=374.57, rerank_ms=0.06, elapsed_ms=619.83
+2026-04-04 16:00:36 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=619.95
+2026-04-04 16:00:36 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:36] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:38 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=241.46
+2026-04-04 16:00:38 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=321.47 | item_static_tags_ms=36.33 | user_profile_ms=0.71 | short_hist_ms=1.95 | long_interest_ms=5.41 | user_click_tag_ms=34.86 | user_click_total_ms=2.65 | elapsed_ms=404.00
+2026-04-04 16:00:38 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=410.54 | infer_ms=7.15 | sort_ms=0.02 | elapsed_ms=417.89
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=418.04
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.06
+2026-04-04 16:00:38 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=241.46, rank_ms=418.04, rerank_ms=0.06, elapsed_ms=659.70
+2026-04-04 16:00:38 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=659.80
+2026-04-04 16:00:38 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:38] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:39 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=270.75
+2026-04-04 16:00:39 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=313.67 | item_static_tags_ms=24.41 | user_profile_ms=0.79 | short_hist_ms=3.17 | long_interest_ms=6.35 | user_click_tag_ms=24.40 | user_click_total_ms=3.85 | elapsed_ms=377.29
+2026-04-04 16:00:39 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=382.67 | infer_ms=8.24 | sort_ms=0.02 | elapsed_ms=391.14
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=391.34
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:39 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=270.75, rank_ms=391.34, rerank_ms=0.07, elapsed_ms=662.39
+2026-04-04 16:00:39 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=662.52
+2026-04-04 16:00:39 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:39] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:40 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:40 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:40 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:40 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=265.34
+2026-04-04 16:00:41 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=304.14 | item_static_tags_ms=24.34 | user_profile_ms=0.84 | short_hist_ms=2.14 | long_interest_ms=6.27 | user_click_tag_ms=38.15 | user_click_total_ms=1.77 | elapsed_ms=378.24
+2026-04-04 16:00:41 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=383.57 | infer_ms=7.47 | sort_ms=0.02 | elapsed_ms=391.27
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=391.46
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=265.34, rank_ms=391.46, rerank_ms=0.07, elapsed_ms=657.10
+2026-04-04 16:00:41 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=657.24
+2026-04-04 16:00:41 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:41] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:41 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:41 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=239.71
+2026-04-04 16:00:42 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=294.76 | item_static_tags_ms=28.22 | user_profile_ms=0.73 | short_hist_ms=2.04 | long_interest_ms=5.30 | user_click_tag_ms=30.74 | user_click_total_ms=1.87 | elapsed_ms=364.34
+2026-04-04 16:00:42 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=369.59 | infer_ms=9.33 | sort_ms=0.02 | elapsed_ms=379.15
+2026-04-04 16:00:42 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=379.29
+2026-04-04 16:00:42 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.06
+2026-04-04 16:00:42 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=239.71, rank_ms=379.29, rerank_ms=0.06, elapsed_ms=619.21
+2026-04-04 16:00:42 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=619.33
+2026-04-04 16:00:42 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:42] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -
+2026-04-04 16:00:42 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=10002, n=10
+2026-04-04 16:00:42 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=10002, movie_id=None, n=10
+2026-04-04 16:00:43 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=296, 累计候选=296
+2026-04-04 16:00:43 | INFO | app.reco.pipeline | 召回阶段完成，候选数=296, elapsed_ms=301.79
+2026-04-04 16:00:43 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=10002 | candidate_movie_count=296 | movie_stats_rows=296 | item_static_tag_rows=1900 | user_profile_found=True | short_hist_len=10 | long_interest_len=100 | movie_stats_ms=293.21 | item_static_tags_ms=25.09 | user_profile_ms=0.81 | short_hist_ms=2.09 | long_interest_ms=3.11 | user_click_tag_ms=36.48 | user_click_total_ms=4.63 | elapsed_ms=366.31
+2026-04-04 16:00:43 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=10002 | candidate_count=296 | tensor_build_ms=371.95 | infer_ms=7.51 | sort_ms=0.02 | elapsed_ms=379.67
+2026-04-04 16:00:43 | INFO | app.reco.pipeline | 排序阶段完成，结果数=296, 排序器=mmoe, elapsed_ms=379.81
+2026-04-04 16:00:43 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=10, 重排器=random_shuffle, elapsed_ms=0.07
+2026-04-04 16:00:43 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=10002, candidate_count=296, ranked_count=296, returned_count=10, recall_ms=301.79, rank_ms=379.81, rerank_ms=0.07, elapsed_ms=682.17
+2026-04-04 16:00:43 | INFO | app.api.v1_recommend | 个性化推荐完成，user_id=10002, 返回条数=10, elapsed_ms=682.40
+2026-04-04 16:00:43 | INFO | werkzeug | 127.0.0.1 - - [04/Apr/2026 16:00:43] "GET /api/v1/recommend/user?user_id=10002&n=10 HTTP/1.1" 200 -

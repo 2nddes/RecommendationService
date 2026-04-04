@@ -6,9 +6,9 @@ import time
 from typing import Any
 
 from app.common.settings import Settings
+from app.reco.runtime import get_pipeline, get_settings
 from app.reco.recall.two_tower import (
     build_hnsw_index,
-    load_config_from_settings,
     load_latest_local_model,
 )
 
@@ -27,13 +27,13 @@ def _safe_sleep(seconds: float) -> None:
 
 def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
     logger.info("Starting two-tower full rebuild")
-    cfg = load_config_from_settings(settings)
+    cfg = settings.two_tower
     loaded = load_latest_local_model(settings)
 
     count = build_hnsw_index(
         index_path=cfg.index_path,
         cfg=cfg,
-        mysql_dsn=settings.mysql_dsn,
+        mysql_dsn=settings.core.mysql_dsn,
     )
     logger.info("Two-tower rebuild finished, items=%s, index_path=%s", int(count), cfg.index_path)
     return {
@@ -44,15 +44,24 @@ def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
     }
 
 
-def _startup_worker(settings: Settings) -> None:
-    logger.info("Startup worker begins")
-    if bool(settings.two_tower_startup_build):
+def _run_startup_once(settings: Settings) -> None:
+    logger.info("Startup init tasks begin")
+    if settings.two_tower.startup_build:
         try:
             _run_two_tower_full_build(settings)
         except Exception:
             logger.exception("Initial two-tower rebuild failed")
 
-    interval = float(settings.two_tower_daily_update_interval_hours) * 3600.0
+    try:
+        get_pipeline()
+        logger.info("Global recommendation pipeline preloaded")
+    except Exception:
+        logger.exception("Global recommendation pipeline preload failed")
+
+
+def _startup_worker(settings: Settings) -> None:
+    logger.info("Startup refresh worker begins")
+    interval = settings.two_tower.daily_update_interval_hours * 3600.0
     logger.info("Entering two-tower refresh loop, interval_seconds=%s", int(interval))
     while True:
         _safe_sleep(interval)
@@ -69,12 +78,26 @@ def start_startup_jobs(settings: Settings) -> None:
             logger.info("Startup jobs already initialized, skipping duplicate launch")
             return
 
+        settings = get_settings()
         _started = True
+
+        # Startup initialization tasks must complete before service continues.
+        init_thread = threading.Thread(
+            target=_run_startup_once,
+            args=(settings,),
+            name="reco-startup-init",
+            daemon=False,
+        )
+        init_thread.start()
+        init_thread.join()
+        logger.info("Startup init tasks completed, thread_name=%s", init_thread.name)
+
         _worker_thread = threading.Thread(
             target=_startup_worker,
             args=(settings,),
-            name="reco-startup-worker",
+            name="reco-startup-refresh-worker",
             daemon=True,
         )
         _worker_thread.start()
         logger.info("Startup worker launched, thread_name=%s", _worker_thread.name)
+

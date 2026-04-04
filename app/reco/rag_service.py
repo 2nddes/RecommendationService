@@ -40,7 +40,7 @@ class MovieRagService:
         if self._engine is not None:
             return self._engine
 
-        mysql_dsn = str(self._settings.mysql_dsn or "").strip()
+        mysql_dsn = self._settings.core.mysql_dsn
         if not mysql_dsn:
             raise RuntimeError("MYSQL_DSN is required for rag retrieval")
 
@@ -51,8 +51,7 @@ class MovieRagService:
         return Path(__file__).resolve().parents[2]
 
     def _faiss_dir(self) -> Path:
-        raw = str(self._settings.rag_faiss_dir or "data/faiss/movie_rag")
-        path = Path(raw)
+        path = Path(self._settings.rag.faiss_dir)
         if not path.is_absolute():
             path = self._repo_root() / path
         path.mkdir(parents=True, exist_ok=True)
@@ -77,7 +76,7 @@ class MovieRagService:
     def _embeddings(self):
         _, _, HuggingFaceEmbeddings = self._load_langchain_components()
         return HuggingFaceEmbeddings(
-            model_name=self._settings.rag_embedding_model_name,
+            model_name=self._settings.rag.embedding_model_name,
             model_kwargs={"device": "cpu"},
             encode_kwargs={"normalize_embeddings": True},
         )
@@ -102,7 +101,7 @@ class MovieRagService:
         )
 
         with engine.connect() as conn:
-            rows = conn.execute(sql, {"limit": int(self._settings.rag_build_limit)})
+            rows = conn.execute(sql, {"limit": self._settings.rag.build_limit})
             out: List[Dict[str, Any]] = []
             for row in rows:
                 m = row._mapping
@@ -157,7 +156,7 @@ class MovieRagService:
                 return self._vector_store
 
             faiss_dir = self._faiss_dir()
-            index_name = str(self._settings.rag_faiss_index_name or "movie_index")
+            index_name = self._settings.rag.faiss_index_name
             embeddings = self._embeddings()
 
             if not force_rebuild:
@@ -227,12 +226,11 @@ _service: MovieRagService | None = None
 _service_lock = threading.RLock()
 
 
-def get_movie_rag_service(settings: Settings | None = None) -> MovieRagService:
+def get_movie_rag_service(settings: Settings) -> MovieRagService:
     global _service
     with _service_lock:
         if _service is not None:
             return _service
 
-        resolved = settings or Settings.from_config()
-        _service = MovieRagService(resolved)
+        _service = MovieRagService(settings)
         return _service

@@ -2,12 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import os
+import threading
 from typing import List, Sequence
 
 from app.common.settings import Settings
 from app.reco.ranking.base import Ranker
 from app.reco.ranking.xgb_features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
 from app.reco.types import Candidate, RankedItem, RequestContext
+
+
+_booster_cache_lock = threading.RLock()
+_booster_cache: dict[str, tuple[float, object]] = {}
 
 
 def _as_bool(value: str | None, default: bool) -> bool:
@@ -22,31 +27,34 @@ def _as_bool(value: str | None, default: bool) -> bool:
 
 
 def load_latest_local_model(settings: Settings) -> str | None:
-    configured = str(settings.xgb_model_path or "").strip()
-    active_path = configured or os.path.join("data", "models", "xgb_latest.json")
+    active_path = settings.xgb.model_path
 
-    if os.path.exists(active_path):
-        return active_path
+    active_exists = os.path.exists(active_path)
 
     artifact_dir = os.path.join("data", "artifacts", "xgb")
-    if not os.path.isdir(artifact_dir):
-        return None
 
-    candidates = [
-        os.path.join(artifact_dir, name)
-        for name in os.listdir(artifact_dir)
-        if name.endswith(".json")
-    ]
-    if not candidates:
-        return None
+    latest: str | None = None
+    if os.path.isdir(artifact_dir):
+        candidates = [
+            os.path.join(artifact_dir, name)
+            for name in os.listdir(artifact_dir)
+            if name.endswith(".json")
+        ]
+        if candidates:
+            latest = max(candidates, key=lambda p: os.path.getmtime(p))
 
-    latest = max(candidates, key=lambda p: os.path.getmtime(p))
-    os.makedirs(os.path.dirname(active_path) or ".", exist_ok=True)
-    tmp = active_path + ".tmp"
-    with open(latest, "rb") as src, open(tmp, "wb") as dst:
-        dst.write(src.read())
-    os.replace(tmp, active_path)
-    return active_path
+    if latest is not None:
+        latest_mtime = os.path.getmtime(latest)
+        active_mtime = os.path.getmtime(active_path) if active_exists else -1.0
+        if (not active_exists) or latest_mtime > active_mtime:
+            os.makedirs(os.path.dirname(active_path) or ".", exist_ok=True)
+            tmp = active_path + ".tmp"
+            with open(latest, "rb") as src, open(tmp, "wb") as dst:
+                dst.write(src.read())
+            os.replace(tmp, active_path)
+            active_exists = True
+
+    return active_path if active_exists else None
 
 
 @dataclass(frozen=True)
@@ -103,8 +111,7 @@ class XGBoostRanker(Ranker):
             raise RuntimeError(f"xgboost_dependency_not_available: {e}") from e
 
         try:
-            booster = xgb.Booster()
-            booster.load_model(model_path)
+            booster = self._load_cached_booster(model_path=model_path, xgb_module=xgb)
 
             X = np.asarray(matrix, dtype=float)
             dmat = xgb.DMatrix(X, feature_names=list(feature_names))
@@ -112,3 +119,19 @@ class XGBoostRanker(Ranker):
             return [float(x) for x in pred.tolist()]
         except Exception as e:
             raise RuntimeError(f"xgboost_rank_inference_failed: {type(e).__name__}: {e}") from e
+
+    def _load_cached_booster(self, *, model_path: str, xgb_module: object):
+        try:
+            mtime = os.path.getmtime(model_path)
+        except OSError as e:
+            raise RuntimeError(f"xgboost_model_not_found: {model_path}") from e
+
+        with _booster_cache_lock:
+            cached = _booster_cache.get(model_path)
+            if cached is not None and cached[0] == mtime:
+                return cached[1]
+
+            booster = xgb_module.Booster()
+            booster.load_model(model_path)
+            _booster_cache[model_path] = (mtime, booster)
+            return booster

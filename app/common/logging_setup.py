@@ -4,7 +4,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from app.common import config
+from app.common.settings import Settings
 
 
 _configured = False
@@ -24,13 +24,14 @@ def configure_logging() -> Path:
         if handler is not None:
             return Path(handler.baseFilename)
 
-    log_file_raw = config.get_str("LOG_FILE_PATH", "data/logs/recommendation_service.log")
-    log_file = Path(log_file_raw or "data/logs/recommendation_service.log")
+    settings = Settings.from_config()
+
+    log_file = Path(settings.log.file_path)
     if not log_file.is_absolute():
         log_file = _repo_root() / log_file
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    level_name = (config.get_str("LOG_LEVEL", "INFO") or "INFO").upper()
+    level_name = settings.log.level.upper()
     level = getattr(logging, level_name, logging.INFO)
 
     root_logger = logging.getLogger()

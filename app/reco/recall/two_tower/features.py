@@ -267,18 +267,29 @@ def fetch_all_movie_ids(mysql_dsn: str | None) -> list[int]:
     return out
 
 
-def fetch_user_excluded_items(user_id: int, *, mysql_dsn: str | None) -> set[int]:
+def fetch_user_excluded_items(user_id: int, *, mysql_dsn: str | None, recent_limit: int) -> set[int]:
+    limit = max(int(recent_limit), 0)
+    if limit == 0:
+        return set()
+
     sql = """
-    SELECT DISTINCT x.movie_id
+    SELECT z.movie_id
     FROM (
-      SELECT movie_id FROM user_collect_movie WHERE user_id = :user_id
-      UNION ALL
-      SELECT movie_id FROM rating WHERE user_id = :user_id
-      UNION ALL
-      SELECT movie_id FROM user_action WHERE user_id = :user_id
-    ) x
+      SELECT x.movie_id, MAX(x.ts) AS last_ts
+      FROM (
+        SELECT movie_id, created_at AS ts FROM user_collect_movie WHERE user_id = :user_id
+        UNION ALL
+        SELECT movie_id, updated_at AS ts FROM rating WHERE user_id = :user_id
+        UNION ALL
+        SELECT movie_id, created_at AS ts FROM user_action WHERE user_id = :user_id
+      ) x
+      WHERE x.movie_id IS NOT NULL
+      GROUP BY x.movie_id
+      ORDER BY last_ts DESC
+      LIMIT :limit
+    ) z
     """
-    rows = _feature_execute_sql(mysql_dsn, sql, {"user_id": int(user_id)})
+    rows = _feature_execute_sql(mysql_dsn, sql, {"user_id": int(user_id), "limit": limit})
     out: set[int] = set()
     for row in rows:
         try:

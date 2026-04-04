@@ -3,10 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
+import os
+import threading
+from time import perf_counter
 from typing import Any, Dict, List, Sequence
 
 import torch
 from sqlalchemy import bindparam, create_engine, text
+from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from torch import Tensor
 
@@ -29,6 +33,20 @@ from .model import MMoENet
 
 
 logger = logging.getLogger(__name__)
+_model_cache_lock = threading.RLock()
+_model_cache: dict[str, tuple[float, Dict[str, Any], MMoENet]] = {}
+_engine_cache_lock = threading.RLock()
+_engine_cache: dict[str, Engine] = {}
+
+
+def _get_mysql_engine(dsn: str) -> Engine:
+    with _engine_cache_lock:
+        cached = _engine_cache.get(dsn)
+        if cached is not None:
+            return cached
+        engine = create_engine(dsn, pool_pre_ping=True)
+        _engine_cache[dsn] = engine
+        return engine
 
 
 def _safe_int(value: Any, default: int = 0) -> int:
@@ -64,12 +82,12 @@ class MMoERanker(Ranker):
         if not candidates:
             return []
 
+        rank_start = perf_counter()
+
         if not self.model_path:
             raise RuntimeError("mmoe_model_path_is_empty")
 
-        bundle = torch.load(self.model_path, map_location="cpu")
-        model = self._ranker_build_model_from_bundle(bundle)
-        model.eval()
+        bundle, model = self._ranker_load_cached_bundle_and_model(self.model_path)
 
         feature_order = [str(x) for x in bundle.get("feature_order") or bundle_feature_order()]
         user_ids, item_ids, numeric_rows, gender_ids, age_bucket_ids, item_tag_ids, short_hist_ids, long_tag_ids = (
@@ -81,7 +99,9 @@ class MMoERanker(Ranker):
                 feature_stats=bundle.get("feature_stats") or {},
             )
         )
+        tensor_ready_ms = (perf_counter() - rank_start) * 1000.0
 
+        infer_start = perf_counter()
         with torch.no_grad():
             pred = model(
                 user_ids,
@@ -93,6 +113,7 @@ class MMoERanker(Ranker):
                 short_hist_item_ids=short_hist_ids,
                 long_interest_tag_ids=long_tag_ids,
             )
+        infer_ms = (perf_counter() - infer_start) * 1000.0
 
         p_click = pred["click"]
         p_collect = pred["collect"]
@@ -104,8 +125,40 @@ class MMoERanker(Ranker):
             RankedItem(item_id=int(c.item_id), score=float(s), reason="mmoe")
             for c, s in zip(candidates, score.tolist())
         ]
+        sort_start = perf_counter()
         ranked.sort(key=lambda x: x.score, reverse=True)
+        sort_ms = (perf_counter() - sort_start) * 1000.0
+        total_ms = (perf_counter() - rank_start) * 1000.0
+        logger.info(
+            "event=reco.rank.mmoe.done | user_id=%s | candidate_count=%s | tensor_build_ms=%.2f | infer_ms=%.2f | sort_ms=%.2f | elapsed_ms=%.2f",
+            ctx.user_id,
+            len(candidates),
+            tensor_ready_ms,
+            infer_ms,
+            sort_ms,
+            total_ms,
+        )
         return ranked
+
+    def _ranker_load_cached_bundle_and_model(self, model_path: str) -> tuple[Dict[str, Any], MMoENet]:
+        try:
+            mtime = os.path.getmtime(model_path)
+        except OSError as e:
+            raise RuntimeError(f"mmoe_model_not_found: {model_path}") from e
+
+        with _model_cache_lock:
+            cached = _model_cache.get(model_path)
+            if cached is not None and cached[0] == mtime:
+                return cached[1], cached[2]
+
+            bundle = torch.load(model_path, map_location="cpu")
+            if not isinstance(bundle, dict):
+                raise RuntimeError("mmoe_bundle_invalid")
+
+            model = self._ranker_build_model_from_bundle(bundle)
+            model.eval()
+            _model_cache[model_path] = (mtime, bundle, model)
+            return bundle, model
 
     def _ranker_build_model_from_bundle(self, bundle: Dict[str, Any]) -> MMoENet:
         model_meta = bundle["model_meta"]
@@ -304,8 +357,10 @@ class MMoERanker(Ranker):
             out["_fallback_reasons"].append("candidate movie_ids is empty")
             return out
 
+        mids = list(dict.fromkeys(mids))
+
         try:
-            engine = create_engine(dsn, pool_pre_ping=True)
+            engine = _get_mysql_engine(dsn)
         except Exception:
             out["_fallback_reasons"].append("failed to create MySQL engine")
             return out
@@ -326,24 +381,28 @@ class MMoERanker(Ranker):
                 SELECT movie_id, COUNT(*) AS comment_count
                 FROM movie_comment
                 WHERE deleted_at IS NULL
+                  AND movie_id IN :ids
                 GROUP BY movie_id
             ) mc ON mc.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_count
                 FROM user_action
                 WHERE action_type = 'view'
+                  AND movie_id IN :ids
                 GROUP BY movie_id
             ) ua_all ON ua_all.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_1h
                 FROM user_action
                 WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)
+                  AND movie_id IN :ids
                 GROUP BY movie_id
             ) ua_1h ON ua_1h.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_24h
                 FROM user_action
                 WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)
+                  AND movie_id IN :ids
                 GROUP BY movie_id
             ) ua_24h ON ua_24h.movie_id = m.movie_id
             WHERE m.movie_id IN :ids
@@ -455,8 +514,12 @@ class MMoERanker(Ranker):
             """
         )
 
+        aux_start = perf_counter()
+        query_ms: Dict[str, float] = {}
+
         try:
             with engine.connect() as conn:
+                t0 = perf_counter()
                 rs = conn.execute(movie_stat_sql, {"ids": mids})
                 movie_stats_by_id: Dict[int, Dict[str, Any]] = {}
                 for row in rs:
@@ -465,7 +528,9 @@ class MMoERanker(Ranker):
                     if mid > 0:
                         movie_stats_by_id[mid] = d
                 out["movie_stats_by_id"] = movie_stats_by_id
+                query_ms["movie_stats"] = (perf_counter() - t0) * 1000.0
 
+                t0 = perf_counter()
                 rs = conn.execute(item_static_tags_sql, {"ids": mids})
                 item_static_tags_by_movie: Dict[int, List[int]] = {}
                 for row in rs:
@@ -476,35 +541,65 @@ class MMoERanker(Ranker):
                         continue
                     item_static_tags_by_movie.setdefault(mid, []).append(tag_id)
                 out["item_static_tags_by_movie"] = item_static_tags_by_movie
+                query_ms["item_static_tags"] = (perf_counter() - t0) * 1000.0
 
                 if uid > 0:
+                    t0 = perf_counter()
                     one = conn.execute(user_profile_sql, {"uid": uid}).first()
                     if one is not None:
                         out["user_profile"] = dict(one._mapping)
+                    query_ms["user_profile"] = (perf_counter() - t0) * 1000.0
 
+                    t0 = perf_counter()
                     rs = conn.execute(short_hist_sql, {"uid": uid, "lim": int(SHORT_INTEREST_SEQ_LEN)})
                     out["short_hist_movie_ids"] = [
                         _safe_int(dict(r._mapping).get("movie_id"), 0) for r in rs if _safe_int(dict(r._mapping).get("movie_id"), 0) > 0
                     ]
+                    query_ms["short_hist"] = (perf_counter() - t0) * 1000.0
 
+                    t0 = perf_counter()
                     rs = conn.execute(long_interest_sql, {"uid": uid, "lim": int(LONG_INTEREST_TAG_SEQ_LEN)})
                     out["long_interest_tag_ids"] = [
                         _safe_int(dict(r._mapping).get("tag_id"), 0) for r in rs if _safe_int(dict(r._mapping).get("tag_id"), 0) > 0
                     ]
+                    query_ms["long_interest"] = (perf_counter() - t0) * 1000.0
 
+                    t0 = perf_counter()
                     rs = conn.execute(user_click_tag_sql, {"uid": uid})
                     out["user_clicked_static_tag_count"] = {
                         _safe_int(dict(r._mapping).get("tag_id"), 0): _safe_int(dict(r._mapping).get("click_cnt"), 0)
                         for r in rs
                         if _safe_int(dict(r._mapping).get("tag_id"), 0) > 0
                     }
+                    query_ms["user_click_tag"] = (perf_counter() - t0) * 1000.0
 
+                    t0 = perf_counter()
                     one = conn.execute(user_click_total_sql, {"uid": uid}).first()
                     if one is not None:
                         out["user_total_click"] = _safe_int(dict(one._mapping).get("total_click"), 0)
+                    query_ms["user_click_total"] = (perf_counter() - t0) * 1000.0
         except SQLAlchemyError:
             out["_fallback_reasons"].append("failed to query MySQL auxiliary features")
             return out
+
+        logger.info(
+            "event=reco.rank.mmoe.aux_query_summary | user_id=%s | candidate_movie_count=%s | movie_stats_rows=%s | item_static_tag_rows=%s | user_profile_found=%s | short_hist_len=%s | long_interest_len=%s | movie_stats_ms=%.2f | item_static_tags_ms=%.2f | user_profile_ms=%.2f | short_hist_ms=%.2f | long_interest_ms=%.2f | user_click_tag_ms=%.2f | user_click_total_ms=%.2f | elapsed_ms=%.2f",
+            uid,
+            len(mids),
+            len(out.get("movie_stats_by_id") or {}),
+            sum(len(v) for v in (out.get("item_static_tags_by_movie") or {}).values()),
+            bool(out.get("user_profile")),
+            len(out.get("short_hist_movie_ids") or []),
+            len(out.get("long_interest_tag_ids") or []),
+            query_ms.get("movie_stats", 0.0),
+            query_ms.get("item_static_tags", 0.0),
+            query_ms.get("user_profile", 0.0),
+            query_ms.get("short_hist", 0.0),
+            query_ms.get("long_interest", 0.0),
+            query_ms.get("user_click_tag", 0.0),
+            query_ms.get("user_click_total", 0.0),
+            (perf_counter() - aux_start) * 1000.0,
+        )
 
         if not out.get("movie_stats_by_id"):
             out["_fallback_reasons"].append("movie stats query returned empty")
