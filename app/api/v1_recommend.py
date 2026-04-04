@@ -8,6 +8,7 @@ from flask import Blueprint, request
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.common.redis_cache import load_item_similar, load_trending_items, store_trending_items
 from app.common.responses import ok, fail
 from app.common.validation import as_int
 from app.reco.runtime import get_pipeline, get_settings
@@ -96,6 +97,52 @@ def _fetch_trending_items(mysql_dsn: str | None, *, window: str, n: int) -> list
     return []
 
 
+def _fetch_trending_item_scores(mysql_dsn: str | None, *, window: str, n: int) -> list[tuple[int, float]]:
+  engine = _get_engine(mysql_dsn)
+  if engine is None:
+    return []
+
+  sql = """
+  SELECT
+    m.movie_id AS item_id,
+    (
+      0.55 * (COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0))
+      + 0.20 * LOG10(COALESCE(m.rating_count, 0) + 1)
+      + 0.25 * LOG10(COALESCE(ua.action_cnt, 0) + 1)
+    ) AS score
+  FROM movie m
+  LEFT JOIN (
+    SELECT movie_id, COUNT(*) AS action_cnt
+    FROM user_action
+    WHERE (:window_start IS NULL OR created_at >= :window_start)
+    GROUP BY movie_id
+  ) ua ON ua.movie_id = m.movie_id
+  WHERE m.status = 'published'
+  ORDER BY score DESC, COALESCE(ua.action_cnt, 0) DESC, m.rating_count DESC, m.movie_id DESC
+  LIMIT :limit
+  """
+
+  try:
+    with engine.connect() as conn:
+      rows = conn.execute(
+        text(sql),
+        {
+          "window_start": _window_start(window),
+          "limit": int(n),
+        },
+      )
+      out: list[tuple[int, float]] = []
+      for row in rows:
+        try:
+          out.append((int(row._mapping["item_id"]), float(row._mapping["score"] or 0.0)))
+        except Exception:
+          continue
+      return out
+  except SQLAlchemyError:
+    logger.exception("趋势推荐查询异常(含分数)，window=%s, n=%s", window, n)
+    return []
+
+
 @recommend_bp.get("/recommend/user")
 def recommend_user():
     """个性化推荐（猜你喜欢）
@@ -149,6 +196,11 @@ def recommend_item():
 
     settings = get_settings()
 
+    cached = load_item_similar(settings, movie_id=movie_id, n=n)
+    if cached:
+      logger.info("相似影片推荐命中 Redis 缓存，movie_id=%s, n=%s, returned=%s", movie_id, n, len(cached))
+      return ok({"source_id": movie_id, "items": cached, "n": n})
+
     cfg = settings.two_tower
     item_vec = build_item_vector(movie_id, cfg, mysql_dsn=settings.core.mysql_dsn)
     if item_vec is None:
@@ -180,7 +232,7 @@ def recommend_trending():
       - n: int (optional, default 10)
     """
 
-    window = request.args.get("window")
+    window = request.args.get("window", "weekly")
     n = as_int(request.args.get("n", 10), name="n")
 
     if window not in {"daily", "weekly", "monthly", "all_time"}:
@@ -188,7 +240,15 @@ def recommend_trending():
       return fail(message="invalid 'window'")
 
     settings = get_settings()
-    items = _fetch_trending_items(settings.core.mysql_dsn, window=window, n=n)
+    items = load_trending_items(settings, window=window, n=n)
+    if items:
+      logger.info("趋势推荐命中 Redis 缓存，window=%s, n=%s, returned=%s", window, n, len(items))
+    else:
+      pairs = _fetch_trending_item_scores(settings.core.mysql_dsn, window=window, n=max(n, settings.cache.trending_topk))
+      items = [item_id for item_id, _score in pairs[:n]]
+      if pairs:
+        stored = store_trending_items(settings, window=window, pairs=pairs)
+        logger.info("趋势推荐回源后回填 Redis，window=%s, cached=%s", window, stored)
     logger.info("趋势推荐完成，window=%s, n=%s, 返回条数=%s", window, n, len(items))
 
     data = {

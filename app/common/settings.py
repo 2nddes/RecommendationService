@@ -27,6 +27,30 @@ class CoreSettings:
 
 
 @dataclass(frozen=True)
+class RedisSettings:
+    enabled: bool = False
+    host: str = "127.0.0.1"
+    port: int = 6379
+    db: int = 0
+    username: str | None = None
+    password: str | None = None
+    ssl: bool = False
+    socket_timeout_s: float = 0.5
+    connect_timeout_s: float = 0.5
+
+
+@dataclass(frozen=True)
+class CacheSettings:
+    key_prefix: str = "reco"
+    feature_ttl_seconds: int = 3600
+    recall_ttl_seconds: int = 1800
+    trending_refresh_interval_seconds: int = 600
+    static_recall_refresh_interval_seconds: int = 600
+    trending_topk: int = 200
+    static_recall_topk: int = 200
+
+
+@dataclass(frozen=True)
 class LogSettings:
     level: str = "INFO"
     file_path: str = "logs/app.log"
@@ -109,6 +133,8 @@ class RagSettings:
 @dataclass(frozen=True)
 class Settings:
     core: CoreSettings = field(default_factory=CoreSettings)
+    redis: RedisSettings = field(default_factory=RedisSettings)
+    cache: CacheSettings = field(default_factory=CacheSettings)
     log: LogSettings = field(default_factory=LogSettings)
     two_tower: TwoTowerSettings = field(default_factory=TwoTowerSettings)
     xgb: XGBSettings = field(default_factory=XGBSettings)
@@ -128,6 +154,8 @@ class Settings:
 
         return Settings(
             core=CoreSettings(**Settings._section(raw_cfg, "core")),
+            redis=RedisSettings(**Settings._section(raw_cfg, "redis")),
+            cache=CacheSettings(**Settings._section(raw_cfg, "cache")),
             log=LogSettings(**Settings._section(raw_cfg, "log")),
             two_tower=TwoTowerSettings(**Settings._section(raw_cfg, "two_tower")),
             xgb=XGBSettings(**Settings._section(raw_cfg, "xgb")),

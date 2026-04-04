@@ -7,6 +7,13 @@ from typing import Any, Iterable, List, Mapping, Sequence
 from sqlalchemy import Engine, bindparam, create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.common.redis_cache import (
+    load_item_similar_candidates,
+    load_user_interest_candidates,
+    store_item_similar,
+    store_user_interest,
+)
+from app.common.settings import Settings
 from app.reco.recall.base import Recaller
 from app.reco.types import Candidate, RequestContext
 
@@ -317,6 +324,10 @@ class UserInterestTagRecall(Recaller):
             raise err
 
         topk = int(self.topk)
+        settings = Settings.from_config()
+        cached = load_user_interest_candidates(settings, user_id=int(ctx.user_id), topk=topk, source=self.name)
+        if cached:
+            return cached[:topk]
 
         sql = """
         SELECT
@@ -337,6 +348,11 @@ class UserInterestTagRecall(Recaller):
         candidates = _merge_best(rows, source=self.name, excluded=excluded)
 
         if candidates:
+            store_user_interest(
+                settings,
+                user_id=int(ctx.user_id),
+                pairs=[(int(x.item_id), float(x.score)) for x in candidates[:topk]],
+            )
             return candidates[:topk]
         logger.warning("user_interest_tag recall produced no candidates, user_id=%s", ctx.user_id)
         return []
@@ -360,6 +376,10 @@ class ItemSimilarByTagsRecall(Recaller):
             raise err
 
         topk = int(self.topk)
+        settings = Settings.from_config()
+        cached = load_item_similar_candidates(settings, movie_id=int(ctx.movie_id), topk=topk, source=self.name)
+        if cached:
+            return cached[:topk]
 
         sql = """
         SELECT
@@ -379,6 +399,11 @@ class ItemSimilarByTagsRecall(Recaller):
 
         candidates = _merge_best(rows, source=self.name, excluded=set())
         if candidates:
+            store_item_similar(
+                settings,
+                movie_id=int(ctx.movie_id),
+                pairs=[(int(x.item_id), float(x.score)) for x in candidates[:topk]],
+            )
             return candidates[:topk]
         logger.warning("item_similar_by_tags recall produced no candidates, movie_id=%s", ctx.movie_id)
         return []

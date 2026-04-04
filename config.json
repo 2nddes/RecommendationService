@@ -4,6 +4,26 @@
         "mysql_dsn": "mysql+pymysql://root:admin@localhost:3306/movie_rec",
         "reranking_seed": null
     },
+    "redis": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 6379,
+        "db": 0,
+        "username": null,
+        "password": null,
+        "ssl": false,
+        "socket_timeout_s": 0.5,
+        "connect_timeout_s": 0.5
+    },
+    "cache": {
+        "key_prefix": "reco",
+        "feature_ttl_seconds": 3600,
+        "recall_ttl_seconds": 1800,
+        "trending_refresh_interval_seconds": 600,
+        "static_recall_refresh_interval_seconds": 600,
+        "trending_topk": 200,
+        "static_recall_topk": 200
+    },
     "log": {
         "level": "INFO",
         "file_path": "logs/app.log"

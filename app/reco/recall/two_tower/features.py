@@ -1,9 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from typing import Mapping, Sequence
 
 import numpy as np
+
+from app.common.redis_cache import (
+    load_movie_feature_hash,
+    load_user_feature_hash,
+)
+from app.common.settings import Settings
 
 from .db import execute
 
@@ -78,6 +85,24 @@ def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[
     if not user_ids:
         return {}
 
+    settings = Settings.from_config()
+    out: dict[int, dict[str, object]] = {}
+    missing: list[int] = []
+    for uid_raw in user_ids:
+        uid = int(uid_raw)
+        cached = load_user_feature_hash(settings, uid)
+        if cached:
+            out[uid] = {
+                "gender": cached.get("gender"),
+                "birth": cached.get("birth"),
+                "created_at": cached.get("created_at"),
+            }
+        else:
+            missing.append(uid)
+
+    if not missing:
+        return out
+
     sql = """
     SELECT u.user_id, u.gender, u.birth, u.created_at
     FROM user u
@@ -86,20 +111,20 @@ def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[
     rows = _feature_execute_sql(
         mysql_dsn,
         sql,
-        {"user_ids": [int(x) for x in user_ids]},
+        {"user_ids": [int(x) for x in missing]},
         expanding=("user_ids",),
     )
-    out: dict[int, dict[str, object]] = {}
     for row in rows:
         try:
             uid = int(row["user_id"])
         except Exception:
             continue
-        out[uid] = {
+        profile = {
             "gender": row.get("gender"),
             "birth": row.get("birth"),
             "created_at": row.get("created_at"),
         }
+        out[uid] = profile
     return out
 
 
@@ -157,6 +182,26 @@ def fetch_user_recent_sequences(
 def fetch_item_tags(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int, list[int]]:
     if not item_ids:
         return {}
+
+    settings = Settings.from_config()
+    out: dict[int, list[int]] = {}
+    missing: list[int] = []
+    for mid_raw in item_ids:
+        mid = int(mid_raw)
+        cached = load_movie_feature_hash(settings, mid)
+        tags_raw = cached.get("tags") if cached else None
+        if tags_raw:
+            try:
+                tags = [int(x) for x in json.loads(tags_raw)]
+                out[mid] = tags
+                continue
+            except Exception:
+                pass
+        missing.append(mid)
+
+    if not missing:
+        return out
+
     sql = """
     SELECT mt.movie_id, mt.tag_id
     FROM movie_tag mt
@@ -166,10 +211,9 @@ def fetch_item_tags(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int,
     rows = _feature_execute_sql(
         mysql_dsn,
         sql,
-        {"movie_ids": [int(x) for x in item_ids]},
+        {"movie_ids": [int(x) for x in missing]},
         expanding=("movie_ids",),
     )
-    out: dict[int, list[int]] = {}
     for row in rows:
         try:
             mid = int(row["movie_id"])
@@ -200,6 +244,25 @@ def _feature_build_item_stats_vector(row: Mapping[str, object]) -> np.ndarray:
 def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int, np.ndarray]:
     if not item_ids:
         return {}
+
+    settings = Settings.from_config()
+    out: dict[int, np.ndarray] = {}
+    missing: list[int] = []
+    for mid_raw in item_ids:
+        mid = int(mid_raw)
+        cached = load_movie_feature_hash(settings, mid)
+        if cached:
+            try:
+                rating_avg = float(cached.get("rating_avg") or 0.0)
+                vec = np.asarray([rating_avg / 10.0, 0.0, *([0.0] * 10), 0.0, 0.0], dtype=np.float32)
+                out[mid] = vec
+                continue
+            except Exception:
+                pass
+        missing.append(mid)
+
+    if not missing:
+        return out
 
     sql = """
     SELECT m.movie_id,
@@ -234,11 +297,10 @@ def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int
     rows = _feature_execute_sql(
         mysql_dsn,
         sql,
-        {"movie_ids": [int(x) for x in item_ids]},
+        {"movie_ids": [int(x) for x in missing]},
         expanding=("movie_ids",),
     )
 
-    out: dict[int, np.ndarray] = {}
     for row in rows:
         try:
             mid = int(row["movie_id"])
