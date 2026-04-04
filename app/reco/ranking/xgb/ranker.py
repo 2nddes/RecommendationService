@@ -7,7 +7,7 @@ from typing import List, Sequence
 
 from app.common.settings import Settings
 from app.reco.ranking.base import Ranker
-from app.reco.ranking.xgb_features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
+from app.reco.ranking.xgb.features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
 from app.reco.types import Candidate, RankedItem, RequestContext
 
 
@@ -62,7 +62,7 @@ class XGBoostRanker(Ranker):
     """XGBoost + manual feature engineering ranker.
 
     Design goals:
-    - Easy to modify feature set: edit `xgb_features.py`.
+    - Easy to modify feature set: edit `xgb/features.py`.
     - Easy to swap algorithm later: keep Ranker interface stable and replace scorer.
     """
 

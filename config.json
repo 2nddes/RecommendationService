@@ -63,7 +63,7 @@
     "mmoe": {
         "model_path": "data/models/mmoe_latest.pt",
         "train_limit": 50000,
-        "train_epochs": 4,
+        "train_epochs": 5,
         "train_batch_size": 1024,
         "train_lr": 0.001,
         "emb_dim": 32,
@@ -77,11 +77,13 @@
         "collect_parquet_path": "data/offline/collects.parquet",
         "rate_parquet_path": "data/offline/rates.parquet",
         "comment_parquet_path": "data/offline/comments.parquet",
-        "global_neg_ratio": 2,
+        "global_neg_ratio": 1,
         "loss_weight_click": 1.0,
         "loss_weight_collect": 5.0,
         "loss_weight_rate": 10.0,
-        "loss_weight_comment": 20.0
+        "loss_weight_comment": 20.0,
+        "enable_dynamic_pos_weight": true,
+        "dynamic_pos_weight_cap": 20.0
     },
     "rag": {
         "embedding_model_name": "BAAI/bge-large-zh-v1.5",

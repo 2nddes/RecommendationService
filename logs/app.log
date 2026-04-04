@@ -1,4 +1,4 @@
-2026-04-01 14:27:40 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+﻿2026-04-01 14:27:40 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
 2026-04-01 14:27:40 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
 2026-04-01 14:27:40 | INFO | app.reco.startup | 启动阶段已尝试加载 XGB 最新模型
 2026-04-01 14:27:40 | INFO | app.reco.startup | 启动后台工作线程

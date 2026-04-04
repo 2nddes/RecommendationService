@@ -120,6 +120,8 @@ class MMOESettings:
     loss_weight_collect: float = 5.0
     loss_weight_rate: float = 10.0
     loss_weight_comment: float = 20.0
+    enable_dynamic_pos_weight: bool = True
+    dynamic_pos_weight_cap: float = 20.0
 
 
 @dataclass(frozen=True)
