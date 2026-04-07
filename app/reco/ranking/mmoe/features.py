@@ -74,12 +74,3 @@ def pad_or_truncate(seq: List[int], *, size: int, pad_value: int = PAD_IDX) -> L
     if len(vals) < size:
         vals.extend([int(pad_value)] * (size - len(vals)))
     return vals
-
-
-def safe_float(value: object, default: float = 0.0) -> float:
-    try:
-        if value is None:
-            return default
-        return float(value)
-    except Exception:
-        return default

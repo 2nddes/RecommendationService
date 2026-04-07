@@ -58,23 +58,6 @@ CREATE TABLE `dict_region`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 512 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '国家地区标准字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for idempotency_key
--- ----------------------------
-DROP TABLE IF EXISTS `idempotency_key`;
-CREATE TABLE `idempotency_key`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `idempotency_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '幂等键',
-  `user_id` bigint NULL DEFAULT NULL COMMENT '用户ID',
-  `response` json NULL COMMENT '响应结果(JSON)',
-  `expires_at` datetime NOT NULL COMMENT '过期时间',
-  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `idempotency_key`(`idempotency_key` ASC) USING BTREE,
-  INDEX `idx_idempotency_key`(`idempotency_key` ASC) USING BTREE,
-  INDEX `idx_expires_at`(`expires_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '幂等键表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
 -- Table structure for model_train_job
 -- ----------------------------
 DROP TABLE IF EXISTS `model_train_job`;
@@ -263,12 +246,13 @@ DROP TABLE IF EXISTS `rating`;
 CREATE TABLE `rating`  (
   `user_id` bigint NOT NULL COMMENT '评分用户',
   `movie_id` bigint NOT NULL COMMENT '评分对象',
-  `rating` tinyint NULL DEFAULT NULL COMMENT '评分1-10',
+  `rating` tinyint NOT NULL COMMENT '评分1-10',
   `updated_at` datetime NULL DEFAULT NULL COMMENT '评分时间',
   PRIMARY KEY (`user_id`, `movie_id`) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   INDEX `updated_at`(`updated_at` DESC) USING BTREE,
+  CONSTRAINT `chk_rating_range` CHECK ((`rating` >= 1) and (`rating` <= 10)),
   CONSTRAINT `rating_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `rating_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户评分' ROW_FORMAT = DYNAMIC;
@@ -353,24 +337,18 @@ CREATE TABLE `user`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 649125 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户账号表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for user_action
+-- Table structure for user_click
 -- ----------------------------
-DROP TABLE IF EXISTS `user_action`;
-CREATE TABLE `user_action`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` bigint NOT NULL,
-  `movie_id` bigint NOT NULL,
-  `action_type` enum('view','like','dislike','collect','share','comment','rate') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'view' COMMENT '行为类型',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+DROP TABLE IF EXISTS `user_click`;
+CREATE TABLE `user_click`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `movie_id` bigint NOT NULL COMMENT '电影ID',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点击时间',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  INDEX `idx_movie_id`(`movie_id` ASC) USING BTREE,
-  INDEX `idx_action_type`(`action_type` ASC) USING BTREE,
-  INDEX `idx_created_at`(`created_at` ASC) USING BTREE,
-  INDEX `action_type`(`action_type` ASC, `created_at` DESC) USING BTREE,
-  CONSTRAINT `user_action_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT `user_action_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 37553235 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户行为表' ROW_FORMAT = DYNAMIC;
+  INDEX `idx_user_time`(`user_id` ASC, `created_at` DESC) USING BTREE,
+  INDEX `idx_movie_time`(`movie_id` ASC, `created_at` DESC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic COMMENT = '用户点击流水表';
 
 -- ----------------------------
 -- Table structure for user_collect_movie

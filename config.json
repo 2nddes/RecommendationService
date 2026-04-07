@@ -44,11 +44,20 @@
         "startup_build": true,
         "daily_update_interval_hours": 24.0,
         "train_epochs": 6,
-        "train_batch_size": 2048,
+        "train_batch_size": 4096,
         "train_lr": 0.03,
         "train_reg": 0.0001,
         "train_negatives": 2,
-        "train_limit": 300000
+        "train_limit": 300000,
+        "train_steps_per_epoch": 200,
+        "train_min_user_interactions": 10,
+        "train_min_item_interactions": 5,
+        "train_use_in_batch_negatives": true,
+        "train_in_batch_temperature": 0.07,
+        "train_id_dropout": 0.15,
+        "train_enable_deep_encoder": true,
+        "train_deep_hidden_mult": 2,
+        "train_deep_dropout": 0.10
     },
     "xgb": {
         "model_path": "data/models/xgb_latest.json",

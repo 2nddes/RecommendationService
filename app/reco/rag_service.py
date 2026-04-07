@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import threading
 import importlib
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List
 
 from sqlalchemy import Engine, create_engine, text
 
+from app.common.runtime_health import mark_component_success
 from app.common.settings import Settings
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -42,9 +47,11 @@ class MovieRagService:
 
         mysql_dsn = self._settings.core.mysql_dsn
         if not mysql_dsn:
+            logger.warning("RAG mysql dsn missing")
             raise RuntimeError("MYSQL_DSN is required for rag retrieval")
 
         self._engine = create_engine(mysql_dsn, pool_pre_ping=True)
+        logger.info("RAG mysql engine initialized")
         return self._engine
 
     def _repo_root(self) -> Path:
@@ -65,11 +72,9 @@ class MovieRagService:
             FAISS = getattr(faiss_module, "FAISS")
             Document = getattr(doc_module, "Document")
             HuggingFaceEmbeddings = getattr(emb_module, "HuggingFaceEmbeddings")
-        except Exception as exc:
-            raise RuntimeError(
-                "RAG dependencies are missing. Install: langchain, langchain-community, "
-                "langchain-huggingface, faiss-cpu, sentence-transformers"
-            ) from exc
+        except Exception:
+            logger.exception("RAG dependencies load failed")
+            raise
 
         return FAISS, Document, HuggingFaceEmbeddings
 
@@ -83,6 +88,7 @@ class MovieRagService:
 
     def _fetch_movie_rows(self) -> List[Dict[str, Any]]:
         engine = self._ensure_engine()
+        logger.info("RAG fetching movie rows, limit=%s", self._settings.rag.build_limit)
         sql = text(
             """
             SELECT
@@ -115,6 +121,7 @@ class MovieRagService:
                         "rating_count": int(m["rating_count"] or 0),
                     }
                 )
+            logger.info("RAG fetched movie rows completed, rows=%s", len(out))
             return out
 
     def _build_documents(self, rows: Iterable[Dict[str, Any]]):
@@ -158,6 +165,12 @@ class MovieRagService:
             faiss_dir = self._faiss_dir()
             index_name = self._settings.rag.faiss_index_name
             embeddings = self._embeddings()
+            logger.info(
+                "RAG load/build started, force_rebuild=%s, faiss_dir=%s, index_name=%s",
+                force_rebuild,
+                str(faiss_dir),
+                index_name,
+            )
 
             if not force_rebuild:
                 try:
@@ -167,18 +180,30 @@ class MovieRagService:
                         index_name=index_name,
                         allow_dangerous_deserialization=True,
                     )
+                    logger.info("RAG load local index succeeded, faiss_dir=%s, index_name=%s", str(faiss_dir), index_name)
+                    mark_component_success(
+                        "rag",
+                        details={"source": "load_local", "faiss_dir": str(faiss_dir), "index_name": index_name},
+                    )
                     return self._vector_store
                 except Exception:
-                    pass
+                    logger.warning("RAG load local index failed, fallback to rebuild")
+                    force_rebuild = True
 
             rows = self._fetch_movie_rows()
             if not rows:
+                logger.warning("RAG rebuild aborted: no movies available")
                 raise RuntimeError("No movies available to build rag vector index")
 
             docs = self._build_documents(rows)
             store = FAISS.from_documents(docs, embeddings)
             store.save_local(str(faiss_dir), index_name=index_name)
             self._vector_store = store
+            logger.info("RAG rebuild completed, rows=%s, faiss_dir=%s, index_name=%s", len(rows), str(faiss_dir), index_name)
+            mark_component_success(
+                "rag",
+                details={"source": "rebuild", "faiss_dir": str(faiss_dir), "index_name": index_name, "rows": len(rows)},
+            )
             return self._vector_store
 
     def stream_recommendations(
@@ -188,8 +213,10 @@ class MovieRagService:
         n: int,
         force_rebuild: bool = False,
     ) -> Iterator[RagMovieItem]:
+        logger.info("RAG stream started, query_len=%s, n=%s, force_rebuild=%s", len(query), n, force_rebuild)
         store = self._load_or_build_store(force_rebuild=force_rebuild)
         pairs = store.similarity_search_with_score(query, k=int(n))
+        logger.info("RAG similarity search completed, pairs=%s", len(pairs))
 
         seen: set[int] = set()
         emitted = 0
@@ -220,6 +247,7 @@ class MovieRagService:
             emitted += 1
             if emitted >= n:
                 break
+        logger.info("RAG stream finished, emitted=%s", emitted)
 
 
 _service: MovieRagService | None = None

@@ -78,11 +78,20 @@ class TwoTowerSettings:
 
     # Training settings.
     train_epochs: int = 6
-    train_batch_size: int = 2048
+    train_batch_size: int = 4096
     train_lr: float = 0.03
     train_reg: float = 0.0001
     train_negatives: int = 2
     train_limit: int = 300000
+    train_steps_per_epoch: int = 200
+    train_min_user_interactions: int = 10
+    train_min_item_interactions: int = 5
+    train_use_in_batch_negatives: bool = True
+    train_in_batch_temperature: float = 0.07
+    train_id_dropout: float = 0.15
+    train_enable_deep_encoder: bool = True
+    train_deep_hidden_mult: int = 2
+    train_deep_dropout: float = 0.10
 
 
 @dataclass(frozen=True)

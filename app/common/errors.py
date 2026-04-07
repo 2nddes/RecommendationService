@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-
 from flask import Flask
 from werkzeug.exceptions import HTTPException
 
@@ -9,54 +7,46 @@ from app.common.responses import fail
 from app.common.validation import ParamError
 
 
-def _humanize_message(message: str | None, *, fallback: str) -> str:
-    raw = (message or "").strip()
-    if not raw:
-        return fallback
-    if re.fullmatch(r"[a-z0-9_]+", raw):
-        return raw.replace("_", " ")
-    return raw
-
-
-def _extract_exception_message(err: Exception, *, fallback: str) -> str:
-    text = ""
-    if isinstance(err, KeyError) and err.args:
-        text = str(err.args[0])
-    else:
-        text = str(err)
-    return _humanize_message(text, fallback=fallback)
-
-
 def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(ParamError)
     def _handle_param_error(err: ParamError):
+        app.logger.warning("param error: %s", err.message)
         return fail(
             code=400,
-            message=_humanize_message(err.message, fallback="invalid request parameters"),
+            message="invalid request parameters",
             data=None,
             http_status=400,
         )
 
     @app.errorhandler(HTTPException)
     def _handle_http_exception(err: HTTPException):
-        message = _humanize_message(err.description, fallback=err.name or "http error")
-        return fail(code=err.code or 500, message=message, data=None, http_status=err.code or 500)
+        status = int(err.code or 500)
+        app.logger.warning(
+            "http exception: code=%s, name=%s, description=%s",
+            status,
+            err.name,
+            err.description,
+        )
+        message = "invalid request" if status < 500 else "internal server error"
+        return fail(code=status, message=message, data=None, http_status=status)
 
     @app.errorhandler(ValueError)
     @app.errorhandler(KeyError)
     def _handle_bad_request_family(err: Exception):
+        app.logger.warning("bad request exception: %s", err, exc_info=True)
         return fail(
             code=400,
-            message=_extract_exception_message(err, fallback="invalid request"),
+            message="invalid request",
             data=None,
             http_status=400,
         )
 
     @app.errorhandler(RuntimeError)
     def _handle_runtime_error(err: RuntimeError):
+        app.logger.exception("runtime exception: %s", err)
         return fail(
             code=500,
-            message=_extract_exception_message(err, fallback="service execution failed"),
+            message="service execution failed",
             data=None,
             http_status=500,
         )

@@ -6,7 +6,6 @@ from flask import Flask
 
 from app.api.v1 import v1_bp
 from app.common.errors import register_error_handlers
-from app.common.health import health_bp
 from app.common.logging_setup import configure_logging
 from app.common.settings import Settings
 from app.reco.startup import start_startup_jobs
@@ -22,7 +21,6 @@ def create_app(settings: Settings) -> Flask:
     app.config["JSON_AS_ASCII"] = False
     logger.info("应用初始化开始，日志文件=%s", str(log_file))
 
-    app.register_blueprint(health_bp)
     app.register_blueprint(v1_bp, url_prefix="/api/v1")
 
     register_error_handlers(app)

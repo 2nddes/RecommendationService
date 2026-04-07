@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from app.common.settings import Settings
 from app.reco.pipeline import RecommendationPipeline
-from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_model
-from app.reco.recall.two_tower_recall import TwoTowerRecall
+from app.reco.recall.two_tower import (
+    TwoTowerRecall,
+    load_latest_local_model as load_latest_two_tower_model,
+)
 from app.reco.ranking.mmoe import MMoERanker, load_latest_local_model as load_latest_mmoe_model
 from app.reco.reranking.random_shuffle import RandomShuffleReranker
 

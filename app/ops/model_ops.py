@@ -16,14 +16,10 @@ logger = logging.getLogger(__name__)
 
 def _rebuild_global_pipeline_singleton(*, reason: str) -> None:
     """Best-effort refresh of global recommendation runtime after model changes."""
+    from app.reco.runtime import rebuild_pipeline
 
-    try:
-        from app.reco.runtime import rebuild_pipeline
-
-        rebuild_pipeline(reason=reason)
-        log_event(logger, "info", "train.runtime.pipeline_rebuilt", reason=reason)
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "train.runtime.pipeline_rebuild_failed", e, reason=reason)
+    rebuild_pipeline(reason=reason)
+    log_event(logger, "info", "train.runtime.pipeline_rebuilt", reason=reason)
 
 
 def train_current_models(
@@ -57,112 +53,87 @@ def train_current_models(
             status="processing",
         )
 
-    try:
-        if component == "ranking" and model == "xgb":
-            from app.reco.ranking.xgb.training import train_xgb_model
+    if component == "ranking" and model == "xgb":
+        from app.reco.ranking.xgb.training import train_xgb_model
 
-            payload = train_xgb_model(settings)
-        elif component == "ranking" and model == "mmoe":
-            from app.reco.ranking.mmoe.training import train_mmoe_model
+        payload = train_xgb_model(settings)
+    elif component == "ranking" and model == "mmoe":
+        from app.reco.ranking.mmoe.training import train_mmoe_model
 
-            payload = train_mmoe_model(settings)
-        elif component == "recall" and model == "two_tower":
-            from app.reco.recall.two_tower.training import train_two_tower_index
+        payload = train_mmoe_model(settings)
+    elif component == "recall" and model == "two_tower":
+        from app.reco.recall.two_tower.training import train_two_tower_index
 
-            payload = train_two_tower_index(settings)
-        else:
-            raise ValueError(f"Unknown component/model combination: {component}/{model}")
+        payload = train_two_tower_index(settings)
+    else:
+        raise ValueError(f"Unknown component/model combination: {component}/{model}")
 
-        outcome = to_train_outcome(payload)
-        result = {"train_outcome": outcome.to_dict()}
+    outcome = to_train_outcome(payload)
+    result = {"train_outcome": outcome.to_dict()}
 
-        if not outcome.trained:
-            details = outcome.details if isinstance(outcome.details, dict) else {}
-            reason = details.get("reason") or details.get("error") or "train_outcome_not_trained"
-            log_event(
-                logger,
-                "warning",
-                "train.task.untrained",
-                component=component,
-                model=model,
-                reason=reason,
-                status="failed",
-                train_job_id=train_job_id,
-            )
-            raise RuntimeError(str(reason))
-
-        if train_job_id is not None:
-            update_model_train_job(
-                mysql_dsn=settings.core.mysql_dsn,
-                job_id=train_job_id,
-                status="completed",
-                metrics=result,
-                set_finished_at=True,
-            )
+    if not outcome.trained:
+        details = outcome.details if isinstance(outcome.details, dict) else {}
+        reason = details.get("reason") or details.get("error") or "train_outcome_not_trained"
         log_event(
             logger,
-            "info",
-            "train.task.done",
-            artifact_path=outcome.artifact_path,
+            "warning",
+            "train.task.untrained",
             component=component,
             model=model,
-            status="completed",
-            train_job_id=train_job_id,
-        )
-        _rebuild_global_pipeline_singleton(reason=f"train_current_models:{component}.{model}")
-        return result
-    except Exception as e:  # noqa: BLE001
-        if train_job_id is not None:
-            update_model_train_job(
-                mysql_dsn=settings.core.mysql_dsn,
-                job_id=train_job_id,
-                status="failed",
-                metrics={
-                    "error": f"{type(e).__name__}: {e}",
-                    "component": component,
-                    "model": model,
-                },
-                set_finished_at=True,
-            )
-        log_exception(
-            logger,
-            "train.task.failed",
-            e,
-            component=component,
-            model=model,
+            reason=reason,
             status="failed",
             train_job_id=train_job_id,
         )
-        raise
+        raise RuntimeError(str(reason))
+
+    if train_job_id is not None:
+        update_model_train_job(
+            mysql_dsn=settings.core.mysql_dsn,
+            job_id=train_job_id,
+            status="completed",
+            metrics=result,
+            set_finished_at=True,
+        )
+    log_event(
+        logger,
+        "info",
+        "train.task.done",
+        artifact_path=outcome.artifact_path,
+        component=component,
+        model=model,
+        status="completed",
+        train_job_id=train_job_id,
+    )
+    _rebuild_global_pipeline_singleton(reason=f"train_current_models:{component}.{model}")
+    return result
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    try:
-        from app.reco.ranking.mmoe import load_latest_local_model as load_latest_mmoe_local_model
-        from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
+    from app.reco.ranking.mmoe import load_latest_local_model as load_latest_mmoe_local_model
+    from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
 
-        if not load_latest_mmoe_local_model(settings):
-            return {"status": "failed", "reason": "mmoe_model_not_found"}
-        if not load_latest_two_tower_local_model(settings):
-            return {"status": "failed", "reason": "two_tower_model_not_found"}
+    if not load_latest_mmoe_local_model(settings):
+        return {"status": "failed", "reason": "mmoe_model_not_found"}
+    if not load_latest_two_tower_local_model(settings):
+        return {"status": "failed", "reason": "two_tower_model_not_found"}
 
-        _rebuild_global_pipeline_singleton(reason="refresh_current_models")
-        return {"status": "completed", "reason": None}
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "refresh.current_models.failed", e)
-        raise RuntimeError(f"refresh_current_models_failed: {type(e).__name__}: {e}") from e
+    _rebuild_global_pipeline_singleton(reason="refresh_current_models")
+    return {"status": "completed", "reason": None}
 
 
-def create_model_train_job(*, mysql_dsn: str | None, mode: str = "full") -> int:
+def create_model_train_job(*, mysql_dsn: str | None, mode: str = "full", metrics: Dict[str, Any] | None = None) -> int:
     engine = get_mysql_engine(mysql_dsn, logger=logger)
 
     sql = """
-    INSERT INTO model_train_job(mode, status)
-    VALUES (:mode, 'pending')
+    INSERT INTO model_train_job(mode, status, metrics)
+    VALUES (:mode, 'pending', CAST(:metrics AS JSON))
     """
+    payload = {"queued": True}
+    if isinstance(metrics, dict):
+        payload.update(metrics)
     try:
         with engine.begin() as conn:
-            rs = conn.execute(text(sql), {"mode": str(mode)})
+            rs = conn.execute(text(sql), {"mode": str(mode), "metrics": json.dumps(payload, ensure_ascii=False)})
             new_id = rs.lastrowid
     except SQLAlchemyError as e:
         raise RuntimeError(f"create_model_train_job_failed: {e}") from e
@@ -170,6 +141,40 @@ def create_model_train_job(*, mysql_dsn: str | None, mode: str = "full") -> int:
     if new_id is None:
         raise RuntimeError("create_model_train_job_failed: empty_insert_id")
     return int(new_id)
+
+
+def claim_next_model_train_job(*, mysql_dsn: str | None) -> Dict[str, Any] | None:
+    engine = get_mysql_engine(mysql_dsn, logger=logger)
+
+    select_sql = text(
+        """
+        SELECT id, mode, status, metrics, created_at, finished_at
+        FROM model_train_job
+        WHERE status = 'pending'
+        ORDER BY id ASC
+        LIMIT 1
+        FOR UPDATE
+        """
+    )
+    update_sql = text(
+        """
+        UPDATE model_train_job
+        SET status = 'processing'
+        WHERE id = :job_id
+        """
+    )
+
+    try:
+        with engine.begin() as conn:
+            row = conn.execute(select_sql).mappings().first()
+            if row is None:
+                return None
+            job_id = int(row.get("id"))
+            conn.execute(update_sql, {"job_id": job_id})
+    except SQLAlchemyError as e:
+        raise RuntimeError(f"claim_model_train_job_failed: {e}") from e
+
+    return get_model_train_job(mysql_dsn=mysql_dsn, job_id=job_id)
 
 
 def update_model_train_job(
@@ -218,23 +223,15 @@ def get_model_train_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any]
         raise RuntimeError(f"get_model_train_job_failed: {type(e).__name__}: {e}") from e
 
     if row is None:
-        err = RuntimeError("model_train_job_not_found")
-        log_exception(logger, "train.job.not_found", err, job_id=job_id)
-        raise err
+        return None
 
     created_at = row.get("created_at")
     finished_at = row.get("finished_at")
     metrics = row.get("metrics")
     if metrics is None:
-        err = RuntimeError("model_train_job_metrics_missing")
-        log_exception(logger, "train.job.metrics_missing", err, job_id=job_id)
-        raise err
+        metrics = {}
     if isinstance(metrics, str):
-        try:
-            metrics = json.loads(metrics)
-        except Exception as e:
-            log_exception(logger, "train.job.metrics_parse_failed", e, job_id=job_id)
-            raise RuntimeError(f"model_train_job_metrics_parse_failed: {type(e).__name__}: {e}") from e
+        metrics = json.loads(metrics)
 
     return {
         "id": int(row.get("id")),
@@ -287,15 +284,9 @@ def list_model_train_jobs(
         finished_at = row.get("finished_at")
         metrics = row.get("metrics")
         if metrics is None:
-            err = RuntimeError("model_train_job_metrics_missing")
-            log_exception(logger, "train.job.list_metrics_missing", err, row_id=row.get("id"))
-            raise err
+            metrics = {}
         if isinstance(metrics, str):
-            try:
-                metrics = json.loads(metrics)
-            except Exception as e:
-                log_exception(logger, "train.job.list_metrics_parse_failed", e, row_id=row.get("id"))
-                raise RuntimeError(f"model_train_job_list_metrics_parse_failed: {type(e).__name__}: {e}") from e
+            metrics = json.loads(metrics)
 
         out.append(
             {

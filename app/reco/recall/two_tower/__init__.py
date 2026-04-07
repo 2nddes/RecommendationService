@@ -15,6 +15,7 @@ from .indexing import (
     materialize_item_vectors_from_model,
 )
 from .online import build_item_vector, build_user_vector
+from .recaller import TwoTowerRecall
 from .store import ItemVectorStore
 from .train import train_two_tower_model
 
@@ -33,5 +34,6 @@ __all__ = [
     "load_model_weights",
     "materialize_item_vectors_from_model",
     "save_model_weights",
+    "TwoTowerRecall",
     "train_two_tower_model",
 ]

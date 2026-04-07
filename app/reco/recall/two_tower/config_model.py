@@ -87,19 +87,16 @@ def load_model_weights(model_path: str) -> TwoTowerModel | None:
         if cached is not None and cached[0] == mtime:
             return cached[1]
 
-        try:
-            data = torch.load(path, map_location="cpu", weights_only=False)
-            if not isinstance(data, dict):
-                return None
-
-            dim = int(data["dim"])
-            user_ids = torch.as_tensor(data["user_ids"], dtype=torch.int64).cpu().numpy()
-            item_ids = torch.as_tensor(data["item_ids"], dtype=torch.int64).cpu().numpy()
-            user_emb = torch.as_tensor(data["user_emb"], dtype=torch.float32).cpu().numpy()
-            item_emb = torch.as_tensor(data["item_emb"], dtype=torch.float32).cpu().numpy()
-            metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else None
-        except Exception:
+        data = torch.load(path, map_location="cpu", weights_only=False)
+        if not isinstance(data, dict):
             return None
+
+        dim = int(data["dim"])
+        user_ids = torch.as_tensor(data["user_ids"], dtype=torch.int64).cpu().numpy()
+        item_ids = torch.as_tensor(data["item_ids"], dtype=torch.int64).cpu().numpy()
+        user_emb = torch.as_tensor(data["user_emb"], dtype=torch.float32).cpu().numpy()
+        item_emb = torch.as_tensor(data["item_emb"], dtype=torch.float32).cpu().numpy()
+        metadata = data.get("metadata") if isinstance(data.get("metadata"), dict) else None
 
         if user_emb.ndim != 2 or item_emb.ndim != 2 or user_emb.shape[1] != dim or item_emb.shape[1] != dim:
             return None

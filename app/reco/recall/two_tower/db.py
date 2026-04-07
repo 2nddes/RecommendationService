@@ -17,11 +17,8 @@ def get_engine(mysql_dsn: str | None) -> Engine | None:
     cached = _engine_by_dsn.get(dsn)
     if cached is not None:
         return cached
-    try:
-        _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
-        return _engine_by_dsn[dsn]
-    except Exception:
-        return None
+    _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
+    return _engine_by_dsn[dsn]
 
 
 def execute(mysql_dsn: str | None, sql: str, params: dict, *, expanding: Sequence[str] = ()) -> list[dict]:
@@ -29,12 +26,9 @@ def execute(mysql_dsn: str | None, sql: str, params: dict, *, expanding: Sequenc
     if engine is None:
         return []
 
-    try:
-        with engine.connect() as conn:
-            stmt = text(sql)
-            for key in expanding:
-                stmt = stmt.bindparams(bindparam(key, expanding=True))
-            rs = conn.execute(stmt, params)
-            return [dict(row._mapping) for row in rs]
-    except SQLAlchemyError:
-        return []
+    with engine.connect() as conn:
+        stmt = text(sql)
+        for key in expanding:
+            stmt = stmt.bindparams(bindparam(key, expanding=True))
+        rs = conn.execute(stmt, params)
+        return [dict(row._mapping) for row in rs]

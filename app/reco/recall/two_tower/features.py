@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import json
+import zlib
 from typing import Mapping, Sequence
 
 import numpy as np
@@ -32,10 +33,7 @@ def parse_datetime_like(raw: object) -> datetime | None:
             return datetime.strptime(text_val, fmt)
         except ValueError:
             continue
-    try:
-        return datetime.fromisoformat(text_val)
-    except Exception:
-        return None
+    return datetime.fromisoformat(text_val)
 
 
 def age_bucket_index(raw_birth: object) -> int:
@@ -81,6 +79,14 @@ def gender_index(raw_gender: object) -> int:
     return 0
 
 
+def profession_bucket_index(raw_profession: object, *, bucket_size: int = 64) -> int:
+    p = str(raw_profession or "").strip().lower()
+    if not p:
+        return 0
+    digest = int(zlib.crc32(p.encode("utf-8")))
+    return int(digest % max(int(bucket_size), 1)) + 1
+
+
 def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[int, dict[str, object]]:
     if not user_ids:
         return {}
@@ -96,6 +102,7 @@ def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[
                 "gender": cached.get("gender"),
                 "birth": cached.get("birth"),
                 "created_at": cached.get("created_at"),
+                "profession": cached.get("profession"),
             }
         else:
             missing.append(uid)
@@ -104,7 +111,7 @@ def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[
         return out
 
     sql = """
-    SELECT u.user_id, u.gender, u.birth, u.created_at
+    SELECT u.user_id, u.gender, u.birth, u.created_at, u.profession
     FROM user u
     WHERE u.user_id IN :user_ids
     """
@@ -115,14 +122,12 @@ def fetch_user_profiles(mysql_dsn: str | None, user_ids: Sequence[int]) -> dict[
         expanding=("user_ids",),
     )
     for row in rows:
-        try:
-            uid = int(row["user_id"])
-        except Exception:
-            continue
+        uid = int(row["user_id"])
         profile = {
             "gender": row.get("gender"),
             "birth": row.get("birth"),
             "created_at": row.get("created_at"),
+            "profession": row.get("profession"),
         }
         out[uid] = profile
     return out
@@ -134,21 +139,24 @@ def fetch_user_recent_sequences(
     *,
     recent_limit: int,
 ) -> dict[int, list[int]]:
-    if not user_ids or int(recent_limit) <= 0:
-        return {}
-
     sql = """
     SELECT x.user_id, x.movie_id, x.ts
     FROM (
-      SELECT ua.user_id, ua.movie_id, ua.created_at AS ts
-      FROM user_action ua
-      WHERE ua.user_id IN :user_ids AND ua.movie_id IS NOT NULL
+        SELECT uc.user_id, uc.movie_id, uc.created_at AS ts
+        FROM user_click uc
+            WHERE uc.user_id IN :user_ids AND uc.movie_id IS NOT NULL
 
       UNION ALL
 
       SELECT r.user_id, r.movie_id, r.updated_at AS ts
       FROM rating r
       WHERE r.user_id IN :user_ids AND r.movie_id IS NOT NULL
+
+        UNION ALL
+
+        SELECT mc.user_id, mc.movie_id, mc.created_at AS ts
+        FROM movie_comment mc
+        WHERE mc.user_id IN :user_ids AND mc.movie_id IS NOT NULL AND mc.deleted_at IS NULL
 
       UNION ALL
 
@@ -168,11 +176,8 @@ def fetch_user_recent_sequences(
     out: dict[int, list[int]] = {}
     limit = int(recent_limit)
     for row in rows:
-        try:
-            uid = int(row["user_id"])
-            iid = int(row["movie_id"])
-        except Exception:
-            continue
+        uid = int(row["user_id"])
+        iid = int(row["movie_id"])
         seq = out.setdefault(uid, [])
         if len(seq) < limit:
             seq.append(iid)
@@ -191,12 +196,9 @@ def fetch_item_tags(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int,
         cached = load_movie_feature_hash(settings, mid)
         tags_raw = cached.get("tags") if cached else None
         if tags_raw:
-            try:
-                tags = [int(x) for x in json.loads(tags_raw)]
-                out[mid] = tags
-                continue
-            except Exception:
-                pass
+            tags = [int(x) for x in json.loads(tags_raw)]
+            out[mid] = tags
+            continue
         missing.append(mid)
 
     if not missing:
@@ -215,11 +217,8 @@ def fetch_item_tags(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int,
         expanding=("movie_ids",),
     )
     for row in rows:
-        try:
-            mid = int(row["movie_id"])
-            tid = int(row["tag_id"])
-        except Exception:
-            continue
+        mid = int(row["movie_id"])
+        tid = int(row["tag_id"])
         out.setdefault(mid, []).append(tid)
     return out
 
@@ -235,8 +234,31 @@ def _feature_build_item_stats_vector(row: Mapping[str, object]) -> np.ndarray:
 
     collect_cnt = float(row.get("collect_cnt") or 0.0)
     hot_cnt = float(row.get("hot_cnt_30d") or 0.0)
+    year_raw = row.get("year")
+    duration_raw = row.get("duration_min")
+    release_dt = parse_datetime_like(row.get("release_date"))
+
+    year = float(year_raw) if year_raw is not None else 0.0
+    duration_min = max(float(duration_raw or 0.0), 0.0)
+    release_age_days = 0.0
+    if release_dt is not None:
+        release_age_days = max(float((datetime.utcnow().date() - release_dt.date()).days), 0.0)
+
+    year_norm = 0.0 if year <= 0 else np.clip((year - 1900.0) / 200.0, 0.0, 1.5)
+    duration_norm = np.log1p(duration_min) / np.log1p(240.0)
+    release_age_norm = np.log1p(release_age_days) / np.log1p(365.0 * 120.0)
+
     return np.asarray(
-        [avg_rating / 10.0, np.log1p(rating_count), *hist_ratio, np.log1p(collect_cnt), np.log1p(hot_cnt)],
+        [
+            avg_rating / 10.0,
+            np.log1p(rating_count),
+            *hist_ratio,
+            np.log1p(collect_cnt),
+            np.log1p(hot_cnt),
+            float(year_norm),
+            float(duration_norm),
+            float(release_age_norm),
+        ],
         dtype=np.float32,
     )
 
@@ -252,13 +274,10 @@ def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int
         mid = int(mid_raw)
         cached = load_movie_feature_hash(settings, mid)
         if cached:
-            try:
-                rating_avg = float(cached.get("rating_avg") or 0.0)
-                vec = np.asarray([rating_avg / 10.0, 0.0, *([0.0] * 10), 0.0, 0.0], dtype=np.float32)
-                out[mid] = vec
-                continue
-            except Exception:
-                pass
+            rating_avg = float(cached.get("rating_avg") or 0.0)
+            vec = np.asarray([rating_avg / 10.0, 0.0, *([0.0] * 10), 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+            out[mid] = vec
+            continue
         missing.append(mid)
 
     if not missing:
@@ -268,6 +287,9 @@ def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int
     SELECT m.movie_id,
            m.rating_sum,
            m.rating_count,
+            m.year,
+            m.release_date,
+            m.duration_min,
            m.rating_1_count,
            m.rating_2_count,
            m.rating_3_count,
@@ -287,10 +309,22 @@ def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int
         GROUP BY movie_id
     ) c ON c.movie_id = m.movie_id
     LEFT JOIN (
-        SELECT movie_id, COUNT(*) AS hot_cnt_30d
-        FROM user_action
-        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY movie_id
+                SELECT x.movie_id, SUM(x.cnt) AS hot_cnt_30d
+                FROM (
+                        SELECT movie_id, COUNT(*) AS cnt
+                    FROM user_click
+                        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                        GROUP BY movie_id
+
+                        UNION ALL
+
+                        SELECT movie_id, COUNT(*) AS cnt
+                        FROM movie_comment
+                        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                            AND deleted_at IS NULL
+                        GROUP BY movie_id
+                ) x
+                GROUP BY x.movie_id
     ) h ON h.movie_id = m.movie_id
     WHERE m.movie_id IN :movie_ids
     """
@@ -302,10 +336,7 @@ def fetch_item_stats(mysql_dsn: str | None, item_ids: Sequence[int]) -> dict[int
     )
 
     for row in rows:
-        try:
-            mid = int(row["movie_id"])
-        except Exception:
-            continue
+        mid = int(row["movie_id"])
         out[mid] = _feature_build_item_stats_vector(row)
     return out
 
@@ -320,12 +351,8 @@ def fetch_all_movie_ids(mysql_dsn: str | None) -> list[int]:
     rows = _feature_execute_sql(mysql_dsn, sql, {})
     out: list[int] = []
     for row in rows:
-        try:
-            mid = int(row.get("movie_id") or 0)
-        except Exception:
-            continue
-        if mid > 0:
-            out.append(mid)
+        mid = int(row["movie_id"])
+        out.append(mid)
     return out
 
 
@@ -343,7 +370,9 @@ def fetch_user_excluded_items(user_id: int, *, mysql_dsn: str | None, recent_lim
         UNION ALL
         SELECT movie_id, updated_at AS ts FROM rating WHERE user_id = :user_id
         UNION ALL
-        SELECT movie_id, created_at AS ts FROM user_action WHERE user_id = :user_id
+        SELECT movie_id, created_at AS ts FROM movie_comment WHERE user_id = :user_id AND deleted_at IS NULL
+        UNION ALL
+            SELECT movie_id, created_at AS ts FROM user_click WHERE user_id = :user_id
       ) x
       WHERE x.movie_id IS NOT NULL
       GROUP BY x.movie_id
@@ -354,8 +383,5 @@ def fetch_user_excluded_items(user_id: int, *, mysql_dsn: str | None, recent_lim
     rows = _feature_execute_sql(mysql_dsn, sql, {"user_id": int(user_id), "limit": limit})
     out: set[int] = set()
     for row in rows:
-        try:
-            out.add(int(row["movie_id"]))
-        except Exception:
-            continue
+        out.add(int(row["movie_id"]))
     return out

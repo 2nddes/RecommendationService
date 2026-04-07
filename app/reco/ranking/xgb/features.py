@@ -14,24 +14,6 @@ FeatureRow = Dict[str, float]
 FeatureFn = Callable[[RequestContext, Candidate, Mapping[str, Any] | None], float]
 
 
-def _safe_float(value: Any, default: float = 0.0) -> float:
-    try:
-        if value is None:
-            return default
-        return float(value)
-    except Exception:
-        return default
-
-
-def _safe_int(value: Any, default: int = 0) -> int:
-    try:
-        if value is None:
-            return default
-        return int(value)
-    except Exception:
-        return default
-
-
 def _log1p(x: float) -> float:
     if x <= 0:
         return 0.0
@@ -50,11 +32,8 @@ def _get_engine(mysql_dsn: str | None) -> Engine | None:
     cached = _engine_by_dsn.get(dsn)
     if cached is not None:
         return cached
-    try:
-        _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
-        return _engine_by_dsn[dsn]
-    except Exception:
-        return None
+    _engine_by_dsn[dsn] = create_engine(dsn, pool_pre_ping=True)
+    return _engine_by_dsn[dsn]
 
 
 def fetch_movie_features(movie_ids: Sequence[int], *, mysql_dsn: str | None = None) -> Dict[int, Dict[str, Any]]:
@@ -81,19 +60,16 @@ def fetch_movie_features(movie_ids: Sequence[int], *, mysql_dsn: str | None = No
         WHERE m.movie_id IN :ids
     """
 
-    try:
-        with engine.connect() as conn:
-            stmt = text(sql).bindparams(bindparam("ids", expanding=True))
-            rs = conn.execute(stmt, {"ids": list(movie_ids)})
-            out: Dict[int, Dict[str, Any]] = {}
-            for row in rs:
-                d = dict(row._mapping)
-                mid = _safe_int(d.get("id"), 0)
-                if mid > 0:
-                    out[mid] = d
-            return out
-    except SQLAlchemyError:
-        return {}
+    with engine.connect() as conn:
+        stmt = text(sql).bindparams(bindparam("ids", expanding=True))
+        rs = conn.execute(stmt, {"ids": list(movie_ids)})
+        out: Dict[int, Dict[str, Any]] = {}
+        for row in rs:
+            d = dict(row._mapping)
+            mid = int(d["id"])
+            if mid > 0:
+                out[mid] = d
+        return out
 
 
 @dataclass(frozen=True)
@@ -138,7 +114,7 @@ class ManualFeatureBuilder:
     def _feature_fns(self) -> List[tuple[str, FeatureFn]]:
         # Core, always-available features
         fns: List[tuple[str, FeatureFn]] = [
-            ("recall_score", lambda _ctx, c, _m: _safe_float(c.score)),
+            ("recall_score", lambda _ctx, c, _m: float(c.score)),
             ("has_user", lambda ctx, _c, _m: 1.0 if ctx.user_id is not None else 0.0),
             ("has_seed_movie", lambda ctx, _c, _m: 1.0 if ctx.movie_id is not None else 0.0),
             ("req_n", lambda ctx, _c, _m: float(max(ctx.n, 0))),
@@ -155,15 +131,15 @@ class ManualFeatureBuilder:
             # These features are strong but optional; if MySQL is missing they become 0.
             fns.extend(
                 [
-                    ("movie_rating_avg", lambda _ctx, _c, m: _safe_float(m.get("rating_avg") if m else 0.0)),
+                    ("movie_rating_avg", lambda _ctx, _c, m: float(m["rating_avg"] if m else 0.0)),
                     (
                         "movie_log_rating_cnt",
-                        lambda _ctx, _c, m: _log1p(_safe_float(m.get("rating_count") if m else 0.0)),
+                        lambda _ctx, _c, m: _log1p(float(m["rating_count"] if m else 0.0)),
                     ),
-                    ("movie_year", lambda _ctx, _c, m: float(_safe_int(m.get("year") if m else 0, 0))),
+                    ("movie_year", lambda _ctx, _c, m: float(m["year"] if m else 0)),
                     (
                         "movie_duration_min",
-                        lambda _ctx, _c, m: float(_safe_int(m.get("duration_min") if m else 0, 0)),
+                        lambda _ctx, _c, m: float(m["duration_min"] if m else 0),
                     ),
                 ]
             )

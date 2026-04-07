@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
+from app.reco.contracts.artifacts import write_manifest
 from app.reco.training.common import log_event, log_exception
 
 
@@ -34,15 +35,11 @@ def train_two_tower_index(settings: Settings) -> Dict[str, Any]:
         vector_db_path=artifact_vector_db_path,
     )
 
-    try:
-        from app.reco.recall.two_tower import (
-            materialize_item_vectors_from_model,
-            save_model_weights,
-            train_two_tower_model,
-        )
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "train.two_tower.deps_failed", e, stage="prepare", status="failed")
-        raise RuntimeError(f"two_tower_dependency_failed: {type(e).__name__}: {e}") from e
+    from app.reco.recall.two_tower import (
+        materialize_item_vectors_from_model,
+        save_model_weights,
+        train_two_tower_model,
+    )
 
     cfg = settings.two_tower
     log_event(
@@ -56,26 +53,32 @@ def train_two_tower_index(settings: Settings) -> Dict[str, Any]:
         train_epochs=cfg.train_epochs,
     )
 
-    try:
-        model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.core.mysql_dsn)
-        log_event(logger, "info", "train.two_tower.fit_done", metrics=train_metrics, stage="fit")
-        save_model_weights(model, artifact_model_path)
-        log_event(logger, "info", "train.two_tower.model_saved", model_path=artifact_model_path, stage="finalize")
-        count = materialize_item_vectors_from_model(
-            cfg=cfg,
-            model_path=artifact_model_path,
-            vector_db_path=artifact_vector_db_path,
-            index_path=artifact_index_path,
-        )
-        log_event(logger, "info", "train.two_tower.index_done", items_indexed=int(count), stage="finalize")
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "train.two_tower.failed", e, stage="fit", status="failed")
-        raise RuntimeError(f"two_tower_train_failed: {type(e).__name__}: {e}") from e
+    model, train_metrics = train_two_tower_model(cfg, mysql_dsn=settings.core.mysql_dsn)
+    log_event(logger, "info", "train.two_tower.fit_done", metrics=train_metrics, stage="fit")
+    save_model_weights(model, artifact_model_path)
+    log_event(logger, "info", "train.two_tower.model_saved", model_path=artifact_model_path, stage="finalize")
+    count = materialize_item_vectors_from_model(
+        cfg=cfg,
+        model_path=artifact_model_path,
+        vector_db_path=artifact_vector_db_path,
+        index_path=artifact_index_path,
+    )
+    log_event(logger, "info", "train.two_tower.index_done", items_indexed=int(count), stage="finalize")
 
     store.set("recall.two_tower.latest_model_artifact_path", artifact_model_path)
     store.set("recall.two_tower.latest_index_artifact_path", artifact_index_path)
     store.set("recall.two_tower.latest_vector_db_artifact_path", artifact_vector_db_path)
     store.set("recall.two_tower.latest_trained_at", ts)
+    manifest_path = write_manifest(
+        component="recall",
+        model_name="two_tower",
+        artifact_path=artifact_model_path,
+        details={
+            "index_path": artifact_index_path,
+            "vector_db_path": artifact_vector_db_path,
+            "items_indexed": int(count),
+        },
+    )
     elapsed_ms = int((time.time() - started_at) * 1000)
     log_event(logger, "info", "train.two_tower.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
@@ -89,6 +92,7 @@ def train_two_tower_index(settings: Settings) -> Dict[str, Any]:
             "model_path": artifact_model_path,
             "index_path": artifact_index_path,
             "vector_db_path": artifact_vector_db_path,
+            "manifest_path": manifest_path,
             **train_metrics,
         },
     }

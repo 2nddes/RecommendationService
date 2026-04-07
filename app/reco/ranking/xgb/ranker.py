@@ -104,21 +104,15 @@ class XGBoostRanker(Ranker):
         if not model_path:
             raise RuntimeError("ranking_model_path_is_empty")
 
-        try:
-            import numpy as np
-            import xgboost as xgb
-        except Exception as e:
-            raise RuntimeError(f"xgboost_dependency_not_available: {e}") from e
+        import numpy as np
+        import xgboost as xgb
 
-        try:
-            booster = self._load_cached_booster(model_path=model_path, xgb_module=xgb)
+        booster = self._load_cached_booster(model_path=model_path, xgb_module=xgb)
 
-            X = np.asarray(matrix, dtype=float)
-            dmat = xgb.DMatrix(X, feature_names=list(feature_names))
-            pred = booster.predict(dmat)
-            return [float(x) for x in pred.tolist()]
-        except Exception as e:
-            raise RuntimeError(f"xgboost_rank_inference_failed: {type(e).__name__}: {e}") from e
+        X = np.asarray(matrix, dtype=float)
+        dmat = xgb.DMatrix(X, feature_names=list(feature_names))
+        pred = booster.predict(dmat)
+        return [float(x) for x in pred.tolist()]
 
     def _load_cached_booster(self, *, model_path: str, xgb_module: object):
         try:

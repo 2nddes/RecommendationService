@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app import create_app
-from app.reco.runtime import get_settings
+from app.reco.online.runtime import get_settings
 
 app = create_app(get_settings())
 

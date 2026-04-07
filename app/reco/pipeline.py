@@ -58,7 +58,19 @@ class RecommendationPipeline:
 
         for recaller in self.recallers:
             before_count = len(merged)
-            for c in recaller.recall(ctx):
+            try:
+                recalled = recaller.recall(ctx)
+            except Exception:
+                logger.exception(
+                    "召回器执行失败，recaller=%s, user_id=%s, movie_id=%s, n=%s",
+                    recaller.name,
+                    ctx.user_id,
+                    ctx.movie_id,
+                    ctx.n,
+                )
+                raise
+
+            for c in recalled:
                 if c.item_id not in merged:
                     merged[c.item_id] = c
                 else:

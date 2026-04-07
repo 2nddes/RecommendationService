@@ -1,0 +1,693 @@
+openapi: 3.0.3
+info:
+  title: RecommendationService API
+  version: 2026-04-06
+  description: |
+    Code-aligned API contract for RecommendationService.
+    Base path is /api/v1.
+
+    Authentication note:
+    - If INTERNAL_SECRET is configured on server, clients must send X-Internal-Secret header.
+    - If not configured, the header is not required.
+servers:
+  - url: http://127.0.0.1:5000/api/v1
+    description: Local
+
+tags:
+  - name: Health
+  - name: Recommendation
+  - name: Search
+  - name: Admin
+  - name: RAG
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health summary
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /health/runtime:
+    get:
+      tags: [Health]
+      summary: Runtime health snapshot
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHealthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recommend/user:
+    get:
+      tags: [Recommendation]
+      summary: Personalized recommendation
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: n
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRecommendResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recommend/item:
+    get:
+      tags: [Recommendation]
+      summary: Similar items recommendation
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: movie_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: n
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 8
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemRecommendResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recommend/trending:
+    get:
+      tags: [Recommendation]
+      summary: Trending recommendation
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: window
+          in: query
+          required: false
+          schema:
+            type: string
+            default: weekly
+            enum: [daily, weekly, monthly, half_year, one_year, all_time]
+        - name: n
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendingRecommendResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /search:
+    get:
+      tags: [Search]
+      summary: Search movies by query text
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Optional search text. At least one of query or tag must be provided.
+        - name: n
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: tag
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: Optional multi-value filter, e.g. tag=a&tag=b. At least one of query or tag must be provided.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/train:
+    post:
+      tags: [Admin]
+      summary: Enqueue model training task
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminTrainRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTrainResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /admin/refresh:
+    post:
+      tags: [Admin]
+      summary: Reload current model artifacts and rebuild runtime pipeline
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /admin/tasks/{task_id}:
+    get:
+      tags: [Admin]
+      summary: Get a training task by id
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTaskResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/tasks:
+    get:
+      tags: [Admin]
+      summary: List training tasks
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            default: all
+            enum: [all, memory, db]
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTasksResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/status:
+    get:
+      tags: [Admin]
+      summary: Get runtime config and artifact status
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /recommend/rag/stream:
+    post:
+      tags: [RAG]
+      summary: RAG streaming recommendation (SSE)
+      parameters:
+        - $ref: '#/components/parameters/InternalSecretHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RagStreamRequest'
+      responses:
+        '200':
+          description: Server-Sent Events stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                sample:
+                  value: |
+                    event: start
+                    data: {"query":"nolan sci-fi","n":8}
+
+                    event: movie
+                    data: {"index":1,"item":{"movie_id":123,"title":"Inception","year":2010,"summary":"...","score":0.31}}
+
+                    event: done
+                    data: {"count":8,"elapsed_ms":386}
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  parameters:
+    InternalSecretHeader:
+      name: X-Internal-Secret
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Required only when server INTERNAL_SECRET is configured.
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          nullable: true
+      required: [code, message, data]
+
+    HealthData:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        ready:
+          type: boolean
+      required: [status, ready]
+
+    HealthResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: success
+        data:
+          $ref: '#/components/schemas/HealthData'
+      required: [code, message, data]
+
+    RuntimeHealthComponent:
+      type: object
+      properties:
+        name:
+          type: string
+        ready:
+          type: boolean
+        status:
+          type: string
+        last_success_at:
+          type: string
+          nullable: true
+        last_error_at:
+          type: string
+          nullable: true
+        last_error:
+          nullable: true
+        details:
+          type: object
+          additionalProperties: true
+      required: [name, ready, status, details]
+
+    RuntimeHealthData:
+      type: object
+      properties:
+        generated_at:
+          type: string
+        overall:
+          type: object
+          properties:
+            ready:
+              type: boolean
+            warmup_ready:
+              type: boolean
+            pipeline_ready:
+              type: boolean
+          required: [ready, warmup_ready, pipeline_ready]
+        components:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RuntimeHealthComponent'
+      required: [generated_at, overall, components]
+
+    RuntimeHealthResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/RuntimeHealthData'
+      required: [code, message, data]
+
+    UserRecommendResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            user_id: { type: integer }
+            items:
+              type: array
+              items: { type: integer }
+            n: { type: integer }
+          required: [user_id, items, n]
+      required: [code, message, data]
+
+    ItemRecommendResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            source_id: { type: integer }
+            items:
+              type: array
+              items: { type: integer }
+            n: { type: integer }
+          required: [source_id, items, n]
+      required: [code, message, data]
+
+    TrendingRecommendResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            window: { type: string }
+            items:
+              type: array
+              items: { type: integer }
+            n: { type: integer }
+          required: [window, items, n]
+      required: [code, message, data]
+
+    SearchResultItem:
+      type: object
+      properties:
+        movie_id: { type: integer }
+        title: { type: string }
+        year:
+          type: integer
+          nullable: true
+        summary: { type: string }
+        rating_avg:
+          type: number
+          nullable: true
+        rating_count: { type: integer }
+        score: { type: number }
+      required: [movie_id, title, year, summary, rating_avg, rating_count, score]
+
+    SearchResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            query: { type: string }
+            n: { type: integer }
+            offset: { type: integer }
+            passthrough:
+              type: object
+              additionalProperties: true
+            total: { type: integer }
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/SearchResultItem'
+          required: [query, n, offset, passthrough, total, results]
+      required: [code, message, data]
+
+    AdminTrainRequest:
+      type: object
+      properties:
+        component: { type: string }
+        model: { type: string }
+      required: [component, model]
+
+    AdminTrainResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            task_id: { type: string }
+            train_job_id: { type: integer }
+            estimated_time: { type: string }
+          required: [task_id, train_job_id, estimated_time]
+      required: [code, message, data]
+
+    AdminRefreshResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            status: { type: string }
+            reason:
+              nullable: true
+          required: [status, reason]
+      required: [code, message, data]
+
+    AdminTaskResult:
+      type: object
+      properties:
+        train_job_id: { type: integer }
+        mode: { type: string }
+        status: { type: string }
+        metrics:
+          type: object
+          additionalProperties: true
+
+    AdminTaskItem:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string }
+        created_at:
+          nullable: true
+        started_at:
+          nullable: true
+        finished_at:
+          nullable: true
+        error:
+          nullable: true
+        source: { type: string }
+        result:
+          $ref: '#/components/schemas/AdminTaskResult'
+
+    AdminTaskResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          $ref: '#/components/schemas/AdminTaskItem'
+      required: [code, message, data]
+
+    AdminTasksData:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminTaskItem'
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        source: { type: string }
+        status:
+          nullable: true
+        note:
+          type: string
+      required: [items, total, limit, offset, source]
+
+    AdminTasksResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          $ref: '#/components/schemas/AdminTasksData'
+      required: [code, message, data]
+
+    AdminStatusResponse:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+        data:
+          type: object
+          properties:
+            config:
+              type: object
+              additionalProperties: true
+            artifacts:
+              type: object
+              additionalProperties: true
+          required: [config, artifacts]
+      required: [code, message, data]
+
+    RagStreamRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        n:
+          type: integer
+          default: 8
+        rebuild_index:
+          type: boolean
+          default: false
+      required: [query]

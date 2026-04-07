@@ -22,6 +22,34 @@ JSON{
   "data": null
 }
 
+## 运行健康与就绪状态
+
+新增运行健康快照接口：
+
+- `GET /health`
+  - 返回服务就绪摘要：`status` + `ready`
+- `GET /health/runtime`
+  - 返回组件级快照，包含 `warmup`、`pipeline`、`rag`、`cache_precompute` 的健康状态与最近错误
+
+启动流程已调整为异步 warmup：服务会先启动，再后台预热。
+`/health` 的 `ready=true` 表示 warmup + pipeline 已就绪。
+
+## 独立训练 Worker
+
+训练任务已从 API 进程内存线程迁移为数据库队列（`model_train_job`）。
+
+- `POST /api/v1/admin/train`：仅入队任务，不在 API 进程内执行训练
+- 通过独立 Worker 消费 `pending` 任务：
+
+```bash
+python -m app.ops.train_worker
+```
+
+可选参数：
+
+- `--once`：只处理一个任务后退出
+- `--interval 3`：轮询间隔秒数
+
 ## 核心推荐接口 (Recommendation APIs)
 这些接口主要服务于 C 端用户体验，由 Spring Boot 获取 ID 列表后，查询数据库组装电影详情返回给 Vue。
 
@@ -102,9 +130,9 @@ JSON{
 - `MMOE_TRAIN_LIMIT` / `MMOE_TRAIN_EPOCHS` / `MMOE_TRAIN_BATCH_SIZE` / `MMOE_TRAIN_LR`：训练参数。
 - 任务目标：`click`、`collect`、`comment`、`rating`。
 - 标签定义：
-  - 点击 = 1（`user_action.action_type='view'`）
-  - 收藏 = 1（`user_action.action_type='collect'` 或 `user_collect_movie`）
-  - 评论 = 1（`user_action.action_type='comment'` 或 `movie_comment`）
+  - 点击 = 1（`user_click`）
+  - 收藏 = 1（`user_collect_movie`）
+  - 评论 = 1（`movie_comment`）
   - 评分 = 1（`rating.rating > 5`）
 - 数据仅从 MySQL 拉取，不使用模拟/造数。
 
@@ -142,7 +170,7 @@ Method: GET
 
 |参数名|类型|必选|默认值|说明|
 |---|---|---|---|---|
-|window|String|否|weekly|时间窗: daily, weekly, monthly, all_time|
+|window|String|否|weekly|时间窗: daily, weekly, monthly, half_year, one_year|
 |n|Integer|否|10|返回数量|
 
 响应示例:
@@ -158,8 +186,8 @@ JSON{
 
 实现说明（当前版本）：
 
-- 数据来源：`movie` + `user_action`
-- 时间窗：`daily` / `weekly` / `monthly` / `all_time`
+- 数据来源：`movie` + `user_click`
+- 时间窗：`daily` / `weekly` / `monthly` / `half_year` / `one_year`
 - 排序分：评分均值、评分人数、窗口内行为数加权组合
 - 返回值：热门电影 ID 列表（由 Java 侧再查详情）
 

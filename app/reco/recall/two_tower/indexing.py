@@ -8,11 +8,7 @@ import time
 from typing import Dict, List, Mapping, Sequence, Tuple
 
 import numpy as np
-
-try:
-    import hnswlib  # type: ignore
-except Exception:  # pragma: no cover
-    hnswlib = None
+import hnswlib  # type: ignore
 
 from app.common.settings import Settings, TwoTowerSettings
 
@@ -50,13 +46,10 @@ def invalidate_index_cache() -> None:
 def _index_load_hnsw_from_disk(cfg: TwoTowerSettings) -> object | None:
     if hnswlib is None:
         return None
-    try:
-        idx = hnswlib.Index(space=cfg.space, dim=cfg.dim)
-        idx.load_index(cfg.index_path)
-        idx.set_ef(cfg.recall_topk)
-        return idx
-    except Exception:
-        return None
+    idx = hnswlib.Index(space=cfg.space, dim=cfg.dim)
+    idx.load_index(cfg.index_path)
+    idx.set_ef(cfg.recall_topk)
+    return idx
 
 
 def _index_refresh_state(cfg: TwoTowerSettings) -> _IndexState:
@@ -111,40 +104,33 @@ def ann_search(vec: np.ndarray, k: int, cfg: TwoTowerSettings) -> List[Tuple[int
         query = query.reshape(1, -1)
 
     with _index_lock:
-        try:
-            st = _index_refresh_state(cfg)
+        st = _index_refresh_state(cfg)
 
-            if st.index is not None:
-                labels, distances = st.index.knn_query(query, k=k)
-                out: List[Tuple[int, float]] = []
-                for label, dist in zip(labels[0].tolist(), distances[0].tolist()):
-                    try:
-                        item_id = int(label)
-                        d = float(dist)
-                    except Exception:
-                        continue
-                    if cfg.space == "cosine":
-                        score = 1.0 - d
-                    else:
-                        score = -d
-                    out.append((item_id, score))
-                return out
+        if st.index is not None:
+            labels, distances = st.index.knn_query(query, k=k)
+            out: List[Tuple[int, float]] = []
+            for label, dist in zip(labels[0].tolist(), distances[0].tolist()):
+                item_id = int(label)
+                d = float(dist)
+                if cfg.space == "cosine":
+                    score = 1.0 - d
+                else:
+                    score = -d
+                out.append((item_id, score))
+            return out
 
-            if st.ids is None or st.vectors is None or st.ids.size == 0:
-                return []
-
-            if cfg.space == "cosine":
-                q = l2_normalize(query[0])
-                sims = st.vectors @ q
-                top_idx = np.argsort(sims)[::-1][:k]
-                return [(int(st.ids[i]), float(sims[i])) for i in top_idx.tolist()]
-
-            dists = np.linalg.norm(st.vectors - query[0], axis=1)
-            top_idx = np.argsort(dists)[:k]
-            return [(int(st.ids[i]), float(-dists[i])) for i in top_idx.tolist()]
-        except Exception:
-            logger.exception("ann_search failed, k=%s, space=%s, dim=%s", k, cfg.space, cfg.dim)
+        if st.ids is None or st.vectors is None or st.ids.size == 0:
             return []
+
+        if cfg.space == "cosine":
+            q = l2_normalize(query[0])
+            sims = st.vectors @ q
+            top_idx = np.argsort(sims)[::-1][:k]
+            return [(int(st.ids[i]), float(sims[i])) for i in top_idx.tolist()]
+
+        dists = np.linalg.norm(st.vectors - query[0], axis=1)
+        top_idx = np.argsort(dists)[:k]
+        return [(int(st.ids[i]), float(-dists[i])) for i in top_idx.tolist()]
 
 
 def _index_persist_hnsw_from_vectors(*, cfg: TwoTowerSettings, vectors: Mapping[int, np.ndarray], index_path: str) -> None:

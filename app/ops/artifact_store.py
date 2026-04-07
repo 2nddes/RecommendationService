@@ -29,16 +29,11 @@ class ArtifactStore:
             self._write(data)
 
     def _read(self) -> Dict[str, Any]:
-        try:
-            with open(self._path, "r", encoding="utf-8") as f:
-                obj = json.load(f)
-            if isinstance(obj, dict):
-                return obj
-            return {}
-        except FileNotFoundError:
-            return {}
-        except Exception:
-            return {}
+        with open(self._path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if isinstance(obj, dict):
+            return obj
+        return {}
 
     def _write(self, data: Dict[str, Any]) -> None:
         os.makedirs(os.path.dirname(self._path) or ".", exist_ok=True)

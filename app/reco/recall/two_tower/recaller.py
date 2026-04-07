@@ -6,13 +6,11 @@ from typing import List
 
 from app.common.settings import TwoTowerSettings
 from app.reco.recall.base import Recaller
-from app.reco.recall.two_tower import (
-    ann_search,
-    build_item_vector,
-    build_user_vector,
-    fetch_user_excluded_items,
-)
 from app.reco.types import Candidate, RequestContext
+
+from .features import fetch_user_excluded_items
+from .indexing import ann_search
+from .online import build_user_vector
 
 
 logger = logging.getLogger(__name__)
@@ -48,9 +46,6 @@ class TwoTowerRecall(Recaller):
                 ctx.movie_id,
                 ctx.n,
             )
-        # if query_vec is None and ctx.movie_id is not None:
-        #     query_vec = build_item_vector(int(ctx.movie_id), self.cfg, mysql_dsn=self.mysql_dsn)
-        #     excluded = {int(ctx.movie_id)}
 
         if query_vec is None:
             logger.warning(

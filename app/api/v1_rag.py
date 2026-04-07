@@ -8,7 +8,7 @@ from typing import Iterator
 from flask import Blueprint, Response, request, stream_with_context
 
 from app.common.validation import as_int, as_str
-from app.common.settings import Settings
+from app.reco.online.runtime import get_settings
 from app.reco.rag_service import get_movie_rag_service
 
 
@@ -58,7 +58,7 @@ def recommend_rag_stream():
     if n <= 0:
         raise ValueError("n must be positive")
 
-    settings = Settings.from_config()
+    settings = get_settings()
     rag_service = get_movie_rag_service(settings)
 
     @stream_with_context

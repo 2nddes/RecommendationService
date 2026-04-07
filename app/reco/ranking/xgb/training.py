@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
+from app.reco.contracts.artifacts import write_manifest
 from app.reco.training.common import (
     binary_auc,
     binary_train_test_split_indices,
@@ -18,7 +19,6 @@ from app.reco.training.common import (
     get_mysql_engine,
     log_event,
     log_exception,
-    simple_train_test_split_indices,
 )
 
 
@@ -29,16 +29,12 @@ def _interaction_strength(*, action_type: str, rating: int | None, source_kind: 
     if source_kind == "rating" and rating is not None:
         return (rating - 5.0) / 5.0
 
-    if source_kind == "action" and action_type == "rate":
-        return 0.0
-
     action_weight = {
         "view": 0.2,
         "like": 1.0,
         "collect": 1.2,
         "share": 0.8,
         "comment": 0.7,
-        "rate": 0.9,
         "dislike": -0.8,
     }
     if action_type not in action_weight:
@@ -61,16 +57,15 @@ def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str,
            t.event_time
     FROM (
          SELECT * FROM (
-             SELECT ua.user_id AS user_id,
-                 ua.movie_id AS movie_id,
-                 ua.action_type AS action_type,
+             SELECT uc.user_id AS user_id,
+                 uc.movie_id AS movie_id,
+                 'view' AS action_type,
                  NULL AS rating,
-                 'action' AS source_kind,
-                 ua.created_at AS event_time
-             FROM user_action ua
-             WHERE ua.movie_id IS NOT NULL
-                   AND ua.action_type <> 'rate'
-             ORDER BY ua.created_at DESC
+                 'click' AS source_kind,
+                 uc.created_at AS event_time
+             FROM user_click uc
+             WHERE uc.movie_id IS NOT NULL
+             ORDER BY uc.created_at DESC
              LIMIT :limit
          ) ua_recent
 
@@ -79,7 +74,7 @@ def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str,
          SELECT * FROM (
              SELECT r.user_id AS user_id,
                  r.movie_id AS movie_id,
-                 'rate' AS action_type,
+                 'rating' AS action_type,
                  r.rating AS rating,
                  'rating' AS source_kind,
                  r.updated_at AS event_time
@@ -88,6 +83,22 @@ def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str,
              ORDER BY r.updated_at DESC
              LIMIT :limit
          ) rating_recent
+
+        UNION ALL
+
+         SELECT * FROM (
+             SELECT mc.user_id AS user_id,
+                 mc.movie_id AS movie_id,
+                 'comment' AS action_type,
+                 NULL AS rating,
+                 'comment' AS source_kind,
+                 mc.created_at AS event_time
+             FROM movie_comment mc
+             WHERE mc.movie_id IS NOT NULL
+                   AND mc.deleted_at IS NULL
+             ORDER BY mc.created_at DESC
+             LIMIT :limit
+         ) comment_recent
 
         UNION ALL
 
@@ -128,7 +139,11 @@ def _fetch_xgb_training_rows(*, settings: Settings) -> List[Tuple[int, int, str,
                     event_time = m.get("event_time")
 
                     strength = _interaction_strength(action_type=action_type, rating=rating, source_kind=source_kind)
-                    source_priority = 3 if source_kind == "rating" else (2 if source_kind == "collect" else 1)
+                    source_priority = (
+                        4
+                        if source_kind == "rating"
+                        else (3 if source_kind == "collect" else (2 if source_kind == "comment" else 1))
+                    )
                     key = (user_id, movie_id)
                     prev = best_by_pair.get(key)
 
@@ -210,15 +225,11 @@ def train_xgb_model(settings: Settings) -> Dict[str, Any]:
         train_limit=settings.xgb.train_limit,
     )
 
-    try:
-        import numpy as np
-        import xgboost as xgb
+    import numpy as np
+    import xgboost as xgb
 
-        from app.reco.ranking.xgb.features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
-        from app.reco.types import Candidate, RequestContext
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "train.xgb.deps_failed", e, stage="prepare", status="failed")
-        raise RuntimeError(f"xgb_dependency_failed: {type(e).__name__}: {e}") from e
+    from app.reco.ranking.xgb.features import ManualFeatureBuilder, ManualFeatureConfig, fetch_movie_features
+    from app.reco.types import Candidate, RequestContext
 
     rows = _fetch_xgb_training_rows(settings=settings)
     if not rows:
@@ -292,10 +303,7 @@ def train_xgb_model(settings: Settings) -> Dict[str, Any]:
     X = np.asarray(builder.to_matrix(feat_rows), dtype=float)
     y = np.asarray(labels, dtype=float)
 
-    try:
-        split_idx = binary_train_test_split_indices(y.tolist(), train_ratio=0.8)
-    except Exception:
-        split_idx = simple_train_test_split_indices(len(y), train_ratio=0.8)
+    split_idx = binary_train_test_split_indices(y.tolist(), train_ratio=0.8)
 
     train_idx, test_idx = split_idx
     log_event(
@@ -342,6 +350,18 @@ def train_xgb_model(settings: Settings) -> Dict[str, Any]:
 
     store.set("ranking.xgb.latest_artifact_path", artifact_path)
     store.set("ranking.xgb.latest_trained_at", ts)
+    manifest_path = write_manifest(
+        component="ranking",
+        model_name="xgb",
+        artifact_path=artifact_path,
+        details={
+            "feature_names": builder.feature_names(),
+            "rows": len(rows),
+            "train_rows": len(train_idx),
+            "test_rows": len(test_idx),
+            "test_auc": test_auc,
+        },
+    )
     elapsed_ms = int((time.time() - started_at) * 1000)
     log_event(logger, "info", "train.xgb.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
@@ -358,6 +378,7 @@ def train_xgb_model(settings: Settings) -> Dict[str, Any]:
             "boost_rounds": num_boost_round,
             "train_rows": len(train_idx),
             "test_rows": len(test_idx),
+            "manifest_path": manifest_path,
             "test_auc": test_auc,
         },
     }

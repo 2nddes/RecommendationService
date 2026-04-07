@@ -64,9 +64,9 @@
 
 `_fetch_mmoe_training_rows(...)` 使用 `UNION ALL` 汇总以下事件：
 
-1. `user_action.action_type='view'` 映射为 `click`。
-2. `user_action.action_type='collect'` + `user_collect_movie` 映射为 `collect`。
-3. `user_action.action_type='comment'` + `movie_comment` 映射为 `comment`。
+1. `user_click` 映射为 `click`。
+2. `user_collect_movie` 映射为 `collect`。
+3. `movie_comment` 映射为 `comment`。
 4. `rating` 表映射为 `rating` 任务（阈值见下）。
 
 实现位置：

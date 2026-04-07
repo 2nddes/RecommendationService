@@ -1,349 +1,136 @@
 {
     "info": {
         "name": "RecommendationService API (Code-Aligned)",
-        "description": "RecommendationService 当前 API 规约（按代码实现自动梳理，日期：2026-02-26）。\n\n统一响应结构（所有接口）：\n{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {...}\n}\n\n统一错误结构：\n{\n  \"code\": <http status>,\n  \"message\": \"error message\",\n  \"data\": null\n}\n\n鉴权说明：\n- 当服务配置了 INTERNAL_SECRET 时，所有接口都需要请求头 X-Internal-Secret\n- 未提供或不匹配时返回 401：{\"code\":401,\"message\":\"unauthorized\",\"data\":null}\n\n路由前缀说明：\n- 健康检查：/health\n- 业务接口：/api/v1/*",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        "_postman_id": "f2755c55-bf8a-44c0-9d00-8bd12de6fd41"
+        "description": "Code-aligned Postman collection for RecommendationService. Base path: /api/v1.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
-        {
-            "key": "base_url",
-            "value": "http://127.0.0.1:5000",
-            "type": "string"
-        },
-        {
-            "key": "internal_secret",
-            "value": "",
-            "type": "string"
-        },
-        {
-            "key": "user_id",
-            "value": "1",
-            "type": "string"
-        },
-        {
-            "key": "movie_id",
-            "value": "1",
-            "type": "string"
-        },
-        {
-            "key": "task_id",
-            "value": "",
-            "type": "string"
-        }
+        { "key": "base_url", "value": "http://127.0.0.1:5000", "type": "string" },
+        { "key": "internal_secret", "value": "", "type": "string" },
+        { "key": "user_id", "value": "10002", "type": "string" },
+        { "key": "movie_id", "value": "24089455", "type": "string" },
+        { "key": "task_id", "value": "", "type": "string" }
     ],
     "item": [
         {
             "name": "Health",
-            "description": "健康检查接口",
             "item": [
                 {
-                    "name": "GET /health",
+                    "name": "GET /api/v1/health",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text",
-                                "description": "可选；仅当服务端配置 INTERNAL_SECRET 时必填"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
-                            "raw": "{{base_url}}/health",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "health"
-                            ]
-                        },
-                        "description": "健康检查。\n\n方法：GET\n路径：/health"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"status\": \"ok\"\n  }\n}"
-                        },
-                        {
-                            "name": "401 Unauthorized",
-                            "status": "Unauthorized",
-                            "code": 401,
-                            "_postman_previewlanguage": "json",
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "body": "{\n  \"code\": 401,\n  \"message\": \"unauthorized\",\n  \"data\": null\n}"
+                            "raw": "{{base_url}}/api/v1/health",
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "health" ]
                         }
-                    ]
+                    }
+                },
+                {
+                    "name": "GET /api/v1/health/runtime",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/health/runtime",
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "health", "runtime" ]
+                        }
+                    }
                 }
             ]
         },
         {
             "name": "Recommendation",
-            "description": "推荐接口",
             "item": [
                 {
                     "name": "GET /api/v1/recommend/user",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/recommend/user?user_id={{user_id}}&n=10",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "recommend",
-                                "user"
-                            ],
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "recommend", "user" ],
                             "query": [
-                                {
-                                    "key": "user_id",
-                                    "value": "{{user_id}}",
-                                    "description": "必填，int"
-                                },
-                                {
-                                    "key": "n",
-                                    "value": "10",
-                                    "description": "可选，int，默认 10"
-                                }
+                                { "key": "user_id", "value": "{{user_id}}" },
+                                { "key": "n", "value": "10" }
                             ]
-                        },
-                        "description": "个性化推荐（猜你喜欢）。\n\n方法：GET\n路径：/api/v1/recommend/user\n返回 data：{ user_id, items, n }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"user_id\": 1,\n    \"items\": [101, 102, 103],\n    \"n\": 10\n  }\n}"
-                        },
-                        {
-                            "name": "400 Missing user_id",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Missing required query parameter: user_id\",\n  \"data\": null\n}"
-                        },
-                        {
-                            "name": "400 Invalid user_id",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'user_id', expected integer\",\n  \"data\": null\n}"
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "GET /api/v1/recommend/item",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/recommend/item?movie_id={{movie_id}}&n=8",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "recommend",
-                                "item"
-                            ],
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "recommend", "item" ],
                             "query": [
-                                {
-                                    "key": "movie_id",
-                                    "value": "{{movie_id}}",
-                                    "description": "必填，int"
-                                },
-                                {
-                                    "key": "n",
-                                    "value": "8",
-                                    "description": "可选，int，默认 8"
-                                }
+                                { "key": "movie_id", "value": "{{movie_id}}" },
+                                { "key": "n", "value": "8" }
                             ]
-                        },
-                        "description": "相似影片推荐（看了又看）。\n\n方法：GET\n路径：/api/v1/recommend/item\n返回 data：{ source_id, items, n }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"source_id\": 1,\n    \"items\": [2, 3, 4],\n    \"n\": 8\n  }\n}"
-                        },
-                        {
-                            "name": "400 Missing movie_id",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Missing required query parameter: movie_id\",\n  \"data\": null\n}"
-                        },
-                        {
-                            "name": "400 Item vector not found",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Item vector not found for movie_id: 999999\",\n  \"data\": null\n}"
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "GET /api/v1/recommend/trending",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/recommend/trending?window=weekly&n=10",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "recommend",
-                                "trending"
-                            ],
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "recommend", "trending" ],
                             "query": [
-                                {
-                                    "key": "window",
-                                    "value": "weekly",
-                                    "description": "必填，枚举：daily|weekly|monthly|all_time（当前实现要求必须显式传入）"
-                                },
-                                {
-                                    "key": "n",
-                                    "value": "10",
-                                    "description": "可选，int，默认 10"
-                                }
+                                { "key": "window", "value": "weekly" },
+                                { "key": "n", "value": "10" }
                             ]
-                        },
-                        "description": "热门推荐。\n\n方法：GET\n路径：/api/v1/recommend/trending\n返回 data：{ window, items, n }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"window\": \"weekly\",\n    \"items\": [101, 102, 103],\n    \"n\": 10\n  }\n}"
-                        },
-                        {
-                            "name": "400 Invalid window",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'window'\",\n  \"data\": null\n}"
                         }
-                    ]
+                    }
                 }
             ]
         },
         {
             "name": "Search",
-            "description": "搜索接口",
             "item": [
                 {
                     "name": "POST /api/v1/search",
                     "request": {
                         "method": "POST",
                         "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "Content-Type", "value": "application/json", "type": "text" },
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"query\": \"科幻 诺兰 时间旅行\",\n  \"n\": 20,\n  \"filters\": {\n    \"year_min\": 2010,\n    \"genre\": \"Sci-Fi\"\n  }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
+                            "raw": "{\n  \"query\": \"sci-fi nolan\",\n  \"n\": 20,\n  \"filters\": {\n    \"genre\": \"Sci-Fi\",\n    \"year_min\": 2010\n  }\n}",
+                            "options": { "raw": { "language": "json" } }
                         },
                         "url": {
                             "raw": "{{base_url}}/api/v1/search",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "search"
-                            ]
-                        },
-                        "description": "混合搜索（当前实现返回占位结果）。\n\n方法：POST\n路径：/api/v1/search\n请求体：{ query(required,string), n(optional,int), filters(optional,object) }\n返回 data：{ query, n, filters, total, results }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"query\": \"科幻 诺兰 时间旅行\",\n    \"n\": 20,\n    \"filters\": {\n      \"year_min\": 2010,\n      \"genre\": \"Sci-Fi\"\n    },\n    \"total\": 0,\n    \"results\": []\n  }\n}"
-                        },
-                        {
-                            "name": "400 Missing query",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Missing required parameter: query\",\n  \"data\": null\n}"
-                        },
-                        {
-                            "name": "400 Invalid query type",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'query', expected string\",\n  \"data\": null\n}"
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "search" ]
                         }
-                    ]
+                    }
                 }
             ]
         },
         {
             "name": "Admin",
-            "description": "管理员运维接口",
             "item": [
                 {
                     "name": "POST /api/v1/admin/train",
@@ -364,261 +151,108 @@
                     "request": {
                         "method": "POST",
                         "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json",
-                                "type": "text"
-                            },
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "Content-Type", "value": "application/json", "type": "text" },
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"component\": \"ranking\",\n  \"model\": \"xgb\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
+                            "raw": "{\n  \"component\": \"ranking\",\n  \"model\": \"mmoe\"\n}",
+                            "options": { "raw": { "language": "json" } }
                         },
                         "url": {
                             "raw": "{{base_url}}/api/v1/admin/train",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "admin",
-                                "train"
-                            ]
-                        },
-                        "description": "触发训练任务。\n\n方法：POST\n路径：/api/v1/admin/train\n请求体：{ component(required,string), model(required,string) }\n返回 data：{ task_id, train_job_id, estimated_time }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 Training task started",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"Training task started\",\n  \"data\": {\n    \"task_id\": \"train_20260226_101010_abc123\",\n    \"train_job_id\": 12,\n    \"estimated_time\": \"unknown\"\n  }\n}"
-                        },
-                        {
-                            "name": "400 Missing component/model",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Please specify 'component' and 'model' in the request body\",\n  \"data\": null\n}"
-                        },
-                        {
-                            "name": "400 Invalid component/model",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Unknown component/model combination: ranking/unknown\",\n  \"data\": null\n}"
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "admin", "train" ]
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "POST /api/v1/admin/refresh",
                     "request": {
                         "method": "POST",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/admin/refresh",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "admin",
-                                "refresh"
-                            ]
-                        },
-                        "description": "刷新当前配置模型（重载本地最新模型）。\n\n方法：POST\n路径：/api/v1/admin/refresh\n返回 data：{ status, reason }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 Refresh completed",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"Refresh completed\",\n  \"data\": {\n    \"status\": \"completed\",\n    \"reason\": null\n  }\n}"
-                        },
-                        {
-                            "name": "400 Refresh failed",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"xgb_model_not_found\",\n  \"data\": {\n    \"status\": \"failed\",\n    \"reason\": \"xgb_model_not_found\"\n  }\n}"
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "admin", "refresh" ]
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "GET /api/v1/admin/tasks/{task_id}",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/admin/tasks/{{task_id}}",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "admin",
-                                "tasks",
-                                "{{task_id}}"
-                            ]
-                        },
-                        "description": "查询任务详情。\n\n方法：GET\n路径：/api/v1/admin/tasks/<task_id>\n支持内存任务 ID（如 train_...）和纯数字 DB train_job_id。"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK (memory task)",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": \"train_20260226_101010_abc123\",\n    \"name\": \"train:ranking.xgb\",\n    \"status\": \"processing\",\n    \"created_at\": \"2026-02-26T10:10:10Z\",\n    \"started_at\": \"2026-02-26T10:10:11Z\",\n    \"finished_at\": null,\n    \"error\": null,\n    \"result\": {\n      \"train_job_id\": 12,\n      \"mode\": \"full\",\n      \"status\": \"processing\",\n      \"metrics\": {}\n    }\n  }\n}"
-                        },
-                        {
-                            "name": "200 OK (db task)",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": \"12\",\n    \"name\": \"train_job\",\n    \"status\": \"completed\",\n    \"created_at\": \"2026-02-26T10:10:10\",\n    \"started_at\": null,\n    \"finished_at\": \"2026-02-26T10:12:10\",\n    \"error\": null,\n    \"result\": {\n      \"train_job_id\": 12,\n      \"mode\": \"full\",\n      \"status\": \"completed\",\n      \"metrics\": {}\n    }\n  }\n}"
-                        },
-                        {
-                            "name": "400 Task not found",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"Task not found: not_exists\",\n  \"data\": null\n}"
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "admin", "tasks", "{{task_id}}" ]
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "GET /api/v1/admin/tasks",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/admin/tasks?source=all&limit=20&offset=0",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "admin",
-                                "tasks"
-                            ],
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "admin", "tasks" ],
                             "query": [
-                                {
-                                    "key": "source",
-                                    "value": "all",
-                                    "description": "可选：all|memory|db，默认 all"
-                                },
-                                {
-                                    "key": "status",
-                                    "value": "",
-                                    "description": "可选：pending|processing|completed|failed"
-                                },
-                                {
-                                    "key": "limit",
-                                    "value": "20",
-                                    "description": "可选，正整数，默认 20"
-                                },
-                                {
-                                    "key": "offset",
-                                    "value": "0",
-                                    "description": "可选，非负整数，默认 0"
-                                }
+                                { "key": "source", "value": "all" },
+                                { "key": "status", "value": "" },
+                                { "key": "limit", "value": "20" },
+                                { "key": "offset", "value": "0" }
                             ]
-                        },
-                        "description": "查询任务列表。\n\n方法：GET\n路径：/api/v1/admin/tasks\n返回 data：{ items, total, limit, offset, source, status }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"12\",\n        \"name\": \"train_job\",\n        \"status\": \"completed\",\n        \"created_at\": \"2026-02-26T10:10:10\",\n        \"started_at\": null,\n        \"finished_at\": \"2026-02-26T10:12:10\",\n        \"error\": null,\n        \"source\": \"db\",\n        \"result\": {\n          \"train_job_id\": 12,\n          \"mode\": \"full\",\n          \"status\": \"completed\",\n          \"metrics\": {}\n        }\n      }\n    ],\n    \"total\": 1,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"source\": \"all\",\n    \"status\": null\n  }\n}"
-                        },
-                        {
-                            "name": "400 Invalid source",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'source', expected one of: all, memory, db\",\n  \"data\": null\n}"
-                        },
-                        {
-                            "name": "400 Invalid status",
-                            "status": "Bad Request",
-                            "code": 400,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 400,\n  \"message\": \"invalid 'status', expected one of: pending, processing, completed, failed\",\n  \"data\": null\n}"
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "GET /api/v1/admin/status",
                     "request": {
                         "method": "GET",
                         "header": [
-                            {
-                                "key": "X-Internal-Secret",
-                                "value": "{{internal_secret}}",
-                                "type": "text"
-                            }
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
                         ],
                         "url": {
                             "raw": "{{base_url}}/api/v1/admin/status",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "v1",
-                                "admin",
-                                "status"
-                            ]
-                        },
-                        "description": "查看当前配置与产物状态。\n\n方法：GET\n路径：/api/v1/admin/status\n返回 data：{ config, artifacts }"
-                    },
-                    "response": [
-                        {
-                            "name": "200 OK",
-                            "status": "OK",
-                            "code": 200,
-                            "_postman_previewlanguage": "json",
-                            "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"config\": {\n      \"recall_channels\": [\"user_collection\", \"user_high_rating_similar\"],\n      \"ranking_method\": \"xgb\",\n      \"reranking_method\": \"random_shuffle\",\n      \"xgb_model_path\": \"data/models/xgb_latest.json\"\n    },\n    \"artifacts\": {\n      \"ranking\": [],\n      \"recall\": []\n    }\n  }\n}"
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "admin", "status" ]
                         }
-                    ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "RAG",
+            "item": [
+                {
+                    "name": "POST /api/v1/recommend/rag/stream",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json", "type": "text" },
+                            { "key": "Accept", "value": "text/event-stream", "type": "text" },
+                            { "key": "X-Internal-Secret", "value": "{{internal_secret}}", "type": "text" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"nolan sci-fi\",\n  \"n\": 8,\n  \"rebuild_index\": false\n}",
+                            "options": { "raw": { "language": "json" } }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/recommend/rag/stream",
+                            "host": [ "{{base_url}}" ],
+                            "path": [ "api", "v1", "recommend", "rag", "stream" ]
+                        }
+                    }
                 }
             ]
         }

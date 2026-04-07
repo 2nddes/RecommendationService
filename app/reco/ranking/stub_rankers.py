@@ -14,24 +14,6 @@ from app.reco.types import Candidate, RankedItem, RequestContext
 _cf_cache: dict[str, dict[str, Any]] = {}
 
 
-def _safe_float(value: Any, default: float = 0.0) -> float:
-    try:
-        if value is None:
-            return default
-        return float(value)
-    except Exception:
-        return default
-
-
-def _safe_int(value: Any, default: int = 0) -> int:
-    try:
-        if value is None:
-            return default
-        return int(value)
-    except Exception:
-        return default
-
-
 def _normalize(values: np.ndarray) -> np.ndarray:
     if values.size == 0:
         return values
@@ -64,25 +46,21 @@ class CollaborativeFilteringRanker(Ranker):
         if not candidates:
             return []
 
-        try:
-            model = self._get_or_build_model()
-            if model is None:
-                # return self._fallback_rank(candidates, reason="cf_fallback_no_model")
-                return []
-
-            if ctx.user_id is None:
-                # return self._fallback_rank(candidates, reason="cf_fallback_no_user")
-                return []
-
-            scored = self._score_candidates_item_cf(ctx, candidates, model)
-            if scored is None:
-                # return self._fallback_rank(candidates, reason="cf_fallback_cold_user")
-                return []
-
-            return scored
-        except Exception:
-            # return self._fallback_rank(candidates, reason="cf_fallback_error")
+        model = self._get_or_build_model()
+        if model is None:
+            # return self._fallback_rank(candidates, reason="cf_fallback_no_model")
             return []
+
+        if ctx.user_id is None:
+            # return self._fallback_rank(candidates, reason="cf_fallback_no_user")
+            return []
+
+        scored = self._score_candidates_item_cf(ctx, candidates, model)
+        if scored is None:
+            # return self._fallback_rank(candidates, reason="cf_fallback_cold_user")
+            return []
+
+        return scored
 
     def _get_or_build_model(self) -> dict[str, Any] | None:
         dsn = (self.mysql_dsn or "").strip()
@@ -104,19 +82,24 @@ class CollaborativeFilteringRanker(Ranker):
     def _build_model(self, dsn: str) -> dict[str, Any] | None:
         """从 MySQL 拉取交互数据并构建 Item-CF 所需矩阵。"""
 
-        try:
-            import pandas as pd
-            from scipy.sparse import csr_matrix
-        except Exception:
-            return None
+        import pandas as pd
+        from scipy.sparse import csr_matrix
 
         engine = create_engine(dsn, pool_pre_ping=True)
 
         action_sql = """
-        SELECT ua.user_id, ua.movie_id, ua.action_type, ua.created_at
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL
-        ORDER BY ua.created_at DESC
+        SELECT uc.user_id, uc.movie_id, uc.created_at
+        FROM user_click uc
+        WHERE uc.movie_id IS NOT NULL
+        ORDER BY uc.created_at DESC
+        LIMIT %(limit)s
+        """
+        comment_sql = """
+        SELECT mc.user_id, mc.movie_id, mc.created_at
+        FROM movie_comment mc
+        WHERE mc.movie_id IS NOT NULL
+            AND mc.deleted_at IS NULL
+        ORDER BY mc.created_at DESC
         LIMIT %(limit)s
         """
         rating_sql = """
@@ -134,32 +117,26 @@ class CollaborativeFilteringRanker(Ranker):
         LIMIT %(limit)s
         """
 
-        try:
-            params = {"limit": int(self.max_interactions)}
-            df_action = pd.read_sql(action_sql, engine, params=params)
-            df_rating = pd.read_sql(rating_sql, engine, params=params)
-            df_collect = pd.read_sql(collect_sql, engine, params=params)
-        except Exception:
-            return None
+        params = {"limit": int(self.max_interactions)}
+        df_action = pd.read_sql(action_sql, engine, params=params)
+        df_comment = pd.read_sql(comment_sql, engine, params=params)
+        df_rating = pd.read_sql(rating_sql, engine, params=params)
+        df_collect = pd.read_sql(collect_sql, engine, params=params)
 
-        if df_action.empty and df_rating.empty and df_collect.empty:
+        if df_action.empty and df_comment.empty and df_rating.empty and df_collect.empty:
             return None
 
         parts: list[pd.DataFrame] = []
 
         if not df_action.empty:
-            action_weight = {
-                "view": 0.2,
-                "like": 0.9,
-                "dislike": -0.6,
-                "collect": 1.0,
-                "share": 0.7,
-                "comment": 0.6,
-                "rate": 0.8,
-            }
-            df_action = df_action[["user_id", "movie_id", "action_type"]].copy()
-            df_action["weight"] = df_action["action_type"].map(action_weight).fillna(0.1).astype(float)
+            df_action = df_action[["user_id", "movie_id"]].copy()
+            df_action["weight"] = 0.2
             parts.append(df_action[["user_id", "movie_id", "weight"]])
+
+        if not df_comment.empty:
+            df_comment = df_comment[["user_id", "movie_id"]].copy()
+            df_comment["weight"] = 0.6
+            parts.append(df_comment[["user_id", "movie_id", "weight"]])
 
         if not df_rating.empty:
             df_rating = df_rating[["user_id", "movie_id", "rating"]].copy()
@@ -218,10 +195,7 @@ class CollaborativeFilteringRanker(Ranker):
     ) -> List[RankedItem] | None:
         """用 Item-CF 给候选打分。"""
 
-        try:
-            from sklearn.metrics.pairwise import cosine_similarity
-        except Exception:
-            return None
+        from sklearn.metrics.pairwise import cosine_similarity
 
         user_history = model["user_history"]
         item_index: dict[int, int] = model["item_index"]
@@ -267,16 +241,14 @@ class CollaborativeFilteringRanker(Ranker):
             den = 0.0
             for idx in order:
                 mid = hist_item_ids[int(idx)]
-                w = max(0.0, _safe_float(hist_weights_map.get(mid, 0.0)))
-                if w <= 0:
-                    continue
-                s = max(0.0, _safe_float(sims[int(idx)]))
+                w = max(0.0, hist_weights_map[mid])
+                s = max(0.0, sims[idx])
                 num += s * w
                 den += w
             cf_scores.append(num / den if den > 0 else 0.0)
 
-        base_scores = np.asarray([_safe_float(c.score) for c in valid_candidates], dtype=float)
-        pop_scores = np.asarray([_safe_float(popularity.get(int(c.item_id), 0.0)) for c in valid_candidates], dtype=float)
+        base_scores = np.asarray([c.score for c in valid_candidates], dtype=float)
+        pop_scores = np.asarray([popularity[c.item_id] for c in valid_candidates], dtype=float)
         cf_arr = np.asarray(cf_scores, dtype=float)
 
         cf_norm = _normalize(cf_arr)
@@ -303,7 +275,7 @@ class CollaborativeFilteringRanker(Ranker):
     def _fallback_rank(self, candidates: List[Candidate], *, reason: str) -> List[RankedItem]:
         """无模型/无用户行为时的可用性兜底排序。"""
 
-        base = np.asarray([_safe_float(c.score) for c in candidates], dtype=float)
+        base = np.asarray([c.score for c in candidates], dtype=float)
         final = _normalize(base)
         ranked = [RankedItem(item_id=int(c.item_id), score=float(s), reason=reason) for c, s in zip(candidates, final)]
         ranked.sort(key=lambda x: x.score, reverse=True)
@@ -313,9 +285,6 @@ class CollaborativeFilteringRanker(Ranker):
 def warmup_collaborative_filtering_model(mysql_dsn: str | None) -> bool:
     """启动预热：提前构建 CF 模型缓存，避免首个请求抖动。"""
 
-    try:
-        ranker = CollaborativeFilteringRanker(mysql_dsn=mysql_dsn)
-        model = ranker._get_or_build_model()
-        return model is not None
-    except Exception:
-        return False
+    ranker = CollaborativeFilteringRanker(mysql_dsn=mysql_dsn)
+    model = ranker._get_or_build_model()
+    return model is not None

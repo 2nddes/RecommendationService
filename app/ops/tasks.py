@@ -4,7 +4,6 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 import logging
 import threading
-import traceback
 from typing import Any, Callable, Dict, Optional
 
 
@@ -66,21 +65,12 @@ class TaskManager:
                 t.started_at = _now_iso()
             logger.info("后台任务开始执行，task_id=%s", task_id)
 
-            try:
-                result = fn() or {}
-                with self._lock:
-                    t.result = dict(result)
-                    t.status = "succeeded"
-                    t.finished_at = _now_iso()
-                logger.info("后台任务执行成功，task_id=%s", task_id)
-            except Exception as e:  # noqa: BLE001
-                err = f"{type(e).__name__}: {e}"
-                tb = traceback.format_exc(limit=50)
-                with self._lock:
-                    t.status = "failed"
-                    t.error = err + "\n" + tb
-                    t.finished_at = _now_iso()
-                logger.exception("后台任务执行失败，task_id=%s, 错误=%s", task_id, err)
+            result = fn() or {}
+            with self._lock:
+                t.result = dict(result)
+                t.status = "succeeded"
+                t.finished_at = _now_iso()
+            logger.info("后台任务执行成功，task_id=%s", task_id)
 
         th = threading.Thread(target=_runner, name=f"task:{task_id}", daemon=True)
         th.start()

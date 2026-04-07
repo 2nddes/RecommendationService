@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
+from app.reco.contracts.artifacts import write_manifest
 from app.reco.training.common import (
     binary_auc,
     catch_and_reraise,
@@ -18,29 +19,10 @@ from app.reco.training.common import (
     group_train_test_split_indices,
     log_event,
     log_exception,
-    simple_train_test_split_indices,
 )
 
 
 logger = logging.getLogger(__name__)
-
-
-def _safe_binary_auc(*, task_name: str, y_true: Sequence[float], y_score: Sequence[float]) -> float | None:
-    pos_count = sum(1 for y in y_true if y > 0.5)
-    neg_count = len(y_true) - pos_count
-    if pos_count == 0 or neg_count == 0:
-        log_event(
-            logger,
-            "warning",
-            "train.mmoe.eval_auc_skipped",
-            negative=neg_count,
-            positive=pos_count,
-            reason="single_class_test_labels",
-            stage="evaluate",
-            task=task_name,
-        )
-        return None
-    return binary_auc(y_true, y_score)
 
 
 def _chunk_values(values: Sequence[int], *, chunk_size: int) -> List[List[int]]:
@@ -49,11 +31,7 @@ def _chunk_values(values: Sequence[int], *, chunk_size: int) -> List[List[int]]:
 
 
 def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
-    try:
-        import numpy as np
-    except Exception as e:
-        log_exception(logger, "train.mmoe.deps_failed", e, stage="dataset")
-        raise RuntimeError(f"mmoe_dataset_dependency_failed: {type(e).__name__}: {e}") from e
+    import numpy as np
 
     engine = get_mysql_engine(settings.core.mysql_dsn, logger=logger, event_prefix="train.mmoe.mysql_engine")
     limit_n = settings.mmoe.train_limit
@@ -62,11 +40,10 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
 
     sql_click_recent = text(
         """
-        SELECT ua.user_id, ua.movie_id, ua.created_at AS event_time
-        FROM user_action ua
-        WHERE ua.movie_id IS NOT NULL
-          AND ua.action_type = 'view'
-        ORDER BY ua.created_at DESC
+                SELECT uc.user_id, uc.movie_id, uc.created_at AS event_time
+                FROM user_click uc
+                WHERE uc.movie_id IS NOT NULL
+                ORDER BY uc.created_at DESC
         LIMIT :limit
         """
     )
@@ -155,8 +132,6 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
             rs = conn.execute(sql_click_recent, {"limit": limit_n})
             for row in rs:
                 uid, mid, event_time = _parse_uid_mid_event(row)
-                if uid <= 0 or mid <= 0:
-                    continue
                 target_fetch_counts["click"] += 1
                 sample = by_pair.setdefault((uid, mid), _new_sample(uid=uid, mid=mid))
                 sample["click"] = 1.0
@@ -165,8 +140,6 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
             rs = conn.execute(sql_collect_recent, {"limit": limit_n})
             for row in rs:
                 uid, mid, event_time = _parse_uid_mid_event(row)
-                if uid <= 0 or mid <= 0:
-                    continue
                 target_fetch_counts["collect"] += 1
                 sample = by_pair.setdefault((uid, mid), _new_sample(uid=uid, mid=mid))
                 sample["click"] = 1.0
@@ -176,8 +149,6 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
             rs = conn.execute(sql_comment_recent, {"limit": limit_n})
             for row in rs:
                 uid, mid, event_time = _parse_uid_mid_event(row)
-                if uid <= 0 or mid <= 0:
-                    continue
                 target_fetch_counts["comment"] += 1
                 sample = by_pair.setdefault((uid, mid), _new_sample(uid=uid, mid=mid))
                 sample["click"] = 1.0
@@ -187,12 +158,10 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
             rs = conn.execute(sql_rating_recent, {"limit": limit_n})
             for row in rs:
                 uid, mid, rating_val, event_time = _parse_uid_mid_rating_event(row)
-                if uid <= 0 or mid <= 0:
-                    continue
                 target_fetch_counts["rating"] += 1
                 sample = by_pair.setdefault((uid, mid), _new_sample(uid=uid, mid=mid))
                 sample["click"] = 1.0
-                if rating_val >= 8:
+                if rating_val >= 5:
                     sample["rating"] = 1.0
                     _upgrade_source(sample, source="user_high_rating_similar", recall_score=1.0, priority=5, event_time=event_time)
                 else:
@@ -233,8 +202,6 @@ def _fetch_mmoe_training_rows(*, settings: Settings) -> List[Dict[str, Any]]:
         movie_pool_np = np.asarray(movie_pool, dtype=np.int64)
         for uid, pos_cnt in user_pos.items():
             need = pos_cnt * neg_ratio
-            if need <= 0:
-                continue
 
             seen = seen_by_user.get(uid, set())
             picked: List[int] = []
@@ -403,8 +370,6 @@ def _fetch_mmoe_aux_training_features(*, settings: Settings, user_ids: Sequence[
                     movie_base_rows += 1
                     m = row._mapping
                     mid = int(m.get("movie_id") or 0)
-                    if mid <= 0:
-                        continue
                     entry = _movie_stats_entry(mid)
                     entry["rating_avg"] = m.get("rating_avg")
                     entry["rating_count"] = m.get("rating_count")
@@ -473,25 +438,20 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
         train_limit=settings.mmoe.train_limit,
     )
 
-    try:
-        import torch
-        from torch import nn
+    import torch
+    from torch import nn
 
-        from app.reco.ranking.mmoe import MMoENet, bundle_feature_order
-        from app.reco.ranking.mmoe.features import (
-            ITEM_TAG_SEQ_LEN,
-            LONG_INTEREST_TAG_SEQ_LEN,
-            SHORT_INTEREST_SEQ_LEN,
-            bucketize_age,
-            default_age_bucket_index,
-            default_gender_index,
-            normalize_gender,
-            pad_or_truncate,
-            safe_float,
-        )
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, "train.mmoe.deps_failed", e, stage="prepare", status="failed")
-        raise RuntimeError(f"mmoe_dependency_failed: {type(e).__name__}: {e}") from e
+    from app.reco.ranking.mmoe import MMoENet, bundle_feature_order
+    from app.reco.ranking.mmoe.features import (
+        ITEM_TAG_SEQ_LEN,
+        LONG_INTEREST_TAG_SEQ_LEN,
+        SHORT_INTEREST_SEQ_LEN,
+        bucketize_age,
+        default_age_bucket_index,
+        default_gender_index,
+        normalize_gender,
+        pad_or_truncate,
+    )
 
     rows = _fetch_mmoe_training_rows(settings=settings)
     if not rows:
@@ -568,31 +528,20 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
         birth = user_profile.get("birth")
         user_age = None
         if birth is not None:
-            try:
-                now = datetime.utcnow().date()
-                user_age = now.year - birth.year - ((now.month, now.day) < (birth.month, birth.day))
-            except Exception as e:
-                log_event(
-                    logger,
-                    "warning",
-                    "train.mmoe.birth_parse_failed",
-                    error=f"{type(e).__name__}: {e}",
-                    stage="feature_build",
-                    user_id=uid,
-                )
-                user_age = None
+            now = datetime.utcnow().date()
+            user_age = now.year - birth.year - ((now.month, now.day) < (birth.month, birth.day))
         user_age_bucket = bucketize_age(user_age)
 
         raw = {
             "recall_score": 0.0,
-            "movie_rating_avg": safe_float(mf.get("rating_avg")),
-            "movie_rating_count": safe_float(mf.get("rating_count")),
-            "movie_comment_count": safe_float(mf.get("comment_count")),
-            "movie_click_count": safe_float(mf.get("click_count")),
-            "movie_click_1h": safe_float(mf.get("click_1h")),
-            "movie_click_24h": safe_float(mf.get("click_24h")),
-            "movie_year": safe_float(mf.get("year")),
-            "movie_duration_min": safe_float(mf.get("duration_min")),
+            "movie_rating_avg": float(mf.get("rating_avg") or 0.0),
+            "movie_rating_count": float(mf.get("rating_count") or 0.0),
+            "movie_comment_count": float(mf.get("comment_count") or 0.0),
+            "movie_click_count": float(mf.get("click_count") or 0.0),
+            "movie_click_1h": float(mf.get("click_1h") or 0.0),
+            "movie_click_24h": float(mf.get("click_24h") or 0.0),
+            "movie_year": float(mf.get("year") or 0.0),
+            "movie_duration_min": float(mf.get("duration_min") or 0.0),
             "user_static_tag_ctr": 0.0,
             "src_user_collection": 0.0,
             "src_user_high_rating_similar": 0.0,
@@ -772,12 +721,8 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
         gender_idx.append(int(gender_index[g]))
         age_bucket_idx.append(int(age_bucket_index[a]))
 
-    try:
-        split_idx = group_train_test_split_indices(user_values, train_ratio=0.8)
-        split_strategy = "group_by_user"
-    except Exception:
-        split_idx = simple_train_test_split_indices(len(labels), train_ratio=0.8)
-        split_strategy = "random_row"
+    split_idx = group_train_test_split_indices(user_values, train_ratio=0.8)
+    split_strategy = "group_by_user"
     train_idx, test_idx = split_idx
     log_event(
         logger,
@@ -1014,12 +959,11 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
         )
 
     y_test = label_tensor[test_idx_tensor].cpu().numpy()
-    auc_click = _safe_binary_auc(task_name="click", y_true=y_test[:, 0].tolist(), y_score=test_pred["click"].cpu().numpy().tolist())
-    auc_collect = _safe_binary_auc(task_name="collect", y_true=y_test[:, 1].tolist(), y_score=test_pred["collect"].cpu().numpy().tolist())
-    auc_comment = _safe_binary_auc(task_name="comment", y_true=y_test[:, 2].tolist(), y_score=test_pred["comment"].cpu().numpy().tolist())
-    auc_rating = _safe_binary_auc(task_name="rating", y_true=y_test[:, 3].tolist(), y_score=test_pred["rating"].cpu().numpy().tolist())
-    auc_values = [x for x in [auc_click, auc_collect, auc_comment, auc_rating] if x is not None]
-    auc_mean = float(sum(auc_values) / len(auc_values)) if auc_values else None
+    auc_click = binary_auc(y_test[:, 0].tolist(), test_pred["click"].cpu().numpy().tolist())
+    auc_collect = binary_auc(y_test[:, 1].tolist(), test_pred["collect"].cpu().numpy().tolist())
+    auc_comment = binary_auc(y_test[:, 2].tolist(), test_pred["comment"].cpu().numpy().tolist())
+    auc_rating = binary_auc(y_test[:, 3].tolist(), test_pred["rating"].cpu().numpy().tolist())
+    auc_mean = float((auc_click + auc_collect + auc_comment + auc_rating) / 4.0)
     log_event(
         logger,
         "info",
@@ -1063,6 +1007,18 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
 
     store.set("ranking.mmoe.latest_artifact_path", artifact_path)
     store.set("ranking.mmoe.latest_trained_at", ts)
+    manifest_path = write_manifest(
+        component="ranking",
+        model_name="mmoe",
+        artifact_path=artifact_path,
+        details={
+            "feature_names": feature_names,
+            "rows": total_rows,
+            "train_rows": len(train_idx),
+            "test_rows": len(test_idx),
+            "auc_mean": auc_mean,
+        },
+    )
     elapsed_ms = int((time.time() - started_at) * 1000)
     log_event(logger, "info", "train.mmoe.done", elapsed_ms=elapsed_ms, stage="finalize", status="completed")
 
@@ -1086,6 +1042,7 @@ def train_mmoe_model(settings: Settings) -> Dict[str, Any]:
             "batch_size": batch_size,
             "train_rows": len(train_idx),
             "test_rows": len(test_idx),
+            "manifest_path": manifest_path,
             "test_auc": auc_mean,
             "test_auc_click": auc_click,
             "test_auc_collect": auc_collect,

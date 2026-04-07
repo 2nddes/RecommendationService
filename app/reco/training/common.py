@@ -42,10 +42,7 @@ def fmt_log_value(value: Any) -> str:
         return "true" if value else "false"
     if isinstance(value, (int, float, str)):
         return str(value)
-    try:
-        return json.dumps(value, ensure_ascii=False, sort_keys=True)
-    except Exception:
-        return str(value)
+    return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
 
 def log_event(logger: logging.Logger, level: str, event: str, **fields: Any) -> None:
@@ -69,11 +66,7 @@ def catch_and_reraise(
     error_prefix: str,
     **fields: Any,
 ):
-    try:
-        yield
-    except Exception as e:  # noqa: BLE001
-        log_exception(logger, event, e, **fields)
-        raise RuntimeError(f"{error_prefix}: {type(e).__name__}: {e}") from e
+    yield
 
 
 def get_mysql_engine(mysql_dsn: str | None, *, logger: logging.Logger, event_prefix: str = "mysql.engine") -> Engine:
@@ -82,11 +75,7 @@ def get_mysql_engine(mysql_dsn: str | None, *, logger: logging.Logger, event_pre
         err = RuntimeError("mysql_dsn_missing")
         log_exception(logger, f"{event_prefix}.dsn_missing", err)
         raise err
-    try:
-        return create_engine(dsn, pool_pre_ping=True)
-    except Exception as e:
-        log_exception(logger, f"{event_prefix}.create_failed", e, mysql_dsn_set=bool(dsn.strip()))
-        raise RuntimeError(f"mysql_engine_create_failed: {type(e).__name__}: {e}") from e
+    return create_engine(dsn, pool_pre_ping=True)
 
 
 def binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float:
@@ -118,8 +107,6 @@ def binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float:
 
 def simple_train_test_split_indices(total: int, train_ratio: float = 0.8) -> tuple[List[int], List[int]]:
     n = total
-    if n <= 1:
-        raise ValueError("split_requires_more_rows")
     shuffled_idx = list(range(n))
     random.Random(_RANDOM_SPLIT_SEED + n).shuffle(shuffled_idx)
     cut = int(n * train_ratio)

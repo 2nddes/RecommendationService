@@ -27,7 +27,6 @@ from .features import (
     default_gender_index,
     normalize_gender,
     pad_or_truncate,
-    safe_float,
 )
 from .model import MMoENet
 
@@ -49,23 +48,11 @@ def _get_mysql_engine(dsn: str) -> Engine:
         return engine
 
 
-def _safe_int(value: Any, default: int = 0) -> int:
-    try:
-        if value is None:
-            return default
-        return int(value)
-    except Exception:
-        return default
-
-
 def _calc_age_from_birth(birth: Any) -> int | None:
     if birth is None:
         return None
-    try:
-        today = datetime.now(timezone.utc).date()
-        return max(today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day)), 0)
-    except Exception:
-        return None
+    today = datetime.now(timezone.utc).date()
+    return max(today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day)), 0)
 
 
 @dataclass(frozen=True)
@@ -277,16 +264,16 @@ class MMoERanker(Ranker):
                 missing_movie_stats_cnt += 1
             one_hot = [1.0 if str(c.source) == s.replace("src_", "") else 0.0 for s in src_names]
             raw = {
-                "recall_score": safe_float(c.score),
-                "movie_rating_avg": safe_float(movie_f.get("rating_avg"), 0.0),
-                "movie_rating_count": safe_float(movie_f.get("rating_count"), 0.0),
-                "movie_comment_count": safe_float(movie_f.get("comment_count"), 0.0),
-                "movie_click_count": safe_float(movie_f.get("click_count"), 0.0),
-                "movie_click_1h": safe_float(movie_f.get("click_1h"), 0.0),
-                "movie_click_24h": safe_float(movie_f.get("click_24h"), 0.0),
-                "movie_year": safe_float(movie_f.get("year"), 0.0),
-                "movie_duration_min": safe_float(movie_f.get("duration_min"), 0.0),
-                "user_static_tag_ctr": safe_float(user_static_tag_ctr, 0.0),
+                "recall_score": float(c.score),
+                "movie_rating_avg": float(movie_f.get("rating_avg", 0.0)),
+                "movie_rating_count": float(movie_f.get("rating_count", 0.0)),
+                "movie_comment_count": float(movie_f.get("comment_count", 0.0)),
+                "movie_click_count": float(movie_f.get("click_count", 0.0)),
+                "movie_click_1h": float(movie_f.get("click_1h", 0.0)),
+                "movie_click_24h": float(movie_f.get("click_24h", 0.0)),
+                "movie_year": float(movie_f.get("year", 0.0)),
+                "movie_duration_min": float(movie_f.get("duration_min", 0.0)),
+                "user_static_tag_ctr": float(user_static_tag_ctr),
                 **{k: v for k, v in zip(src_names, one_hot)},
             }
 
@@ -359,11 +346,7 @@ class MMoERanker(Ranker):
 
         mids = list(dict.fromkeys(mids))
 
-        try:
-            engine = _get_mysql_engine(dsn)
-        except Exception:
-            out["_fallback_reasons"].append("failed to create MySQL engine")
-            return out
+        engine = _get_mysql_engine(dsn)
 
         movie_stat_sql = text(
             """
@@ -386,22 +369,21 @@ class MMoERanker(Ranker):
             ) mc ON mc.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_count
-                FROM user_action
-                WHERE action_type = 'view'
-                  AND movie_id IN :ids
+                FROM user_click
+                WHERE movie_id IN :ids
                 GROUP BY movie_id
             ) ua_all ON ua_all.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_1h
-                FROM user_action
-                WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)
+                FROM user_click
+                WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR)
                   AND movie_id IN :ids
                 GROUP BY movie_id
             ) ua_1h ON ua_1h.movie_id = m.movie_id
             LEFT JOIN (
                 SELECT movie_id, COUNT(*) AS click_24h
-                FROM user_action
-                WHERE action_type = 'view' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)
+                FROM user_click
+                WHERE created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 24 HOUR)
                   AND movie_id IN :ids
                 GROUP BY movie_id
             ) ua_24h ON ua_24h.movie_id = m.movie_id
@@ -436,13 +418,12 @@ class MMoERanker(Ranker):
             """
             SELECT t.movie_id
             FROM (
-                SELECT ua.movie_id,
+                SELECT uc.movie_id,
                        ROW_NUMBER() OVER (
-                           ORDER BY ua.created_at DESC, ua.id DESC
+                           ORDER BY uc.created_at DESC, uc.movie_id DESC
                        ) AS rn
-                FROM user_action ua
-                WHERE ua.user_id = :uid
-                  AND ua.action_type = 'view'
+                FROM user_click uc
+                WHERE uc.user_id = :uid
             ) t
             WHERE t.rn <= :lim
             ORDER BY t.rn ASC
@@ -493,11 +474,10 @@ class MMoERanker(Ranker):
             SELECT x.tag_id, COUNT(*) AS click_cnt
             FROM (
                 SELECT mt.tag_id
-                FROM user_action ua
-                JOIN movie_tag mt ON mt.movie_id = ua.movie_id
+                                FROM user_click uc
+                                JOIN movie_tag mt ON mt.movie_id = uc.movie_id
                 JOIN tag_dict td ON td.tag_id = mt.tag_id
-                WHERE ua.user_id = :uid
-                  AND ua.action_type = 'view'
+                                WHERE uc.user_id = :uid
                   AND td.type = 'static'
                   AND td.status = 'show'
             ) x
@@ -508,79 +488,68 @@ class MMoERanker(Ranker):
         user_click_total_sql = text(
             """
             SELECT COUNT(*) AS total_click
-            FROM user_action ua
-            WHERE ua.user_id = :uid
-              AND ua.action_type = 'view'
+                        FROM user_click uc
+                        WHERE uc.user_id = :uid
             """
         )
 
         aux_start = perf_counter()
         query_ms: Dict[str, float] = {}
 
-        try:
-            with engine.connect() as conn:
+        with engine.connect() as conn:
+            t0 = perf_counter()
+            rs = conn.execute(movie_stat_sql, {"ids": mids})
+            movie_stats_by_id: Dict[int, Dict[str, Any]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                mid = int(d["movie_id"])
+                if mid > 0:
+                    movie_stats_by_id[mid] = d
+            out["movie_stats_by_id"] = movie_stats_by_id
+            query_ms["movie_stats"] = (perf_counter() - t0) * 1000.0
+
+            t0 = perf_counter()
+            rs = conn.execute(item_static_tags_sql, {"ids": mids})
+            item_static_tags_by_movie: Dict[int, List[int]] = {}
+            for row in rs:
+                d = dict(row._mapping)
+                mid = int(d["movie_id"])
+                tag_id = int(d["tag_id"])
+                item_static_tags_by_movie.setdefault(mid, []).append(tag_id)
+            out["item_static_tags_by_movie"] = item_static_tags_by_movie
+            query_ms["item_static_tags"] = (perf_counter() - t0) * 1000.0
+
+            if uid > 0:
                 t0 = perf_counter()
-                rs = conn.execute(movie_stat_sql, {"ids": mids})
-                movie_stats_by_id: Dict[int, Dict[str, Any]] = {}
-                for row in rs:
-                    d = dict(row._mapping)
-                    mid = _safe_int(d.get("movie_id"), 0)
-                    if mid > 0:
-                        movie_stats_by_id[mid] = d
-                out["movie_stats_by_id"] = movie_stats_by_id
-                query_ms["movie_stats"] = (perf_counter() - t0) * 1000.0
+                one = conn.execute(user_profile_sql, {"uid": uid}).first()
+                if one is not None:
+                    out["user_profile"] = dict(one._mapping)
+                query_ms["user_profile"] = (perf_counter() - t0) * 1000.0
 
                 t0 = perf_counter()
-                rs = conn.execute(item_static_tags_sql, {"ids": mids})
-                item_static_tags_by_movie: Dict[int, List[int]] = {}
-                for row in rs:
-                    d = dict(row._mapping)
-                    mid = _safe_int(d.get("movie_id"), 0)
-                    tag_id = _safe_int(d.get("tag_id"), 0)
-                    if mid <= 0 or tag_id <= 0:
-                        continue
-                    item_static_tags_by_movie.setdefault(mid, []).append(tag_id)
-                out["item_static_tags_by_movie"] = item_static_tags_by_movie
-                query_ms["item_static_tags"] = (perf_counter() - t0) * 1000.0
+                rs = conn.execute(short_hist_sql, {"uid": uid, "lim": int(SHORT_INTEREST_SEQ_LEN)})
+                out["short_hist_movie_ids"] = [int(dict(r._mapping)["movie_id"]) for r in rs if int(dict(r._mapping)["movie_id"]) > 0]
+                query_ms["short_hist"] = (perf_counter() - t0) * 1000.0
 
-                if uid > 0:
-                    t0 = perf_counter()
-                    one = conn.execute(user_profile_sql, {"uid": uid}).first()
-                    if one is not None:
-                        out["user_profile"] = dict(one._mapping)
-                    query_ms["user_profile"] = (perf_counter() - t0) * 1000.0
+                t0 = perf_counter()
+                rs = conn.execute(long_interest_sql, {"uid": uid, "lim": int(LONG_INTEREST_TAG_SEQ_LEN)})
+                out["long_interest_tag_ids"] = [int(dict(r._mapping)["tag_id"]) for r in rs if int(dict(r._mapping)["tag_id"]) > 0]
+                query_ms["long_interest"] = (perf_counter() - t0) * 1000.0
 
-                    t0 = perf_counter()
-                    rs = conn.execute(short_hist_sql, {"uid": uid, "lim": int(SHORT_INTEREST_SEQ_LEN)})
-                    out["short_hist_movie_ids"] = [
-                        _safe_int(dict(r._mapping).get("movie_id"), 0) for r in rs if _safe_int(dict(r._mapping).get("movie_id"), 0) > 0
-                    ]
-                    query_ms["short_hist"] = (perf_counter() - t0) * 1000.0
+                t0 = perf_counter()
+                rs = conn.execute(user_click_tag_sql, {"uid": uid})
+                out["user_clicked_static_tag_count"] = {
+                    int(dict(r._mapping)["tag_id"]): int(dict(r._mapping)["click_cnt"])
+                    for r in rs
+                    if int(dict(r._mapping)["tag_id"]) > 0
+                }
+                query_ms["user_click_tag"] = (perf_counter() - t0) * 1000.0
 
-                    t0 = perf_counter()
-                    rs = conn.execute(long_interest_sql, {"uid": uid, "lim": int(LONG_INTEREST_TAG_SEQ_LEN)})
-                    out["long_interest_tag_ids"] = [
-                        _safe_int(dict(r._mapping).get("tag_id"), 0) for r in rs if _safe_int(dict(r._mapping).get("tag_id"), 0) > 0
-                    ]
-                    query_ms["long_interest"] = (perf_counter() - t0) * 1000.0
-
-                    t0 = perf_counter()
-                    rs = conn.execute(user_click_tag_sql, {"uid": uid})
-                    out["user_clicked_static_tag_count"] = {
-                        _safe_int(dict(r._mapping).get("tag_id"), 0): _safe_int(dict(r._mapping).get("click_cnt"), 0)
-                        for r in rs
-                        if _safe_int(dict(r._mapping).get("tag_id"), 0) > 0
-                    }
-                    query_ms["user_click_tag"] = (perf_counter() - t0) * 1000.0
-
-                    t0 = perf_counter()
-                    one = conn.execute(user_click_total_sql, {"uid": uid}).first()
-                    if one is not None:
-                        out["user_total_click"] = _safe_int(dict(one._mapping).get("total_click"), 0)
-                    query_ms["user_click_total"] = (perf_counter() - t0) * 1000.0
-        except SQLAlchemyError:
-            out["_fallback_reasons"].append("failed to query MySQL auxiliary features")
-            return out
+                t0 = perf_counter()
+                one = conn.execute(user_click_total_sql, {"uid": uid}).first()
+                if one is not None:
+                    out["user_total_click"] = int(dict(one._mapping)["total_click"])
+                query_ms["user_click_total"] = (perf_counter() - t0) * 1000.0
 
         logger.info(
             "event=reco.rank.mmoe.aux_query_summary | user_id=%s | candidate_movie_count=%s | movie_stats_rows=%s | item_static_tag_rows=%s | user_profile_found=%s | short_hist_len=%s | long_interest_len=%s | movie_stats_ms=%.2f | item_static_tags_ms=%.2f | user_profile_ms=%.2f | short_hist_ms=%.2f | long_interest_ms=%.2f | user_click_tag_ms=%.2f | user_click_total_ms=%.2f | elapsed_ms=%.2f",

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 
+from app.common.runtime_health import mark_component_error, mark_component_state, mark_component_success
 from app.common.settings import Settings
 from app.reco.factory import build_pipeline
 from app.reco.pipeline import RecommendationPipeline
@@ -43,7 +44,13 @@ def get_pipeline() -> RecommendationPipeline:
     with _lock:
         if _global_pipeline is None:
             logger.info("Initializing global Recommendation Pipeline...")
-            _global_pipeline = build_pipeline(get_settings())
+            try:
+                _global_pipeline = build_pipeline(get_settings())
+                mark_component_success("pipeline")
+            except Exception as exc:
+                logger.exception("Global Recommendation Pipeline initialization failed")
+                mark_component_error("pipeline", exc, details={"stage": "build_pipeline"})
+                raise
         return _global_pipeline
 
 
@@ -53,6 +60,7 @@ def reset_pipeline(reason: str | None = None) -> None:
     global _global_pipeline
     with _lock:
         _global_pipeline = None
+        mark_component_state("pipeline", ready=False, status="pending", details={"reason": reason or "manual_reset"})
         if reason:
             logger.info("Global Recommendation Pipeline reset, reason=%s", reason)
         else:
