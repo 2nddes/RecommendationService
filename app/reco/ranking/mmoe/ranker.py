@@ -236,6 +236,7 @@ class MMoERanker(Ranker):
         item_static_tags_by_movie = aux.get("item_static_tags_by_movie") or {}
         user_clicked_static_tag_count = aux.get("user_clicked_static_tag_count") or {}
         user_total_click = int(aux.get("user_total_click") or 0)
+        has_click_history = user_total_click > 0
         padded_long_interest_cnt = 0
         missing_movie_stats_cnt = 0
 
@@ -256,8 +257,14 @@ class MMoERanker(Ranker):
                 # Missing sequence is represented by PAD and masked in model pooling.
                 padded_long_interest_cnt += 1
 
-            ctr_vals = [float(user_clicked_static_tag_count.get(int(tag_id), 0)) / float(user_total_click) for tag_id in item_tags]
-            user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals)) if ctr_vals else 0.0
+            if has_click_history and item_tags:
+                ctr_vals = [
+                    float(user_clicked_static_tag_count.get(int(tag_id), 0)) / float(user_total_click)
+                    for tag_id in item_tags
+                ]
+                user_static_tag_ctr = sum(ctr_vals) / float(len(ctr_vals))
+            else:
+                user_static_tag_ctr = 0.0
 
             movie_f = movie_stats_by_id.get(mid) or {}
             if not movie_f:

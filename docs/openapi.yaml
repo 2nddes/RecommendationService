@@ -534,13 +534,14 @@ components:
         year:
           type: integer
           nullable: true
+        poster: { type: string }
         summary: { type: string }
         rating_avg:
           type: number
           nullable: true
         rating_count: { type: integer }
         score: { type: number }
-      required: [movie_id, title, year, summary, rating_avg, rating_count, score]
+      required: [movie_id, title, year, poster, summary, rating_avg, rating_count, score]
 
     SearchResponse:
       type: object

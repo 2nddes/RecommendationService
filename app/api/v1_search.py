@@ -101,9 +101,10 @@ def _build_search_sql(*, query: str, n: int, offset: int, tags: list[str]):
           m.movie_id,
           m.title,
           m.year,
-          COALESCE(m.summary, '') AS summary,
-          COALESCE((COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)), 0) AS rating_avg,
-          COALESCE(m.rating_count, 0) AS rating_count,
+          m.poster,
+          m.summary,
+          m.rating_sum / NULLIF(m.rating_count, 0) AS rating_avg,
+          m.rating_count AS rating_count,
           ({score_expr}) AS score
         FROM movie m
         WHERE {where_sql}
@@ -193,6 +194,7 @@ def search():
                 "movie_id": int(m["movie_id"]),
                 "title": str(m["title"] or ""),
                 "year": int(m["year"]) if m["year"] is not None else None,
+                "poster": str(m["poster"] or ""),
                 "summary": summary,
                 "rating_avg": float(m["rating_avg"]) if m["rating_avg"] is not None else None,
                 "rating_count": int(m["rating_count"] or 0),

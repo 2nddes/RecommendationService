@@ -289,6 +289,7 @@ GET /api/v1/search?query=科幻%20诺兰&n=20&offset=0&tag=悬疑&tag=推理
         "movie_id": 10086,
         "title": "星际穿越",
         "year": 2014,
+        "poster": "https://example.com/posters/10086.jpg",
         "summary": "人类面临生存危机，前往深空寻找新家园...",
         "rating_avg": 9.3,
         "rating_count": 998877,
