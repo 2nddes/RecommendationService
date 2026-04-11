@@ -1,0 +1,14 @@
+{
+    "env": {
+        "ANTHROPIC_AUTH_TOKEN": "3263d40a25ae7a6a6e4e0a68d00a8693:YmQzOGRhNzc0OTY3OWRhMWUyYWI4ZjEz",
+        "ANTHROPIC_BASE_URL": "https://maas-coding-api.cn-huabei-1.xf-yun.com/anthropic",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
+        "API_TIMEOUT_MS": 600000,
+        "ANTHROPIC_MODEL": "astron-code-latest",
+        "ANTHROPIC_SMALL_FAST_MODEL": "astron-code-latest"
+    },
+    "permissions": {
+        "allow": [ ],
+        "deny": [ ]
+    }
+}
