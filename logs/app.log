@@ -8074,3 +8074,87 @@ redis.exceptions.ResponseError: Command # 1 (DEL reco:trending:daily) of pipelin
 2026-04-11 10:21:42 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 10:21:42] "GET /api/v1/recommend/item?movie_id=34782623&n=20 HTTP/1.1" 200 -
 2026-04-11 10:24:44 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}}
 2026-04-11 10:24:44 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}}
+2026-04-11 13:40:21 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-11 13:40:21 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-11 13:40:21 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-11 13:40:21 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-11 13:40:21 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-11 13:40:21 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-11 13:40:21 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-11 13:40:21 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-11 13:40:21 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-11 13:40:21 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-11 13:40:21 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-11 13:40:21 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-11 13:40:21 | INFO | app.reco.startup | Train queue worker begins
+2026-04-11 13:40:21 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-11 13:40:22 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.210.10:5000
+2026-04-11 13:40:22 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-11 13:40:22 | INFO | werkzeug |  * Restarting with stat
+2026-04-11 13:40:29 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-11 13:40:29 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-11 13:40:29 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-11 13:40:30 | INFO | app.common.logging_setup | 日志系统初始化完成，日志文件: D:\project\Python\RecommendationService\logs\app.log
+2026-04-11 13:40:30 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-11 13:40:30 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-11 13:40:30 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-11 13:40:30 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-11 13:40:30 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-11 13:40:30 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-11 13:40:30 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-11 13:40:30 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-11 13:40:30 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-11 13:40:30 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-11 13:40:30 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-11 13:40:30 | INFO | app.reco.startup | Train queue worker begins
+2026-04-11 13:40:30 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-11 13:40:30 | WARNING | werkzeug |  * Debugger is active!
+2026-04-11 13:40:30 | INFO | werkzeug |  * Debugger PIN: 165-747-606
+2026-04-11 13:40:40 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-11 13:40:40 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-11 13:40:40 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-11 13:42:22 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-11 13:42:22 | INFO | app.services.recommendation_service | User recommendation started, user_id=649125, page=1, page_size=20, mode=pop
+2026-04-11 13:42:22 | INFO | app.services.recommendation_service | User recommendation completed, user_id=649125, page=1, page_size=20, returned=20, total=400, cache_hit=True, mode=pop, elapsed_ms=3.10
+2026-04-11 13:42:22 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:42:22] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-11 13:42:23 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-11 13:42:23 | INFO | app.services.recommendation_service | User recommendation started, user_id=649125, page=1, page_size=20, mode=pop
+2026-04-11 13:42:23 | INFO | app.services.recommendation_service | User recommendation completed, user_id=649125, page=1, page_size=20, returned=20, total=380, cache_hit=True, mode=pop, elapsed_ms=1.02
+2026-04-11 13:42:23 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:42:23] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-11 13:43:07 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-11 13:43:07 | INFO | app.services.recommendation_service | User recommendation started, user_id=649125, page=1, page_size=20, mode=pop
+2026-04-11 13:43:07 | INFO | app.services.recommendation_service | User recommendation completed, user_id=649125, page=1, page_size=20, returned=20, total=360, cache_hit=True, mode=pop, elapsed_ms=0.61
+2026-04-11 13:43:07 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:43:07] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-11 13:43:08 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-11 13:43:08 | INFO | app.services.recommendation_service | User recommendation started, user_id=649125, page=1, page_size=20, mode=pop
+2026-04-11 13:43:08 | INFO | app.services.recommendation_service | User recommendation completed, user_id=649125, page=1, page_size=20, returned=20, total=340, cache_hit=True, mode=pop, elapsed_ms=1.30
+2026-04-11 13:43:08 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:43:08] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-11 13:43:16 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=10342941, n=20
+2026-04-11 13:43:16 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=10342941, n=20
+2026-04-11 13:43:21 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=10342941, ann_candidates=21
+2026-04-11 13:43:21 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=10342941, returned=20
+2026-04-11 13:43:21 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=10342941, 返回条数=20
+2026-04-11 13:43:21 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:43:21] "GET /api/v1/recommend/item?movie_id=10342941&n=20 HTTP/1.1" 200 -
+2026-04-11 13:44:00 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-11 13:44:00 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-11 13:44:14 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:14 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:14 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:14] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -
+2026-04-11 13:44:17 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=12, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:18 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:18 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:18] "GET /api/v1/search?n=12&offset=12&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -
+2026-04-11 13:44:18 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=24, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:19 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:19 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:19] "GET /api/v1/search?n=12&offset=24&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -
+2026-04-11 13:44:20 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=36, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:20 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:20 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:20] "GET /api/v1/search?n=12&offset=36&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -
+2026-04-11 13:44:21 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=48, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:21 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:21 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:21] "GET /api/v1/search?n=12&offset=48&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -
+2026-04-11 13:44:21 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=60, passthrough_keys=['search_mode', 'source', 'tag']
+2026-04-11 13:44:22 | INFO | app.api.v1_search | search completed, query_len=0, total=10196, returned=12
+2026-04-11 13:44:22 | INFO | werkzeug | 127.0.0.1 - - [11/Apr/2026 13:44:22] "GET /api/v1/search?n=12&offset=60&source=click_tag&search_mode=smart&tag=日本 HTTP/1.1" 200 -

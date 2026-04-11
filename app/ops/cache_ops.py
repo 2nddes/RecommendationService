@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import datetime, timedelta
 
 from sqlalchemy import text
@@ -8,6 +9,7 @@ from sqlalchemy import text
 from app.common.runtime_health import mark_component_success
 from app.common.redis_cache import (
     get_redis_client,
+    store_tag_recall_items,
     store_movie_features,
     store_trending_items,
     store_user_features,
@@ -43,6 +45,18 @@ def _query_rows(settings: Settings, sql: str, params: dict) -> list[dict]:
     with engine.connect() as conn:
         rs = conn.execute(text(sql), params)
         return [dict(row._mapping) for row in rs]
+
+
+def _bayesian_weighted_rating(*, rating_sum: float, rating_count: int, global_mean: float, min_votes: int) -> float:
+    v = max(int(rating_count), 0)
+    if v <= 0:
+        return 0.0
+
+    m = max(int(min_votes), 0)
+    r = float(rating_sum) / float(v)
+    if v + m <= 0:
+        return r
+    return (float(v) / float(v + m)) * r + (float(m) / float(v + m)) * float(global_mean)
 
 
 def refresh_feature_cache(settings: Settings) -> dict[str, int]:
@@ -179,10 +193,146 @@ def refresh_trending_cache(settings: Settings) -> dict[str, int]:
     return out
 
 
+def refresh_tag_inverted_recall_cache(settings: Settings) -> dict[str, int]:
+    if not settings.tag_recall.enabled:
+        return {
+            "enabled": 0,
+            "skipped": 1,
+            "genre_keys": 0,
+            "director_keys": 0,
+            "keys_written": 0,
+            "members_written": 0,
+        }
+
+    if get_redis_client(settings) is None:
+        return {
+            "enabled": 1,
+            "skipped": 1,
+            "genre_keys": 0,
+            "director_keys": 0,
+            "keys_written": 0,
+            "members_written": 0,
+        }
+
+    endorsement_source = str(settings.tag_recall.director_endorsement_source or "").strip().lower()
+    if endorsement_source != "rating_count":
+        raise RuntimeError(f"director_endorsement_source_not_supported: {endorsement_source}")
+
+    min_votes = max(int(settings.tag_recall.min_rating_count_m), 0)
+
+    c_sql = """
+    SELECT AVG(COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)) AS global_avg
+    FROM movie m
+    WHERE m.status = 'published' AND m.rating_count > 0
+    """
+    c_rows = _query_rows(settings, c_sql, {})
+    global_avg = float(c_rows[0].get("global_avg") or 0.0) if c_rows else 0.0
+
+    genre_sql = """
+    SELECT
+      mt.tag_id AS tag_id,
+      mt.movie_id AS movie_id,
+      COALESCE(mt.vote_up, 0) AS endorsement_cnt,
+      COALESCE(m.rating_sum, 0) AS rating_sum,
+      COALESCE(m.rating_count, 0) AS rating_count
+    FROM movie_tag mt
+    JOIN movie m ON m.movie_id = mt.movie_id
+    JOIN tag_dict td ON td.tag_id = mt.tag_id
+    WHERE m.status = 'published' AND td.status = 'show'
+    """
+
+    director_sql = """
+    SELECT
+      mp.person_id AS tag_id,
+      mp.movie_id AS movie_id,
+      COALESCE(m.rating_sum, 0) AS rating_sum,
+      COALESCE(m.rating_count, 0) AS rating_count
+    FROM movie_person mp
+    JOIN movie m ON m.movie_id = mp.movie_id
+    WHERE m.status = 'published' AND mp.person_role = 'director'
+    """
+
+    genre_rows = _query_rows(settings, genre_sql, {})
+    director_rows = _query_rows(settings, director_sql, {})
+
+    payload: dict[tuple[str, int], dict[int, float]] = {}
+    for row in genre_rows:
+        tag_id = int(row["tag_id"])
+        movie_id = int(row["movie_id"])
+        rating_count = int(row.get("rating_count") or 0)
+        rating_sum = float(row.get("rating_sum") or 0.0)
+        endorsement_cnt = max(int(row.get("endorsement_cnt") or 0), 0)
+
+        wr = _bayesian_weighted_rating(
+            rating_sum=rating_sum,
+            rating_count=rating_count,
+            global_mean=global_avg,
+            min_votes=min_votes,
+        )
+        final_score = float(wr) * float(math.log(float(endorsement_cnt) + 1.0))
+        if final_score <= 0.0:
+            continue
+
+        bucket = payload.setdefault(("genre", tag_id), {})
+        prev = bucket.get(movie_id)
+        if prev is None or final_score > prev:
+            bucket[movie_id] = final_score
+
+    for row in director_rows:
+        tag_id = int(row["tag_id"])
+        movie_id = int(row["movie_id"])
+        rating_count = int(row.get("rating_count") or 0)
+        rating_sum = float(row.get("rating_sum") or 0.0)
+        endorsement_cnt = max(rating_count, 0)
+
+        wr = _bayesian_weighted_rating(
+            rating_sum=rating_sum,
+            rating_count=rating_count,
+            global_mean=global_avg,
+            min_votes=min_votes,
+        )
+        final_score = float(wr) * float(math.log(float(endorsement_cnt) + 1.0))
+        if final_score <= 0.0:
+            continue
+
+        bucket = payload.setdefault(("director", tag_id), {})
+        prev = bucket.get(movie_id)
+        if prev is None or final_score > prev:
+            bucket[movie_id] = final_score
+
+    tag_items: dict[tuple[str, int], list[tuple[int, float]]] = {}
+    genre_keys = 0
+    director_keys = 0
+    for spec, item_map in payload.items():
+        pairs = [(int(movie_id), float(score)) for movie_id, score in item_map.items() if float(score) > 0.0]
+        if not pairs:
+            continue
+        tag_items[spec] = pairs
+        if spec[0] == "genre":
+            genre_keys += 1
+        elif spec[0] == "director":
+            director_keys += 1
+
+    written = store_tag_recall_items(
+        settings,
+        tag_items=tag_items,
+        retain_topn=max(int(settings.tag_recall.retain_topn_per_tag), 1),
+    )
+    return {
+        "enabled": 1,
+        "skipped": 0,
+        "genre_keys": int(genre_keys),
+        "director_keys": int(director_keys),
+        "keys_written": int(len(written)),
+        "members_written": int(sum(written.values())),
+    }
+
+
 def run_all_cache_precompute(settings: Settings) -> dict[str, dict[str, int]]:
     summary = {
         "features": refresh_feature_cache(settings),
         "trending": refresh_trending_cache(settings),
+        "tag_recall": refresh_tag_inverted_recall_cache(settings),
     }
     mark_component_success("cache_precompute", details=summary)
     return summary

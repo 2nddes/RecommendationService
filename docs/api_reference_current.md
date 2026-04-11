@@ -498,6 +498,7 @@ Query 参数：
 成功返回 `data` 关键字段：
 
 - `config.pipeline`：当前 `recall` / `ranking` / `reranking` 选择
+  - `pipeline.recall` 为数组，至少包含 `two_tower`；当开启 `tag_recall.enabled` 时会包含 `tag_inverted`
 - `config.mmoe_model_path`
 - `config.two_tower_model_path`
 - `config.two_tower_index_path`

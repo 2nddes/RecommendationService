@@ -103,5 +103,16 @@
         "faiss_dir": "data/faiss/movie_rag",
         "faiss_index_name": "movie_index",
         "build_limit": 50000
+    },
+    "tag_recall": {
+        "enabled": true,
+        "min_rating_count_m": 100,
+        "retain_topn_per_tag": 1000,
+        "user_topk_tags": 20,
+        "per_tag_fetch_m": 200,
+        "online_candidate_multiplier": 4,
+        "high_rating_threshold": 8,
+        "recent_interaction_limit": 300,
+        "director_endorsement_source": "rating_count"
     }
 }

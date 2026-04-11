@@ -146,6 +146,19 @@ class RagSettings:
 
 
 @dataclass(frozen=True)
+class TagRecallSettings:
+    enabled: bool = False
+    min_rating_count_m: int = 100
+    retain_topn_per_tag: int = 1000
+    user_topk_tags: int = 20
+    per_tag_fetch_m: int = 200
+    online_candidate_multiplier: int = 4
+    high_rating_threshold: int = 8
+    recent_interaction_limit: int = 300
+    director_endorsement_source: str = "rating_count"
+
+
+@dataclass(frozen=True)
 class Settings:
     core: CoreSettings = field(default_factory=CoreSettings)
     redis: RedisSettings = field(default_factory=RedisSettings)
@@ -155,6 +168,7 @@ class Settings:
     xgb: XGBSettings = field(default_factory=XGBSettings)
     mmoe: MMOESettings = field(default_factory=MMOESettings)
     rag: RagSettings = field(default_factory=RagSettings)
+    tag_recall: TagRecallSettings = field(default_factory=TagRecallSettings)
 
     @staticmethod
     def _section(cfg: Mapping[str, Any], key: str) -> Mapping[str, Any]:
@@ -176,4 +190,5 @@ class Settings:
             xgb=XGBSettings(**Settings._section(raw_cfg, "xgb")),
             mmoe=MMOESettings(**Settings._section(raw_cfg, "mmoe")),
             rag=RagSettings(**Settings._section(raw_cfg, "rag")),
+            tag_recall=TagRecallSettings(**Settings._section(raw_cfg, "tag_recall")),
         )

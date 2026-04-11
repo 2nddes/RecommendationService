@@ -162,10 +162,14 @@ def get_tasks(
 
 def get_admin_status(settings: Settings) -> Dict[str, Any]:
     store = get_artifact_store()
+    recallers = ["two_tower"]
+    if settings.tag_recall.enabled:
+        recallers.append("tag_inverted")
+
     return {
         "config": {
             "pipeline": {
-                "recall": "two_tower",
+                "recall": recallers,
                 "ranking": "mmoe",
                 "reranking": "random_shuffle",
             },
