@@ -22,7 +22,11 @@
         "trending_refresh_interval_seconds": 600,
         "static_recall_refresh_interval_seconds": 600,
         "trending_topk": 200,
-        "static_recall_topk": 200
+        "static_recall_topk": 200,
+        "user_reco_cache_size": 500,
+        "user_reco_ttl_seconds": 86400,
+        "user_reco_build_lock_seconds": 10,
+        "user_reco_delivery_mode": "pop"
     },
     "log": {
         "level": "INFO",

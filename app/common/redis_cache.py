@@ -72,6 +72,14 @@ def trending_key(settings: Settings, window: str) -> str:
     return _build_key(settings, "trending", str(window))
 
 
+def user_recommendation_list_key(settings: Settings, user_id: int) -> str:
+    return _build_key(settings, "recommend", "user", int(user_id))
+
+
+def user_recommendation_lock_key(settings: Settings, user_id: int) -> str:
+    return _build_key(settings, "recommend", "user", int(user_id), "build_lock")
+
+
 def load_trending_items(settings: Settings, *, window: str, n: int) -> list[int]:
     client = get_redis_client(settings)
     if client is None:
@@ -84,6 +92,50 @@ def load_trending_items(settings: Settings, *, window: str, n: int) -> list[int]
     for raw in rows:
         out.append(int(raw))
     return out
+
+
+def load_user_recommendation_page(
+    settings: Settings,
+    *,
+    user_id: int,
+    start: int,
+    end: int,
+) -> list[int]:
+    client = get_redis_client(settings)
+    if client is None:
+        return []
+    if int(end) < int(start):
+        return []
+
+    key = user_recommendation_list_key(settings, user_id)
+    rows = client.lrange(key, max(int(start), 0), max(int(end), 0))
+    return [int(raw) for raw in rows]
+
+
+def load_user_recommendation_total(settings: Settings, *, user_id: int) -> int:
+    client = get_redis_client(settings)
+    if client is None:
+        return 0
+    key = user_recommendation_list_key(settings, user_id)
+    return int(client.llen(key) or 0)
+
+
+def pop_user_recommendation_items(settings: Settings, *, user_id: int, count: int) -> tuple[list[int], int]:
+    client = get_redis_client(settings)
+    if client is None:
+        return [], 0
+
+    normalized = max(int(count), 0)
+    if normalized <= 0:
+        return [], load_user_recommendation_total(settings, user_id=user_id)
+
+    key = user_recommendation_list_key(settings, user_id)
+    pipe = client.pipeline(transaction=True)
+    pipe.lrange(key, 0, normalized - 1)
+    pipe.ltrim(key, normalized, -1)
+    pipe.llen(key)
+    rows, _trim_result, remaining = pipe.execute()
+    return [int(raw) for raw in rows], int(remaining or 0)
 
 
 def store_trending_items(settings: Settings, *, window: str, pairs: Sequence[tuple[int, float]]) -> int:
@@ -102,6 +154,55 @@ def store_trending_items(settings: Settings, *, window: str, pairs: Sequence[tup
     pipe.expire(key, max(int(settings.cache.trending_refresh_interval_seconds) * 3, 300))
     pipe.execute()
     return len(payload)
+
+
+def store_user_recommendation_items(settings: Settings, *, user_id: int, items: Sequence[int]) -> int:
+    client = get_redis_client(settings)
+    if client is None:
+        return 0
+
+    normalized = [int(item_id) for item_id in items]
+    key = user_recommendation_list_key(settings, user_id)
+    ttl = max(int(settings.cache.user_reco_ttl_seconds), 60)
+
+    pipe = client.pipeline(transaction=False)
+    pipe.delete(key)
+    if normalized:
+        pipe.rpush(key, *[str(item_id) for item_id in normalized])
+        pipe.expire(key, ttl)
+    pipe.execute()
+    return len(normalized)
+
+
+def try_acquire_user_recommendation_lock(
+    settings: Settings,
+    *,
+    user_id: int,
+    token: str,
+    ttl_seconds: int | None = None,
+) -> bool:
+    client = get_redis_client(settings)
+    if client is None:
+        return False
+
+    key = user_recommendation_lock_key(settings, user_id)
+    ttl = int(ttl_seconds if ttl_seconds is not None else settings.cache.user_reco_build_lock_seconds)
+    return bool(client.set(key, token, nx=True, ex=max(ttl, 1)))
+
+
+def release_user_recommendation_lock(settings: Settings, *, user_id: int, token: str) -> None:
+    client = get_redis_client(settings)
+    if client is None or not token:
+        return
+
+    key = user_recommendation_lock_key(settings, user_id)
+    client.eval(
+        "if redis.call('GET', KEYS[1]) == ARGV[1] then "
+        "return redis.call('DEL', KEYS[1]) else return 0 end",
+        1,
+        key,
+        token,
+    )
 
 
 def load_movie_feature_hash(settings: Settings, movie_id: int) -> dict[str, str]:

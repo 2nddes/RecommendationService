@@ -91,7 +91,9 @@ X-Internal-Secret: <secret>
 ### 3.2 默认值
 
 - `GET /movies/{id}/similar` 的 `limit` 默认 `20`
-- `GET /recommend/user` 的 `n` 默认 `10`
+- `GET /recommend/user` 的 `page` 默认 `1`
+- `GET /recommend/user` 的 `page_size` 默认 `20`
+- `GET /recommend/user` 的 `n` 默认 `20`（仅 `pop` 模式）
 - `GET /recommend/item` 的 `n` 默认 `8`
 - `GET /recommend/trending` 的 `n` 默认 `10`
 - `GET /recommend/trending` 的 `window` 默认 `weekly`
@@ -354,7 +356,10 @@ Query：
 ### 12.2 推荐查询
 
 - `GET /recommend/user`
-  - Query：`user_id` 必填，`n` 可选（默认 10）
+  - 读取策略开关：`cache.user_reco_delivery_mode`
+    - `paged`（默认）：Query 使用 `user_id` + `page/page_size`，非破坏性分页读取（`LRANGE`）
+    - `pop`：Query 使用 `user_id` + `n`，破坏性弹出读取（取出后从缓存移除）
+  - 参数规则：`n` 与 `page/page_size` 不可混用
 - `GET /recommend/item`
   - Query：`movie_id` 必填，`n` 可选（默认 8）
 - `GET /recommend/trending`

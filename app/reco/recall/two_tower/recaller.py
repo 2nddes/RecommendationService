@@ -57,7 +57,7 @@ class TwoTowerRecall(Recaller):
             )
             return []
 
-        pairs = ann_search(query_vec, k=self.cfg.recall_topk, cfg=self.cfg)
+        pairs = ann_search(query_vec, k=max(int(self.cfg.recall_topk), int(ctx.n)), cfg=self.cfg)
         out: List[Candidate] = []
         for item_id, score in pairs:
             if int(item_id) in excluded:

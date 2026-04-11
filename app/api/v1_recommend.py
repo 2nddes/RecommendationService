@@ -13,6 +13,14 @@ recommend_bp = Blueprint("recommend", __name__)
 logger = logging.getLogger(__name__)
 
 
+def _resolve_user_reco_delivery_mode(settings) -> str:
+    raw_mode = str(settings.cache.user_reco_delivery_mode or "paged").strip().lower()
+    if raw_mode in {"paged", "pop"}:
+        return raw_mode
+    logger.warning("用户推荐缓存读取模式非法，fallback到paged，mode=%s", raw_mode)
+    return "paged"
+
+
 @recommend_bp.get("/recommend/user")
 def recommend_user():
     """个性化推荐（猜你喜欢）
@@ -20,7 +28,8 @@ def recommend_user():
     文档: GET /api/v1/recommend/user
     query params:
       - user_id: int (required)
-      - n: int (optional, default 10)
+            - page/page_size: only for paged mode
+            - n: only for pop mode
     """
 
     user_id_raw = request.args.get("user_id")
@@ -28,11 +37,36 @@ def recommend_user():
         raise ParamError("missing required query parameter: user_id")
 
     user_id = as_int(user_id_raw, name="user_id")
-    n = as_int(request.args.get("n", 10), name="n")
-    logger.info("收到个性化推荐请求，user_id=%s, n=%s", user_id, n)
     settings = get_settings()
+    mode = _resolve_user_reco_delivery_mode(settings)
+
+    if mode == "pop":
+        if request.args.get("page") is not None or request.args.get("page_size") is not None:
+            raise ParamError("invalid request for pop mode, use 'n' only")
+
+        n = as_int(request.args.get("n", 20), name="n")
+        if n < 1 or n > 100:
+            raise ParamError("invalid 'n', expected integer in [1, 100]")
+
+        page = 1
+        page_size = n
+        logger.info("收到个性化推荐请求，user_id=%s, mode=%s, n=%s", user_id, mode, n)
+    else:
+        if request.args.get("n") is not None:
+            raise ParamError("invalid request for paged mode, use 'page' and 'page_size' only")
+
+        page = as_int(request.args.get("page", 1), name="page")
+        page_size = as_int(request.args.get("page_size", 20), name="page_size")
+
+        if page < 1:
+            raise ParamError("invalid 'page', expected integer >= 1")
+        if page_size < 1 or page_size > 100:
+            raise ParamError("invalid 'page_size', expected integer in [1, 100]")
+
+        logger.info("收到个性化推荐请求，user_id=%s, mode=%s, page=%s, page_size=%s", user_id, mode, page, page_size)
+
     service = build_recommendation_service(settings)
-    data = service.recommend_user(user_id=user_id, n=n)
+    data = service.recommend_user(user_id=user_id, page=page, page_size=page_size)
     return ok(data)
 
 

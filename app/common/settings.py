@@ -48,6 +48,10 @@ class CacheSettings:
     static_recall_refresh_interval_seconds: int = 600
     trending_topk: int = 200
     static_recall_topk: int = 200
+    user_reco_cache_size: int = 500
+    user_reco_ttl_seconds: int = 86400
+    user_reco_build_lock_seconds: int = 10
+    user_reco_delivery_mode: str = "paged"
 
 
 @dataclass(frozen=True)

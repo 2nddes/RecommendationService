@@ -57,6 +57,11 @@ paths:
     get:
       tags: [Recommendation]
       summary: Personalized recommendation
+      description: |
+        Delivery mode is controlled by `cache.user_reco_delivery_mode`.
+        - `paged` mode: use `page` and `page_size`
+        - `pop` mode: use `n`
+        Do not mix `n` with `page/page_size`.
       parameters:
         - $ref: '#/components/parameters/InternalSecretHeader'
         - name: user_id
@@ -65,12 +70,32 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: page
+          in: query
+          required: false
+          description: Used only when delivery mode is `paged`.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: page_size
+          in: query
+          required: false
+          description: Used only when delivery mode is `paged`.
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
         - name: n
           in: query
           required: false
+          description: Used only when delivery mode is `pop`. Do not combine with `page` or `page_size`.
           schema:
             type: integer
-            default: 10
+            default: 20
+            minimum: 1
+            maximum: 100
       responses:
         '200':
           description: OK
@@ -491,7 +516,11 @@ components:
               type: array
               items: { type: integer }
             n: { type: integer }
-          required: [user_id, items, n]
+            page: { type: integer }
+            page_size: { type: integer }
+            total: { type: integer }
+            has_next: { type: boolean }
+          required: [user_id, items, n, page, page_size, total, has_next]
       required: [code, message, data]
 
     ItemRecommendResponse:

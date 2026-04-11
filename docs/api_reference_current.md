@@ -168,7 +168,15 @@ JSON 类接口统一结构：
 Query 参数：
 
 - `user_id`：必填，`int`
-- `n`：可选，`int`，默认 `10`
+- `page`：`paged` 模式可选，`int`，默认 `1`
+- `page_size`：`paged` 模式可选，`int`，默认 `20`，取值范围 `[1, 100]`
+- `n`：`pop` 模式可选，`int`，默认 `20`，取值范围 `[1, 100]`
+
+缓存读取策略（配置项）：
+
+- `cache.user_reco_delivery_mode = paged`：使用 `page/page_size`，非破坏性分页读取（默认）
+- `cache.user_reco_delivery_mode = pop`：使用 `n`，破坏性弹出读取（每次响应后从缓存移除已返回项）
+- 参数规则：`n` 与 `page/page_size` 不可混用
 
 成功示例：
 
@@ -179,7 +187,11 @@ Query 参数：
   "data": {
     "user_id": 1001,
     "items": [101, 202, 303],
-    "n": 10
+    "n": 20,
+    "page": 1,
+    "page_size": 20,
+    "total": 500,
+    "has_next": true
   }
 }
 ```
@@ -187,7 +199,10 @@ Query 参数：
 错误场景：
 
 - 缺少 `user_id` 或类型错误 -> 400
-- `n` 不是整数 -> 400
+- `page` 不是正整数 -> 400
+- `page_size` 非整数或不在 `[1, 100]` -> 400
+- `n` 非整数或不在 `[1, 100]` -> 400
+- `paged` 模式传入 `n`（或 `pop` 模式传入 `page/page_size`）-> 400
 
 ### 6.4 GET /recommend/item
 
