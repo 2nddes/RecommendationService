@@ -15,12 +15,14 @@ def _repo_root() -> Path:
 
 
 def configure_logging() -> Path:
-    """配置全局日志，输出到专用文件（按大小轮转）。"""
+    """Initialize project-wide logging to rotating file handlers only."""
 
     global _configured
 
+    root_logger = logging.getLogger()
     if _configured:
-        handler = _find_file_handler(logging.getLogger())
+        _remove_console_handlers(root_logger)
+        handler = _find_file_handler(root_logger)
         if handler is not None:
             return Path(handler.baseFilename)
 
@@ -34,8 +36,8 @@ def configure_logging() -> Path:
     level_name = settings.log.level.upper()
     level = getattr(logging, level_name, logging.INFO)
 
-    root_logger = logging.getLogger()
     root_logger.setLevel(level)
+    _remove_console_handlers(root_logger)
 
     file_handler = _find_file_handler(root_logger)
     if file_handler is None:
@@ -50,16 +52,23 @@ def configure_logging() -> Path:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         file_handler.setFormatter(formatter)
-        file_handler.setLevel(level)
         root_logger.addHandler(file_handler)
 
+    file_handler.setLevel(level)
+
     _configured = True
-    logging.getLogger(__name__).info("日志系统初始化完成，日志文件: %s", str(log_file))
+    logging.getLogger(__name__).info("Logging initialized. log_file=%s", str(log_file))
     return log_file
 
 
 def _find_file_handler(logger: logging.Logger) -> RotatingFileHandler | None:
-    for h in logger.handlers:
-        if isinstance(h, RotatingFileHandler):
-            return h
+    for handler in logger.handlers:
+        if isinstance(handler, RotatingFileHandler):
+            return handler
     return None
+
+
+def _remove_console_handlers(logger: logging.Logger) -> None:
+    for handler in list(logger.handlers):
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+            logger.removeHandler(handler)

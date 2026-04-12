@@ -22,7 +22,7 @@ def _get_engine(mysql_dsn: str):
 
 def _as_passthrough_params() -> dict[str, Any]:
     passthrough: dict[str, Any] = {}
-    reserved = {"query", "n", "offset"}
+    reserved = {"query", "n", "offset", "tag_id"}
     for key, values in request.args.lists():
         if key in reserved:
             continue
@@ -33,7 +33,7 @@ def _as_passthrough_params() -> dict[str, Any]:
     return passthrough
 
 
-def _build_search_sql(*, query: str, n: int, offset: int, tags: list[str]):
+def _build_search_sql(*, query: str, n: int, offset: int, tag_ids: list[int]):
     query = query.strip()
     has_query = bool(query)
     params: dict[str, Any] = {
@@ -69,17 +69,15 @@ def _build_search_sql(*, query: str, n: int, offset: int, tags: list[str]):
             query_match = f"({query_match} OR ({' AND '.join(token_all_terms)}))"
         where_clauses.append(query_match)
 
-    if tags:
-        params["tags"] = tags
+    if tag_ids:
+        params["tag_ids"] = tag_ids
         where_clauses.append(
             """
             EXISTS (
                 SELECT 1
                 FROM movie_tag mt
-                JOIN tag_dict td ON td.tag_id = mt.tag_id
                 WHERE mt.movie_id = m.movie_id
-                  AND td.status = 'show'
-                  AND td.tag_name IN :tags
+                  AND mt.tag_id IN :tag_ids
             )
             """
         )
@@ -121,9 +119,9 @@ def _build_search_sql(*, query: str, n: int, offset: int, tags: list[str]):
         """
     )
 
-    if tags:
-        select_sql = select_sql.bindparams(bindparam("tags", expanding=True))
-        count_sql = count_sql.bindparams(bindparam("tags", expanding=True))
+    if tag_ids:
+        select_sql = select_sql.bindparams(bindparam("tag_ids", expanding=True))
+        count_sql = count_sql.bindparams(bindparam("tag_ids", expanding=True))
 
     return select_sql, count_sql, params
 
@@ -140,9 +138,15 @@ def search():
     """
     query_raw = request.args.get("query")
     query = (query_raw or "").strip()
-    tags = [t.strip() for t in request.args.getlist("tag") if str(t).strip()]
-    if not query and not tags:
-        raise ParamError("at least one of 'query' or 'tag' is required")
+    tag_ids: list[int] = []
+    for raw in request.args.getlist("tag_id"):
+        raw_text = str(raw).strip()
+        if not raw_text:
+            continue
+        tag_ids.append(as_int(raw_text, name="tag_id"))
+    tag_ids = list(dict.fromkeys(tag_ids))
+    if not query and not tag_ids:
+        raise ParamError("at least one of 'query' or 'tag_id' is required")
 
     n_raw = request.args.get("n")
     offset_raw = request.args.get("offset")
@@ -174,7 +178,7 @@ def search():
         query=query,
         n=n,
         offset=offset,
-        tags=tags,
+        tag_ids=tag_ids,
     )
 
     engine = _get_engine(mysql_dsn)
@@ -211,6 +215,7 @@ def search():
 
     data = {
         "query": query,
+        "tag_ids": tag_ids,
         "n": n,
         "offset": offset,
         "passthrough": passthrough,

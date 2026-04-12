@@ -4,6 +4,7 @@ import argparse
 import logging
 import time
 
+from app.common.logging_setup import configure_logging
 from app.common.settings import Settings
 from app.ops.rag_embedding_ops import (
     claim_next_rag_embedding_job,
@@ -59,7 +60,8 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    log_file = configure_logging()
+    logger.info("RAG embedding worker logging initialized, log_file=%s", str(log_file))
     args = _parse_args()
     if args.once:
         run_once()
