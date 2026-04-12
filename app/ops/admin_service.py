@@ -12,6 +12,7 @@ from app.ops.model_ops import (
     get_model_train_job,
     list_model_train_jobs,
 )
+from app.ops.rag_embedding_ops import enqueue_rag_embedding_job
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,18 @@ def start_train_task(
     train_job_id = create_model_train_job(mysql_dsn=settings.core.mysql_dsn, mode="full", metrics=payload)
     logger.info("训练任务已入队，task_id=%s, train_job_id=%s", task_id, train_job_id)
     return {"task_id": str(train_job_id), "train_job_id": int(train_job_id)}
+
+
+def start_rag_embedding_task(settings: Settings, *, movie_id: int) -> Dict[str, Any]:
+    task_id = new_task_id("rag_embedding")
+    logger.info("RAG embedding job enqueue requested, task_id=%s, movie_id=%s", task_id, int(movie_id))
+    job_id = enqueue_rag_embedding_job(mysql_dsn=settings.core.mysql_dsn, movie_id=int(movie_id))
+    logger.info("RAG embedding job enqueued, task_id=%s, job_id=%s, movie_id=%s", task_id, job_id, int(movie_id))
+    return {
+        "task_id": str(job_id),
+        "rag_embedding_job_id": int(job_id),
+        "movie_id": int(movie_id),
+    }
 
 
 def _map_model_train_job_status(status: str | None) -> str:

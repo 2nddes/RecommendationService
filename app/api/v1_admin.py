@@ -6,7 +6,7 @@ from flask import Blueprint, abort, request
 
 from app.common.responses import ok
 from app.common.validation import ParamError, as_int, as_str
-from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_train_task
+from app.ops.admin_service import get_admin_status, get_task, get_tasks, start_rag_embedding_task, start_train_task
 from app.ops.model_ops import refresh_current_models
 from app.reco.online.runtime import get_settings
 
@@ -41,6 +41,18 @@ def admin_train():
     data["estimated_time"] = "unknown"
     logger.info("训练任务已提交，task_id=%s", data.get("task_id"))
     return ok(data, message="Training task started")
+
+
+@admin_bp.post("/admin/rag/enqueue")
+def admin_rag_enqueue():
+    body = request.get_json(silent=True) or {}
+    movie_id = as_int(body.get("movie_id"), name="movie_id")
+    if movie_id <= 0:
+        raise ParamError("invalid 'movie_id', expected positive integer")
+
+    settings = get_settings()
+    data = start_rag_embedding_task(settings, movie_id=int(movie_id))
+    return ok(data, message="RAG embedding task enqueued")
 
 
 @admin_bp.post("/admin/refresh")

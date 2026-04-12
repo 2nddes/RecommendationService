@@ -21,6 +21,7 @@ _start_lock = threading.RLock()
 _worker_thread: threading.Thread | None = None
 _cache_worker_thread: threading.Thread | None = None
 _train_worker_thread: threading.Thread | None = None
+_rag_embedding_worker_thread: threading.Thread | None = None
 
 def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
     logger.info("Starting two-tower full rebuild")
@@ -47,6 +48,11 @@ def _run_startup_once(settings: Settings) -> None:
     try:
         if settings.two_tower.startup_build:
             _run_two_tower_full_build(settings)
+
+        from app.reco.rag_service import get_movie_rag_service
+
+        get_movie_rag_service(settings).load_from_mysql()
+        logger.info("RAG HNSW index preloaded from MySQL")
 
         get_pipeline()
         logger.info("Global recommendation pipeline preloaded")
@@ -103,8 +109,22 @@ def _train_queue_worker(settings: Settings) -> None:
         logger.exception("Train queue worker crashed")
 
 
+def _rag_embedding_queue_worker(settings: Settings) -> None:
+    if not settings.core.mysql_dsn:
+        logger.warning("RAG embedding queue worker skipped: mysql_dsn is not configured")
+        return
+
+    from app.ops.rag_embedding_worker import run_loop
+
+    logger.info("RAG embedding queue worker begins")
+    try:
+        run_loop(interval_seconds=3.0)
+    except Exception:
+        logger.exception("RAG embedding queue worker crashed")
+
+
 def start_startup_jobs(settings: Settings) -> None:
-    global _started, _worker_thread, _cache_worker_thread, _train_worker_thread
+    global _started, _worker_thread, _cache_worker_thread, _train_worker_thread, _rag_embedding_worker_thread
     with _start_lock:
         if _started:
             logger.info("Startup jobs already initialized, skipping duplicate launch")
@@ -151,3 +171,11 @@ def start_startup_jobs(settings: Settings) -> None:
         _train_worker_thread.start()
         logger.info("Train queue worker launched, thread_name=%s", _train_worker_thread.name)
 
+        _rag_embedding_worker_thread = threading.Thread(
+            target=_rag_embedding_queue_worker,
+            args=(settings,),
+            name="reco-rag-embedding-worker",
+            daemon=True,
+        )
+        _rag_embedding_worker_thread.start()
+        logger.info("RAG embedding worker launched, thread_name=%s", _rag_embedding_worker_thread.name)

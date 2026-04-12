@@ -421,3 +421,38 @@ GET /search?query=%E7%A7%91%E5%B9%BB%20%E8%AF%BA%E5%85%B0&n=20&offset=0&genre=Sc
 - 前端统一调用本服务 `/api/v1`，不要直连推荐微服务。
 - 推荐接口优先解析 `code/message/data`。
 - 普通业务接口错误优先解析 `ProblemDetail.detail`。
+
+## RAG v2 API Notes
+
+### Stream endpoint
+`POST /api/v1/recommend/rag/stream`
+
+Request body:
+```json
+{
+  "query": "sci-fi with deep story",
+  "n": 8
+}
+```
+
+SSE events:
+- `start`
+- `answer_delta` (`data.text`)
+- `answer_done` (`data.cited_movie_ids`, `data.elapsed_ms`, `data.chars`)
+- `error`
+
+### Async embedding enqueue endpoint
+`POST /api/v1/admin/rag/enqueue`
+
+Request body:
+```json
+{
+  "movie_id": 123
+}
+```
+
+Response data fields:
+- `task_id`
+- `rag_embedding_job_id`
+- `movie_id`
+

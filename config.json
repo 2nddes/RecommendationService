@@ -99,10 +99,17 @@
         "dynamic_pos_weight_cap": 20.0
     },
     "rag": {
+        "embedding_api_base_url": null,
+        "embedding_api_key": null,
         "embedding_model_name": "BAAI/bge-large-zh-v1.5",
-        "faiss_dir": "data/faiss/movie_rag",
-        "faiss_index_name": "movie_index",
-        "build_limit": 50000
+        "llm_api_base_url": null,
+        "llm_api_key": null,
+        "llm_model_name": "gpt-4o-mini",
+        "ann_topk_default": 8,
+        "redis_result_ttl_seconds": 300,
+        "index_hnsw_m": 32,
+        "index_hnsw_ef_search": 64,
+        "embedding_job_max_retry": 3
     },
     "tag_recall": {
         "enabled": true,

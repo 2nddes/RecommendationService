@@ -9,6 +9,7 @@ from flask import Blueprint, Response, request, stream_with_context
 
 from app.common.validation import as_int, as_str
 from app.reco.online.runtime import get_settings
+from app.reco.rag_clients import OpenAICompatError
 from app.reco.rag_service import get_movie_rag_service
 
 
@@ -17,41 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 def _sse(event: str, payload: dict) -> str:
-    return f"event: {event}\\ndata: {json.dumps(payload, ensure_ascii=False)}\\n\\n"
-
-
-def _as_bool(value: object, *, default: bool = False) -> bool:
-    if value is None:
-        return default
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return bool(value)
-    if isinstance(value, str):
-        s = value.strip().lower()
-        if s in {"1", "true", "yes", "on"}:
-            return True
-        if s in {"0", "false", "no", "off"}:
-            return False
-    return default
+    return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
 @rag_bp.post("/recommend/rag/stream")
 def recommend_rag_stream():
-    """RAG 流式推荐接口。
-
-    文档: POST /api/v1/recommend/rag/stream
-    body json:
-      - query: str (required)
-      - n: int (optional, default 8)
-      - rebuild_index: bool (optional, default false)
-    """
-
     payload = request.get_json(silent=True) or {}
     query = as_str(payload.get("query"), name="query").strip()
     n = as_int(payload.get("n", 8), name="n")
-    rebuild_index = _as_bool(payload.get("rebuild_index", False), default=False)
-    logger.info("收到RAG流式推荐请求，query_len=%s, n=%s, rebuild_index=%s", len(query), n, rebuild_index)
 
     if not query:
         raise ValueError("query cannot be empty")
@@ -64,20 +38,31 @@ def recommend_rag_stream():
     @stream_with_context
     def _generate() -> Iterator[str]:
         started_at = time.time()
-        yield _sse("start", {"query": query, "n": n})
+        yield _sse("start", {"query": query, "n": int(n)})
+        try:
+            cited_movie_ids, chunks = rag_service.stream_answer(query=query, n=n)
+            sent_chars = 0
+            for piece in chunks:
+                if not piece:
+                    continue
+                sent_chars += len(piece)
+                yield _sse("answer_delta", {"text": piece})
 
-        count = 0
-        for item in rag_service.stream_recommendations(
-            query=query,
-            n=n,
-            force_rebuild=rebuild_index,
-        ):
-            count += 1
-            yield _sse("movie", {"index": count, "item": item.to_dict()})
-
-        elapsed_ms = int((time.time() - started_at) * 1000)
-        logger.info("RAG流式推荐完成，输出条数=%s, 耗时=%sms", count, elapsed_ms)
-        yield _sse("done", {"count": count, "elapsed_ms": elapsed_ms})
+            elapsed_ms = int((time.time() - started_at) * 1000)
+            yield _sse(
+                "answer_done",
+                {
+                    "elapsed_ms": elapsed_ms,
+                    "cited_movie_ids": cited_movie_ids,
+                    "chars": sent_chars,
+                },
+            )
+        except OpenAICompatError as exc:
+            logger.exception("RAG LLM request failed")
+            yield _sse("error", {"message": str(exc), "type": "llm_error"})
+        except Exception as exc:
+            logger.exception("RAG stream failed")
+            yield _sse("error", {"message": f"{type(exc).__name__}: {exc}", "type": "server_error"})
 
     response = Response(_generate(), mimetype="text/event-stream")
     response.headers["Cache-Control"] = "no-cache"

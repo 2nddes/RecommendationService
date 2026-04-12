@@ -140,9 +140,16 @@ class MMOESettings:
 @dataclass(frozen=True)
 class RagSettings:
     embedding_model_name: str = "BAAI/bge-large-zh-v1.5"
-    faiss_dir: str = "data/faiss/movie_rag"
-    faiss_index_name: str = "movie_index"
-    build_limit: int = 50000
+    embedding_api_base_url: str | None = None
+    embedding_api_key: str | None = None
+    llm_api_base_url: str | None = None
+    llm_api_key: str | None = None
+    llm_model_name: str = "gpt-4o-mini"
+    ann_topk_default: int = 8
+    redis_result_ttl_seconds: int = 300
+    index_hnsw_m: int = 32
+    index_hnsw_ef_search: int = 64
+    embedding_job_max_retry: int = 3
 
 
 @dataclass(frozen=True)

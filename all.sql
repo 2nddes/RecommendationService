@@ -414,3 +414,35 @@ CREATE TABLE `user_token`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 126 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户Token表' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for movie_embeddings
+-- ----------------------------
+DROP TABLE IF EXISTS `movie_embeddings`;
+CREATE TABLE `movie_embeddings` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'primary id',
+  `movie_id` BIGINT UNSIGNED NOT NULL COMMENT 'business movie id',
+  `chunk_text` TEXT NOT NULL COMMENT 'source text for embedding',
+  `embedding_vector` BLOB NOT NULL COMMENT 'serialized float32 vector',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_movie_id` (`movie_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='movie embedding cold storage';
+
+-- ----------------------------
+-- Table structure for rag_embedding_job
+-- ----------------------------
+DROP TABLE IF EXISTS `rag_embedding_job`;
+CREATE TABLE `rag_embedding_job` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'job id',
+  `movie_id` BIGINT UNSIGNED NOT NULL COMMENT 'target movie id',
+  `status` ENUM('pending','processing','completed','failed') NOT NULL DEFAULT 'pending' COMMENT 'job status',
+  `retry_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'retry count',
+  `error` VARCHAR(1000) NULL DEFAULT NULL COMMENT 'last error message',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_status_created` (`status`, `created_at`),
+  KEY `idx_movie_id` (`movie_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='rag embedding async queue';

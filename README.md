@@ -338,3 +338,40 @@ JSON{
 URL: /api/v1/admin/refresh
 Method: POST
 描述: 当有新电影入库或用户冷启动数据产生时，通知 Python 更新局部特征缓存，无需全量训练。
+
+
+### DB migration
+- Apply SQL file manually: `docs/sql/20260412_rag_embeddings.sql`
+- New tables:
+  - `movie_embeddings` (cold embedding storage)
+  - `rag_embedding_job` (async embedding queue)
+
+### New config keys (`config.json -> rag`)
+- `embedding_api_base_url`
+- `embedding_api_key`
+- `embedding_model_name`
+- `llm_api_base_url`
+- `llm_api_key`
+- `llm_model_name`
+- `ann_topk_default`
+- `redis_result_ttl_seconds`
+- `index_hnsw_m`
+- `index_hnsw_ef_search`
+- `embedding_job_max_retry`
+
+### RAG stream protocol
+`POST /api/v1/recommend/rag/stream` now emits SSE events:
+- `start`
+- `answer_delta`
+- `answer_done`
+- `error`
+
+### New admin endpoint
+`POST /api/v1/admin/rag/enqueue`
+
+Body:
+```json
+{ "movie_id": 123 }
+```
+
+Use this endpoint after movie creation (from upstream Java/admin service) to enqueue embedding generation.
