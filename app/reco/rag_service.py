@@ -79,6 +79,7 @@ class MovieRagService:
     def _embedding_cfg(self) -> OpenAICompatConfig:
         return OpenAICompatConfig(
             base_url=str(self._settings.rag.embedding_api_base_url or "").strip(),
+            path=str(self._settings.rag.embedding_api_path or "").strip(),
             api_key=self._settings.rag.embedding_api_key,
             model=self._settings.rag.embedding_model_name,
             timeout_seconds=30.0,
@@ -87,6 +88,7 @@ class MovieRagService:
     def _llm_cfg(self) -> OpenAICompatConfig:
         return OpenAICompatConfig(
             base_url=str(self._settings.rag.llm_api_base_url or "").strip(),
+            path=str(self._settings.rag.llm_api_path or "").strip(),
             api_key=self._settings.rag.llm_api_key,
             model=self._settings.rag.llm_model_name,
             timeout_seconds=60.0,

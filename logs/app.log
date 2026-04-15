@@ -8665,3 +8665,1017 @@ redis.exceptions.ResponseError: Command # 1 (DEL reco:trending:weekly) of pipeli
 2026-04-12 20:32:19 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
 2026-04-12 20:42:24 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
 2026-04-12 20:42:34 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 20:44:39 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-12 20:44:39 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-12 20:44:39 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-12 20:44:39 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-12 20:44:39 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-12 20:44:39 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-12 20:44:39 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-12 20:44:39 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-12 20:44:39 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-12 20:44:39 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-12 20:44:39 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-12 20:44:39 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-12 20:44:39 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-12 20:44:39 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-12 20:44:39 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-12 20:44:39 | INFO | app.reco.startup | Train queue worker begins
+2026-04-12 20:44:39 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-12 20:44:40 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.34.196:5000
+2026-04-12 20:44:40 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-12 20:44:40 | INFO | werkzeug |  * Restarting with stat
+2026-04-12 20:44:43 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-12 20:44:43 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-12 20:44:43 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-12 20:44:43 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-12 20:44:43 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-12 20:44:45 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-12 20:44:45 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-12 20:44:45 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-12 20:44:45 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-12 20:44:45 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-12 20:44:45 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-12 20:44:45 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-12 20:44:45 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-12 20:44:45 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-12 20:44:45 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-12 20:44:45 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-12 20:44:45 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-12 20:44:45 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-12 20:44:45 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-12 20:44:45 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-12 20:44:45 | INFO | app.reco.startup | Train queue worker begins
+2026-04-12 20:44:45 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-12 20:44:45 | WARNING | werkzeug |  * Debugger is active!
+2026-04-12 20:44:45 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-12 20:44:48 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-12 20:44:48 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-12 20:44:48 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-12 20:44:48 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-12 20:44:48 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=20
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=20
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=20
+2026-04-12 20:45:25 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=20, 返回条数=20
+2026-04-12 20:45:25 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:45:25] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=40
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=40
+2026-04-12 20:45:25 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=40
+2026-04-12 20:45:25 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=40, 返回条数=40
+2026-04-12 20:45:25 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:45:25] "GET /api/v1/recommend/trending?window=all_time&n=40 HTTP/1.1" 200 -
+2026-04-12 20:45:37 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:45:37 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:45:42 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:45:42 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:45:42 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:45:42 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:45:42] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:45:42 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:45:45 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:45:45 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:45:45] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:45:52 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:45:52 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:45:52 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:45:52 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:45:52 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:45:52 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:45:52] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:46:01 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:46:04 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:46:04 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:46:04] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:47:22 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 20:47:26 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 20:53:19 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:53:19 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:53:19 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:53:19 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:53:19 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:53:19 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:53:19] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:53:21 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:53:24 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:53:24 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:53:24] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:53:32 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:53:32 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:53:32 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:53:32 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:53:32 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:53:32 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:53:32] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:54:05 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:54:07 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:54:07 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:54:07] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:54:25 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:54:25 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:54:25 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:54:25 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:54:25 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:54:25 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:54:25] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:54:33 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:54:36 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:54:36 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:54:36] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:57:33 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 20:57:40 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=20
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=20
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=20
+2026-04-12 20:57:43 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=20, 返回条数=20
+2026-04-12 20:57:43 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:57:43] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=40
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=40
+2026-04-12 20:57:43 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=40
+2026-04-12 20:57:43 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=40, 返回条数=40
+2026-04-12 20:57:43 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:57:43] "GET /api/v1/recommend/trending?window=all_time&n=40 HTTP/1.1" 200 -
+2026-04-12 20:57:46 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 20:57:46 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 20:57:46 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 20:57:46 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 20:57:46 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 20:57:46 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:57:46] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 20:57:47 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:57:50 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:57:50 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:57:50] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 20:58:19 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=12, passthrough_keys=['search_mode', 'source']
+2026-04-12 20:58:22 | INFO | app.api.v1_search | search completed, query_len=0, total=68400, returned=12
+2026-04-12 20:58:22 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 20:58:22] "GET /api/v1/search?n=12&offset=12&source=search_panel&search_mode=smart&tag_id=1610 HTTP/1.1" 200 -
+2026-04-12 21:10:33 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 21:10:35 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 21:23:23 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 21:23:23 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=20
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=20
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=20
+2026-04-12 21:24:47 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=20, 返回条数=20
+2026-04-12 21:24:47 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:24:47] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation started, window=all_time, n=40
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=all_time, returned=40
+2026-04-12 21:24:47 | INFO | app.services.recommendation_service | Trending recommendation completed, window=all_time, returned=40
+2026-04-12 21:24:47 | INFO | app.api.v1_recommend | 趋势推荐完成，window=all_time, n=40, 返回条数=40
+2026-04-12 21:24:47 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:24:47] "GET /api/v1/recommend/trending?window=all_time&n=40 HTTP/1.1" 200 -
+2026-04-12 21:24:53 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=27010768, n=20
+2026-04-12 21:24:53 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=27010768, n=20
+2026-04-12 21:24:53 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=27010768, ann_candidates=21
+2026-04-12 21:24:53 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=27010768, returned=20
+2026-04-12 21:24:53 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=27010768, 返回条数=20
+2026-04-12 21:24:53 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:24:53] "GET /api/v1/recommend/item?movie_id=27010768&n=20 HTTP/1.1" 200 -
+2026-04-12 21:24:55 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:24:55 | INFO | app.api.v1_search | search completed, query_len=0, total=2608, returned=12
+2026-04-12 21:24:55 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:24:55] "GET /api/v1/search?n=12&offset=0&source=click_tag&search_mode=smart&tag_id=1631 HTTP/1.1" 200 -
+2026-04-12 21:28:02 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:28:02 | INFO | app.api.v1_search | search completed, query_len=0, total=6961, returned=12
+2026-04-12 21:28:02 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:02] "GET /api/v1/search?n=12&offset=0&source=search_panel&search_mode=smart&tag_id=1615 HTTP/1.1" 200 -
+2026-04-12 21:28:02 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=12, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:28:02 | INFO | app.api.v1_search | search completed, query_len=0, total=6961, returned=12
+2026-04-12 21:28:02 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:02] "GET /api/v1/search?n=12&offset=12&source=search_panel&search_mode=smart&tag_id=1615 HTTP/1.1" 200 -
+2026-04-12 21:28:06 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=24, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:28:06 | INFO | app.api.v1_search | search completed, query_len=0, total=6961, returned=12
+2026-04-12 21:28:06 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:06] "GET /api/v1/search?n=12&offset=24&source=search_panel&search_mode=smart&tag_id=1615 HTTP/1.1" 200 -
+2026-04-12 21:28:07 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=36, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:28:07 | INFO | app.api.v1_search | search completed, query_len=0, total=6961, returned=12
+2026-04-12 21:28:07 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:07] "GET /api/v1/search?n=12&offset=36&source=search_panel&search_mode=smart&tag_id=1615 HTTP/1.1" 200 -
+2026-04-12 21:28:13 | INFO | app.api.v1_search | search started, query_len=0, n=12, offset=48, passthrough_keys=['search_mode', 'source']
+2026-04-12 21:28:13 | INFO | app.api.v1_search | search completed, query_len=0, total=6961, returned=12
+2026-04-12 21:28:13 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:13] "GET /api/v1/search?n=12&offset=48&source=search_panel&search_mode=smart&tag_id=1615 HTTP/1.1" 200 -
+2026-04-12 21:28:15 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1418019, n=20
+2026-04-12 21:28:15 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1418019, n=20
+2026-04-12 21:28:16 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1418019, ann_candidates=21
+2026-04-12 21:28:16 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1418019, returned=20
+2026-04-12 21:28:16 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1418019, 返回条数=20
+2026-04-12 21:28:16 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:16] "GET /api/v1/recommend/item?movie_id=1418019&n=20 HTTP/1.1" 200 -
+2026-04-12 21:28:30 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-12 21:28:30 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-12 21:28:30 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=220, item_preview=[1907966, 5975246, 1304031, 2242142, 3006123], elapsed_ms=1.74
+2026-04-12 21:28:30 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=220
+2026-04-12 21:28:30 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=220, total_before_pop=240, has_next=True
+2026-04-12 21:28:30 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.37
+2026-04-12 21:28:30 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:30] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-12 21:28:31 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-12 21:28:31 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-12 21:28:31 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=200, item_preview=[26310757, 1760631, 2225784, 26310750, 6432898], elapsed_ms=0.53
+2026-04-12 21:28:31 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=200
+2026-04-12 21:28:31 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=200, total_before_pop=220, has_next=True
+2026-04-12 21:28:31 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.96
+2026-04-12 21:28:31 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:31] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-12 21:28:33 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1418019, n=20
+2026-04-12 21:28:33 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1418019, n=20
+2026-04-12 21:28:33 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1418019, ann_candidates=21
+2026-04-12 21:28:33 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1418019, returned=20
+2026-04-12 21:28:33 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1418019, 返回条数=20
+2026-04-12 21:28:33 | INFO | werkzeug | 127.0.0.1 - - [12/Apr/2026 21:28:33] "GET /api/v1/recommend/item?movie_id=1418019&n=20 HTTP/1.1" 200 -
+2026-04-13 14:21:47 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:21:47 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:21:47 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 14:21:47 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 14:21:47 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 14:21:47 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 14:21:47 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 14:21:47 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 14:21:47 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 14:21:47 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 14:21:47 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 14:21:47 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 14:21:47 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 14:21:47 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 14:21:47 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 14:21:47 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 14:21:47 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 14:21:47 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.66.170.8:5000
+2026-04-13 14:21:47 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-13 14:21:47 | INFO | werkzeug |  * Restarting with stat
+2026-04-13 14:21:51 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 14:21:51 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 14:21:51 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 14:21:51 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 14:21:51 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 14:21:55 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:21:55 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:21:55 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 14:21:55 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 14:21:55 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 14:21:55 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 14:21:55 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 14:21:55 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 14:21:55 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 14:21:55 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 14:21:55 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 14:21:55 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 14:21:55 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 14:21:55 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 14:21:55 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 14:21:55 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 14:21:55 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 14:21:55 | WARNING | werkzeug |  * Debugger is active!
+2026-04-13 14:21:55 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-13 14:21:58 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 14:21:58 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 14:21:58 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 14:21:58 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 14:21:58 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 14:23:13 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 14:23:13 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 14:23:13 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=180, item_preview=[1298653, 1295575, 2978660, 1305336, 24875658], elapsed_ms=2.05
+2026-04-13 14:23:13 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=180
+2026-04-13 14:23:13 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=180, total_before_pop=200, has_next=True
+2026-04-13 14:23:13 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.53
+2026-04-13 14:23:13 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 14:23:13] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 14:23:14 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 14:23:14 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 14:23:14 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=160, item_preview=[1467779, 1299158, 2119624, 25858721, 1759912], elapsed_ms=0.66
+2026-04-13 14:23:14 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=160
+2026-04-13 14:23:14 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=160, total_before_pop=180, has_next=True
+2026-04-13 14:23:14 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.10
+2026-04-13 14:23:14 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 14:23:14] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 14:23:25 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=5298994, n=20
+2026-04-13 14:23:25 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=5298994, n=20
+2026-04-13 14:23:30 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=5298994, ann_candidates=21
+2026-04-13 14:23:30 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=5298994, returned=20
+2026-04-13 14:23:30 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=5298994, 返回条数=20
+2026-04-13 14:23:30 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 14:23:30] "GET /api/v1/recommend/item?movie_id=5298994&n=20 HTTP/1.1" 200 -
+2026-04-13 14:24:32 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 14:24:33 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 14:34:35 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 14:34:38 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 14:59:31 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:59:31 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:59:31 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 14:59:31 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 14:59:31 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 14:59:31 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 14:59:31 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 14:59:31 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 14:59:31 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 14:59:31 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 14:59:31 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 14:59:31 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 14:59:31 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 14:59:31 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 14:59:31 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 14:59:31 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 14:59:31 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 14:59:33 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://198.18.0.1:5000
+2026-04-13 14:59:33 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-13 14:59:33 | INFO | werkzeug |  * Restarting with stat
+2026-04-13 14:59:35 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 14:59:35 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 14:59:35 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 14:59:35 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 14:59:35 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 14:59:38 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:59:38 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 14:59:38 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 14:59:38 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 14:59:38 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 14:59:38 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 14:59:38 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 14:59:38 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 14:59:38 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 14:59:38 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 14:59:38 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 14:59:38 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 14:59:38 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 14:59:38 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 14:59:38 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 14:59:38 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 14:59:38 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 14:59:38 | WARNING | werkzeug |  * Debugger is active!
+2026-04-13 14:59:38 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-13 14:59:41 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 14:59:41 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 14:59:41 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 14:59:41 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 14:59:41 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 15:02:15 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:02:17 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:08:48 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 15:08:48 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=0, remaining=0, item_preview=[], elapsed_ms=1.74
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=0, remaining=0
+2026-04-13 15:08:48 | WARNING | app.services.recommendation_service | User recommendation pop cache miss, user_id=649125, n=20, build_target=500, action=acquire_build_lock
+2026-04-13 15:08:48 | INFO | app.common.redis_cache | User recommendation lock acquire, user_id=649125, key=reco:recommend:user:649125:build_lock, ttl=10, acquired=True, elapsed_ms=1.82
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649125, n=20
+2026-04-13 15:08:48 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=0, remaining=0, item_preview=[], elapsed_ms=0.70
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation pop double-check cache read, user_id=649125, n=20, returned=0, remaining=0
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation pop cache build required, user_id=649125, n=20, build_target=500, reason=double_check_empty
+2026-04-13 15:08:48 | INFO | app.services.recommendation_service | User recommendation cache build started, user_id=649125, build_target=500
+2026-04-13 15:08:48 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=649125, movie_id=None, n=500
+2026-04-13 15:08:51 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=500, 累计候选=500
+2026-04-13 15:08:51 | INFO | app.reco.recall.tag_inverted | 用户无有效标签偏好，tag倒排召回返回空，user_id=649125
+2026-04-13 15:08:51 | INFO | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 新增候选=0, 累计候选=500
+2026-04-13 15:08:51 | INFO | app.reco.pipeline | 召回阶段完成，候选数=500, elapsed_ms=3180.15
+2026-04-13 15:08:52 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649125 | candidate_movie_count=500 | movie_stats_rows=500 | item_static_tag_rows=3020 | user_profile_found=True | short_hist_len=0 | long_interest_len=0 | movie_stats_ms=406.72 | item_static_tags_ms=174.66 | user_profile_ms=1.66 | short_hist_ms=4.21 | long_interest_ms=1.30 | user_click_tag_ms=0.70 | user_click_total_ms=0.56 | elapsed_ms=617.43
+2026-04-13 15:08:52 | WARNING | app.reco.ranking.mmoe.ranker | MMoE inference uses fallback/default features. reasons=short-term behavior sequence missing; long-term high-rating tag sequence missing user_id=649125 candidate_count=500
+2026-04-13 15:08:52 | WARNING | app.reco.ranking.mmoe.ranker | MMoE inference uses PAD+mask for missing long-interest sequence. padded=500 total=500 user_id=649125
+2026-04-13 15:08:53 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649125 | candidate_count=500 | tensor_build_ms=1178.07 | infer_ms=76.32 | sort_ms=0.19 | elapsed_ms=1255.93
+2026-04-13 15:08:53 | INFO | app.reco.pipeline | 排序阶段完成，结果数=500, 排序器=mmoe, elapsed_ms=1256.32
+2026-04-13 15:08:53 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=500, 重排器=random_shuffle, elapsed_ms=0.29
+2026-04-13 15:08:53 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=649125, candidate_count=500, ranked_count=500, returned_count=500, recall_ms=3180.15, rank_ms=1256.32, rerank_ms=0.29, elapsed_ms=4437.12
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649125, build_target=500, built_count=500, item_preview=[1304837, 26937558, 1308872, 1302723, 10342941]
+2026-04-13 15:08:53 | INFO | app.common.redis_cache | User recommendation store, user_id=649125, key=reco:recommend:user:649125, stored_count=500, ttl=86400, item_preview=[1304837, 26937558, 1308872, 1302723, 10342941], elapsed_ms=17.81
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation cache stored, user_id=649125, build_target=500, stored_count=500
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation cache build completed, user_id=649125, build_target=500, built_count=500, stored_count=500, elapsed_ms=4456.10
+2026-04-13 15:08:53 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=480, item_preview=[1304837, 26937558, 1308872, 1302723, 10342941], elapsed_ms=1.07
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation pop post-build cache read, user_id=649125, n=20, returned=20, remaining=480
+2026-04-13 15:08:53 | INFO | app.common.redis_cache | User recommendation lock release, user_id=649125, key=reco:recommend:user:649125:build_lock, released=True, elapsed_ms=4.01
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True
+2026-04-13 15:08:53 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=False, elapsed_ms=4468.56
+2026-04-13 15:08:53 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 15:08:53] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 15:08:54 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 15:08:54 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 15:08:54 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=460, item_preview=[6791750, 4910200, 1292489, 1301022, 1292911], elapsed_ms=0.78
+2026-04-13 15:08:54 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=460
+2026-04-13 15:08:54 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True
+2026-04-13 15:08:54 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.39
+2026-04-13 15:08:54 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 15:08:54] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 15:08:57 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=5298994, n=20
+2026-04-13 15:08:57 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=5298994, n=20
+2026-04-13 15:08:57 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=5298994, ann_candidates=21
+2026-04-13 15:08:57 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=5298994, returned=20
+2026-04-13 15:08:57 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=5298994, 返回条数=20
+2026-04-13 15:08:57 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 15:08:57] "GET /api/v1/recommend/item?movie_id=5298994&n=20 HTTP/1.1" 200 -
+2026-04-13 15:09:19 | INFO | app.api.v1_search | search started, query_len=3, n=20, offset=0, passthrough_keys=['type']
+2026-04-13 15:09:23 | INFO | app.api.v1_search | search completed, query_len=3, total=8, returned=8
+2026-04-13 15:09:23 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 15:09:23] "GET /api/v1/search?query=asd&type=person HTTP/1.1" 200 -
+2026-04-13 15:12:42 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:12:45 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:25:44 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:25:46 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:38:46 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 15:38:48 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 16:28:32 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 16:28:32 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 16:28:32 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 16:28:32 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 16:28:32 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 16:28:32 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 16:28:32 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 16:28:32 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 16:28:32 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 16:28:32 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 16:28:32 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 16:28:32 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 16:28:32 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 16:28:32 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 16:28:32 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 16:28:32 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 16:28:32 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 16:28:34 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://198.18.0.1:5000
+2026-04-13 16:28:34 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-13 16:28:34 | INFO | werkzeug |  * Restarting with stat
+2026-04-13 16:28:35 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 16:28:35 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 16:28:35 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 16:28:35 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 16:28:35 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 16:28:38 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 16:28:38 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-13 16:28:38 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-13 16:28:38 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-13 16:28:38 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-13 16:28:38 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-13 16:28:38 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-13 16:28:38 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-13 16:28:38 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-13 16:28:38 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-13 16:28:38 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-13 16:28:38 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-13 16:28:38 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-13 16:28:38 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-13 16:28:38 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-13 16:28:38 | INFO | app.reco.startup | Train queue worker begins
+2026-04-13 16:28:38 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-13 16:28:38 | WARNING | werkzeug |  * Debugger is active!
+2026-04-13 16:28:38 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-13 16:28:41 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-13 16:28:41 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-13 16:28:41 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-13 16:28:41 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-13 16:28:41 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-13 16:29:36 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 16:29:36 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 16:29:36 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=440, item_preview=[26425468, 1300031, 2055431, 3004522, 25913634], elapsed_ms=2.94
+2026-04-13 16:29:36 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=440
+2026-04-13 16:29:36 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True
+2026-04-13 16:29:36 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=3.82
+2026-04-13 16:29:36 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 16:29:36] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 16:29:37 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 16:29:37 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 16:29:37 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=420, item_preview=[4754237, 26310750, 5299186, 3769423, 26315236], elapsed_ms=0.55
+2026-04-13 16:29:37 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=420
+2026-04-13 16:29:37 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True
+2026-04-13 16:29:37 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.98
+2026-04-13 16:29:37 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 16:29:37] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 16:29:49 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-13 16:29:49 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-13 16:29:49 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=400, item_preview=[27110296, 26700664, 4118924, 1297574, 30174420], elapsed_ms=0.71
+2026-04-13 16:29:49 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=400
+2026-04-13 16:29:49 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=400, total_before_pop=420, has_next=True
+2026-04-13 16:29:49 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.35
+2026-04-13 16:29:49 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 16:29:49] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-13 16:29:56 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=26310131, n=20
+2026-04-13 16:29:56 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=26310131, n=20
+2026-04-13 16:30:00 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=26310131, ann_candidates=21
+2026-04-13 16:30:00 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=26310131, returned=20
+2026-04-13 16:30:00 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=26310131, 返回条数=20
+2026-04-13 16:30:00 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 16:30:00] "GET /api/v1/recommend/item?movie_id=26310131&n=20 HTTP/1.1" 200 -
+2026-04-13 16:30:11 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=26310131, n=20
+2026-04-13 16:30:11 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=26310131, n=20
+2026-04-13 16:30:11 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=26310131, ann_candidates=21
+2026-04-13 16:30:11 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=26310131, returned=20
+2026-04-13 16:30:11 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=26310131, 返回条数=20
+2026-04-13 16:30:11 | INFO | werkzeug | 127.0.0.1 - - [13/Apr/2026 16:30:11] "GET /api/v1/recommend/item?movie_id=26310131&n=20 HTTP/1.1" 200 -
+2026-04-13 16:31:04 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-13 16:31:04 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 18:52:47 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-14 18:52:47 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-14 18:52:47 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-14 18:52:47 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-14 18:52:47 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-14 18:52:47 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-14 18:52:47 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-14 18:52:47 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-14 18:52:47 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-14 18:52:47 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-14 18:52:47 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-14 18:52:47 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-14 18:52:47 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-14 18:52:47 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-14 18:52:47 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-14 18:52:47 | INFO | app.reco.startup | Train queue worker begins
+2026-04-14 18:52:47 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-14 18:52:47 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-14 18:52:47 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-14 18:52:47 | INFO | werkzeug |  * Restarting with stat
+2026-04-14 18:52:52 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-14 18:52:52 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-14 18:52:52 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-14 18:52:52 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-14 18:52:52 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-14 18:52:57 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-14 18:52:57 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-14 18:52:57 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-14 18:52:57 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-14 18:52:57 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-14 18:52:57 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-14 18:52:57 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-14 18:52:57 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-14 18:52:57 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-14 18:52:57 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-14 18:52:57 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-14 18:52:57 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-14 18:52:57 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-14 18:52:57 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-14 18:52:57 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-14 18:52:57 | INFO | app.reco.startup | Train queue worker begins
+2026-04-14 18:52:57 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-14 18:52:57 | WARNING | werkzeug |  * Debugger is active!
+2026-04-14 18:52:57 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-14 18:53:00 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-14 18:53:00 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-14 18:53:00 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-14 18:53:00 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-14 18:53:00 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-14 18:55:45 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 18:55:46 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 18:56:03 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 18:56:03 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=0, remaining=0, item_preview=[], elapsed_ms=1.72
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=0, remaining=0
+2026-04-14 18:56:03 | WARNING | app.services.recommendation_service | User recommendation pop cache miss, user_id=649125, n=20, build_target=500, action=acquire_build_lock
+2026-04-14 18:56:03 | INFO | app.common.redis_cache | User recommendation lock acquire, user_id=649125, key=reco:recommend:user:649125:build_lock, ttl=10, acquired=True, elapsed_ms=0.80
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649125, n=20
+2026-04-14 18:56:03 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=0, remaining=0, item_preview=[], elapsed_ms=0.33
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation pop double-check cache read, user_id=649125, n=20, returned=0, remaining=0
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation pop cache build required, user_id=649125, n=20, build_target=500, reason=double_check_empty
+2026-04-14 18:56:03 | INFO | app.services.recommendation_service | User recommendation cache build started, user_id=649125, build_target=500
+2026-04-14 18:56:03 | INFO | app.reco.pipeline | 推荐流水线开始，user_id=649125, movie_id=None, n=500
+2026-04-14 18:56:06 | INFO | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 新增候选=500, 累计候选=500
+2026-04-14 18:56:06 | INFO | app.reco.recall.tag_inverted | 用户无有效标签偏好，tag倒排召回返回空，user_id=649125
+2026-04-14 18:56:06 | INFO | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 新增候选=0, 累计候选=500
+2026-04-14 18:56:06 | INFO | app.reco.pipeline | 召回阶段完成，候选数=500, elapsed_ms=3212.66
+2026-04-14 18:56:08 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649125 | candidate_movie_count=500 | movie_stats_rows=500 | item_static_tag_rows=3020 | user_profile_found=True | short_hist_len=0 | long_interest_len=0 | movie_stats_ms=687.85 | item_static_tags_ms=210.47 | user_profile_ms=3.33 | short_hist_ms=8.97 | long_interest_ms=1.60 | user_click_tag_ms=0.71 | user_click_total_ms=0.49 | elapsed_ms=923.30
+2026-04-14 18:56:08 | WARNING | app.reco.ranking.mmoe.ranker | MMoE inference uses fallback/default features. reasons=short-term behavior sequence missing; long-term high-rating tag sequence missing user_id=649125 candidate_count=500
+2026-04-14 18:56:08 | WARNING | app.reco.ranking.mmoe.ranker | MMoE inference uses PAD+mask for missing long-interest sequence. padded=500 total=500 user_id=649125
+2026-04-14 18:56:08 | INFO | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649125 | candidate_count=500 | tensor_build_ms=1704.95 | infer_ms=69.16 | sort_ms=0.52 | elapsed_ms=1775.63
+2026-04-14 18:56:08 | INFO | app.reco.pipeline | 排序阶段完成，结果数=500, 排序器=mmoe, elapsed_ms=1775.78
+2026-04-14 18:56:08 | INFO | app.reco.pipeline | 重排阶段完成，返回条数=500, 重排器=random_shuffle, elapsed_ms=0.52
+2026-04-14 18:56:08 | INFO | app.reco.pipeline | 推荐流水线完成，user_id=649125, candidate_count=500, ranked_count=500, returned_count=500, recall_ms=3212.66, rank_ms=1775.78, rerank_ms=0.52, elapsed_ms=4989.23
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649125, build_target=500, built_count=500, item_preview=[1304837, 6844861, 3421317, 24772973, 3272846]
+2026-04-14 18:56:08 | INFO | app.common.redis_cache | User recommendation store, user_id=649125, key=reco:recommend:user:649125, stored_count=500, ttl=86400, item_preview=[1304837, 6844861, 3421317, 24772973, 3272846], elapsed_ms=13.02
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation cache stored, user_id=649125, build_target=500, stored_count=500
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation cache build completed, user_id=649125, build_target=500, built_count=500, stored_count=500, elapsed_ms=5003.75
+2026-04-14 18:56:08 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=480, item_preview=[1304837, 6844861, 3421317, 24772973, 3272846], elapsed_ms=0.37
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation pop post-build cache read, user_id=649125, n=20, returned=20, remaining=480
+2026-04-14 18:56:08 | INFO | app.common.redis_cache | User recommendation lock release, user_id=649125, key=reco:recommend:user:649125:build_lock, released=True, elapsed_ms=4.59
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True
+2026-04-14 18:56:08 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=False, elapsed_ms=5014.82
+2026-04-14 18:56:08 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:56:08] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 18:56:09 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 18:56:09 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=460, item_preview=[5975246, 2083965, 1307899, 27005972, 1419946], elapsed_ms=0.75
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=460
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.79
+2026-04-14 18:56:09 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:56:09] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 18:56:09 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 18:56:09 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=440, item_preview=[30177319, 5053061, 10568385, 2346028, 4944008], elapsed_ms=1.01
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=440
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True
+2026-04-14 18:56:09 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.44
+2026-04-14 18:56:09 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:56:09] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 18:56:46 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=6782006, n=20
+2026-04-14 18:56:46 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=6782006, n=20
+2026-04-14 18:56:46 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=6782006, ann_candidates=21
+2026-04-14 18:56:46 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=6782006, returned=20
+2026-04-14 18:56:46 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=6782006, 返回条数=20
+2026-04-14 18:56:46 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:56:46] "GET /api/v1/recommend/item?movie_id=6782006&n=20 HTTP/1.1" 200 -
+2026-04-14 18:59:01 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=4885827, n=20
+2026-04-14 18:59:01 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=4885827, n=20
+2026-04-14 18:59:01 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=4885827, ann_candidates=21
+2026-04-14 18:59:01 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=4885827, returned=20
+2026-04-14 18:59:01 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=4885827, 返回条数=20
+2026-04-14 18:59:01 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:59:01] "GET /api/v1/recommend/item?movie_id=4885827&n=20 HTTP/1.1" 200 -
+2026-04-14 18:59:06 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=2370936, n=20
+2026-04-14 18:59:06 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=2370936, n=20
+2026-04-14 18:59:06 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=2370936, ann_candidates=21
+2026-04-14 18:59:06 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=2370936, returned=20
+2026-04-14 18:59:06 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=2370936, 返回条数=20
+2026-04-14 18:59:06 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:59:06] "GET /api/v1/recommend/item?movie_id=2370936&n=20 HTTP/1.1" 200 -
+2026-04-14 18:59:59 | INFO | app.services.recommendation_service | Trending recommendation started, window=weekly, n=36
+2026-04-14 18:59:59 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=weekly, returned=36
+2026-04-14 18:59:59 | INFO | app.services.recommendation_service | Trending recommendation completed, window=weekly, returned=36
+2026-04-14 18:59:59 | INFO | app.api.v1_recommend | 趋势推荐完成，window=weekly, n=36, 返回条数=36
+2026-04-14 18:59:59 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 18:59:59] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-14 19:00:05 | INFO | app.services.recommendation_service | Trending recommendation started, window=one_year, n=36
+2026-04-14 19:00:05 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=one_year, returned=36
+2026-04-14 19:00:05 | INFO | app.services.recommendation_service | Trending recommendation completed, window=one_year, returned=36
+2026-04-14 19:00:05 | INFO | app.api.v1_recommend | 趋势推荐完成，window=one_year, n=36, 返回条数=36
+2026-04-14 19:00:05 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:05] "GET /api/v1/recommend/trending?window=one_year&n=36 HTTP/1.1" 200 -
+2026-04-14 19:00:06 | INFO | app.services.recommendation_service | Trending recommendation started, window=half_year, n=36
+2026-04-14 19:00:06 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=half_year, returned=36
+2026-04-14 19:00:06 | INFO | app.services.recommendation_service | Trending recommendation completed, window=half_year, returned=36
+2026-04-14 19:00:06 | INFO | app.api.v1_recommend | 趋势推荐完成，window=half_year, n=36, 返回条数=36
+2026-04-14 19:00:06 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:06] "GET /api/v1/recommend/trending?window=half_year&n=36 HTTP/1.1" 200 -
+2026-04-14 19:00:08 | INFO | app.services.recommendation_service | Trending recommendation started, window=monthly, n=36
+2026-04-14 19:00:08 | INFO | app.services.recommendation_service | Trending recommendation cache hit, window=monthly, returned=36
+2026-04-14 19:00:08 | INFO | app.services.recommendation_service | Trending recommendation completed, window=monthly, returned=36
+2026-04-14 19:00:08 | INFO | app.api.v1_recommend | 趋势推荐完成，window=monthly, n=36, 返回条数=36
+2026-04-14 19:00:08 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:08] "GET /api/v1/recommend/trending?window=monthly&n=36 HTTP/1.1" 200 -
+2026-04-14 19:00:22 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 19:00:22 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 19:00:22 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=420, item_preview=[5048106, 25716089, 3740059, 1303276, 30329892], elapsed_ms=5.72
+2026-04-14 19:00:22 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=420
+2026-04-14 19:00:22 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True
+2026-04-14 19:00:22 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=6.24
+2026-04-14 19:00:22 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:22] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 19:00:33 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:33] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-14 19:00:33 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:33] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-14 19:00:57 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 19:00:57 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 19:00:57 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=400, item_preview=[26806092, 2310291, 1309028, 2160611, 1937946], elapsed_ms=1.02
+2026-04-14 19:00:57 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=400
+2026-04-14 19:00:57 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=400, total_before_pop=420, has_next=True
+2026-04-14 19:00:57 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.85
+2026-04-14 19:00:57 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:57] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 19:00:58 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 19:00:58 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 19:00:58 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=380, item_preview=[1984340, 3786288, 1297710, 1307702, 30459903], elapsed_ms=0.76
+2026-04-14 19:00:58 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=380
+2026-04-14 19:00:58 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=380, total_before_pop=400, has_next=True
+2026-04-14 19:00:58 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.65
+2026-04-14 19:00:58 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:00:58] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 19:01:14 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1040990, n=20
+2026-04-14 19:01:14 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1040990, n=20
+2026-04-14 19:01:15 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1040990, ann_candidates=21
+2026-04-14 19:01:15 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1040990, returned=20
+2026-04-14 19:01:15 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1040990, 返回条数=20
+2026-04-14 19:01:15 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:01:15] "GET /api/v1/recommend/item?movie_id=1040990&n=20 HTTP/1.1" 200 -
+2026-04-14 19:01:32 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=6782006, n=20
+2026-04-14 19:01:32 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=6782006, n=20
+2026-04-14 19:01:32 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=6782006, ann_candidates=21
+2026-04-14 19:01:32 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=6782006, returned=20
+2026-04-14 19:01:32 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=6782006, 返回条数=20
+2026-04-14 19:01:32 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 19:01:32] "GET /api/v1/recommend/item?movie_id=6782006&n=20 HTTP/1.1" 200 -
+2026-04-14 19:06:02 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:06:08 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:19:04 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:19:08 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:32:03 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:32:06 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:45:04 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:45:06 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:58:32 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 19:58:33 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:02:10 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 20:02:10 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 20:02:10 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=360, item_preview=[3091271, 1433368, 1305405, 3389614, 1301637], elapsed_ms=1.44
+2026-04-14 20:02:10 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=360
+2026-04-14 20:02:10 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=360, total_before_pop=380, has_next=True
+2026-04-14 20:02:10 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.98
+2026-04-14 20:02:10 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 20:02:10] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 20:02:10 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=6782006, n=20
+2026-04-14 20:02:10 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=6782006, n=20
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=6782006, ann_candidates=21
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=6782006, returned=20
+2026-04-14 20:02:11 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=6782006, 返回条数=20
+2026-04-14 20:02:11 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 20:02:11] "GET /api/v1/recommend/item?movie_id=6782006&n=20 HTTP/1.1" 200 -
+2026-04-14 20:02:11 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=2370936, n=20
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=2370936, n=20
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=2370936, ann_candidates=21
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=2370936, returned=20
+2026-04-14 20:02:11 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=2370936, 返回条数=20
+2026-04-14 20:02:11 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 20:02:11] "GET /api/v1/recommend/item?movie_id=2370936&n=20 HTTP/1.1" 200 -
+2026-04-14 20:02:11 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 20:02:11 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=340, item_preview=[25704556, 1296353, 4734603, 4848690, 1296828], elapsed_ms=1.06
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=340
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=340, total_before_pop=360, has_next=True
+2026-04-14 20:02:11 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.78
+2026-04-14 20:02:11 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 20:02:11] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 20:11:10 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:11:10 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:23:46 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:23:46 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:36:26 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:36:26 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:49:12 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 20:49:13 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:00:37 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 21:00:37 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=320, item_preview=[6888764, 2084493, 5968888, 1307126, 2354900], elapsed_ms=3.09
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=320
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=320, total_before_pop=340, has_next=True
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=4.80
+2026-04-14 21:00:37 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 21:00:37] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 21:00:37 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-14 21:00:37 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=300, item_preview=[25843851, 1299472, 1293077, 1299158, 27045991], elapsed_ms=0.90
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=300
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=300, total_before_pop=320, has_next=True
+2026-04-14 21:00:37 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.97
+2026-04-14 21:00:37 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 21:00:37] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-14 21:00:39 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=6888764, n=20
+2026-04-14 21:00:39 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=6888764, n=20
+2026-04-14 21:00:39 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=6888764, ann_candidates=21
+2026-04-14 21:00:39 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=6888764, returned=20
+2026-04-14 21:00:39 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=6888764, 返回条数=20
+2026-04-14 21:00:39 | INFO | werkzeug | 127.0.0.1 - - [14/Apr/2026 21:00:39] "GET /api/v1/recommend/item?movie_id=6888764&n=20 HTTP/1.1" 200 -
+2026-04-14 21:02:24 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:02:24 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:15:24 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:15:25 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:28:40 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:28:42 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:42:15 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:42:15 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:55:54 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 21:55:54 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:09:03 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:09:04 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:22:13 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:22:14 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:35:38 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-14 22:35:38 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:26:52 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 09:26:52 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 09:26:52 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-15 09:26:52 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-15 09:26:52 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-15 09:26:52 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-15 09:26:52 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-15 09:26:52 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-15 09:26:52 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-15 09:26:52 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-15 09:26:52 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-15 09:26:52 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-15 09:26:52 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-15 09:26:52 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-15 09:26:52 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-15 09:26:52 | INFO | app.reco.startup | Train queue worker begins
+2026-04-15 09:26:52 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-15 09:26:52 | INFO | werkzeug | [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-15 09:26:52 | INFO | werkzeug | [33mPress CTRL+C to quit[0m
+2026-04-15 09:26:52 | INFO | werkzeug |  * Restarting with stat
+2026-04-15 09:26:55 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-15 09:26:55 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-15 09:26:55 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-15 09:26:55 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-15 09:26:55 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-15 09:26:57 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 09:26:57 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 09:26:57 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-15 09:26:57 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-15 09:26:57 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-15 09:26:57 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-15 09:26:57 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-15 09:26:57 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-15 09:26:57 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-15 09:26:57 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-15 09:26:57 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-15 09:26:57 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-15 09:26:57 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-15 09:26:57 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-15 09:26:57 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-15 09:26:57 | INFO | app.reco.startup | Train queue worker begins
+2026-04-15 09:26:57 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-15 09:26:57 | WARNING | werkzeug |  * Debugger is active!
+2026-04-15 09:26:57 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-15 09:27:00 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-15 09:27:00 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-15 09:27:00 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-15 09:27:00 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-15 09:27:00 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-15 09:28:05 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:28:05 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:28:05 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=280, item_preview=[4847593, 1306827, 1981174, 1295250, 1481649], elapsed_ms=1.49
+2026-04-15 09:28:05 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=280
+2026-04-15 09:28:05 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=280, total_before_pop=300, has_next=True
+2026-04-15 09:28:05 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.11
+2026-04-15 09:28:05 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:28:05] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:28:06 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:28:06 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:28:06 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=260, item_preview=[4164444, 5996813, 1298093, 2056667, 20365404], elapsed_ms=0.60
+2026-04-15 09:28:06 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=260
+2026-04-15 09:28:06 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=260, total_before_pop=280, has_next=True
+2026-04-15 09:28:06 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.08
+2026-04-15 09:28:06 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:28:06] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:28:30 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1481649, n=20
+2026-04-15 09:28:30 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1481649, n=20
+2026-04-15 09:28:33 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1481649, ann_candidates=21
+2026-04-15 09:28:33 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1481649, returned=20
+2026-04-15 09:28:33 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1481649, 返回条数=20
+2026-04-15 09:28:33 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:28:33] "GET /api/v1/recommend/item?movie_id=1481649&n=20 HTTP/1.1" 200 -
+2026-04-15 09:29:40 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:29:41 | INFO | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:29:44 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1481649, n=20
+2026-04-15 09:29:44 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1481649, n=20
+2026-04-15 09:29:44 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1481649, ann_candidates=21
+2026-04-15 09:29:44 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1481649, returned=20
+2026-04-15 09:29:44 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1481649, 返回条数=20
+2026-04-15 09:29:44 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:29:44] "GET /api/v1/recommend/item?movie_id=1481649&n=20 HTTP/1.1" 200 -
+2026-04-15 09:39:30 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:39:31 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:45:48 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:45:48 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:45:48 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=240, item_preview=[2237865, 6432898, 1826652, 1305324, 30321898], elapsed_ms=1.78
+2026-04-15 09:45:48 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=240
+2026-04-15 09:45:48 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=240, total_before_pop=260, has_next=True
+2026-04-15 09:45:48 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.11
+2026-04-15 09:45:48 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:45:48] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:45:48 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1481649, n=20
+2026-04-15 09:45:48 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1481649, n=20
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1481649, ann_candidates=21
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1481649, returned=20
+2026-04-15 09:45:49 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1481649, 返回条数=20
+2026-04-15 09:45:49 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:45:49] "GET /api/v1/recommend/item?movie_id=1481649&n=20 HTTP/1.1" 200 -
+2026-04-15 09:45:49 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:45:49 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=220, item_preview=[3586725, 5056860, 1831574, 30337905, 30132462], elapsed_ms=0.73
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=220
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=220, total_before_pop=240, has_next=True
+2026-04-15 09:45:49 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.26
+2026-04-15 09:45:49 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:45:49] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:45:50 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:45:50 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:45:50 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=200, item_preview=[25698359, 26754513, 33446459, 1294215, 1899892], elapsed_ms=0.97
+2026-04-15 09:45:50 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=200
+2026-04-15 09:45:50 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=200, total_before_pop=220, has_next=True
+2026-04-15 09:45:50 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.17
+2026-04-15 09:45:50 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:45:50] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:47:48 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:47:48 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=180, item_preview=[4016491, 26287114, 25803257, 6721629, 1307179], elapsed_ms=0.72
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=180
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=180, total_before_pop=200, has_next=True
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.00
+2026-04-15 09:47:48 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:47:48] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:47:48 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1481649, n=20
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1481649, n=20
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1481649, ann_candidates=21
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1481649, returned=20
+2026-04-15 09:47:48 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1481649, 返回条数=20
+2026-04-15 09:47:48 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:47:48] "GET /api/v1/recommend/item?movie_id=1481649&n=20 HTTP/1.1" 200 -
+2026-04-15 09:47:48 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:47:48 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=160, item_preview=[1449962, 2991847, 1299463, 4812793, 4193254], elapsed_ms=2.14
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=160
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=160, total_before_pop=180, has_next=True
+2026-04-15 09:47:48 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.94
+2026-04-15 09:47:48 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:47:48] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:52:05 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:52:05 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 09:54:58 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:54:58 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:54:58 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=140, item_preview=[2050453, 6791750, 1296266, 26937558, 1304529], elapsed_ms=1.31
+2026-04-15 09:54:58 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=140
+2026-04-15 09:54:58 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=140, total_before_pop=160, has_next=True
+2026-04-15 09:54:58 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.81
+2026-04-15 09:54:58 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:54:58] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:54:59 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=120, item_preview=[5135326, 5948656, 26315236, 1299462, 3808604], elapsed_ms=0.64
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=120
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=120, total_before_pop=140, has_next=True
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.17
+2026-04-15 09:54:59 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:54:59] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:54:59 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=1481649, n=20
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=1481649, n=20
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1481649, ann_candidates=21
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=1481649, returned=20
+2026-04-15 09:54:59 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=1481649, 返回条数=20
+2026-04-15 09:54:59 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:54:59] "GET /api/v1/recommend/item?movie_id=1481649&n=20 HTTP/1.1" 200 -
+2026-04-15 09:54:59 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=100, item_preview=[1292489, 6829661, 26599177, 20284939, 26984196], elapsed_ms=1.11
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=100
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=100, total_before_pop=120, has_next=True
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.94
+2026-04-15 09:54:59 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:54:59] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:54:59 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:54:59 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=80, item_preview=[1433065, 3072813, 5355595, 26680554, 1296126], elapsed_ms=1.03
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=80
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=80, total_before_pop=100, has_next=True
+2026-04-15 09:54:59 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.77
+2026-04-15 09:54:59 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:54:59] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:55:00 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:55:00 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:55:00 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=60, item_preview=[1974230, 1923712, 3210953, 3788093, 2126953], elapsed_ms=0.79
+2026-04-15 09:55:00 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=60
+2026-04-15 09:55:00 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=60, total_before_pop=80, has_next=True
+2026-04-15 09:55:00 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.37
+2026-04-15 09:55:00 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:00] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:55:01 | INFO | app.api.v1_recommend | 收到相似影片推荐请求，movie_id=26350539, n=20
+2026-04-15 09:55:01 | INFO | app.services.recommendation_service | Item recommendation started, movie_id=26350539, n=20
+2026-04-15 09:55:01 | INFO | app.services.recommendation_service | Item recommendation ANN finished, movie_id=26350539, ann_candidates=21
+2026-04-15 09:55:01 | INFO | app.services.recommendation_service | Item recommendation completed, movie_id=26350539, returned=20
+2026-04-15 09:55:01 | INFO | app.api.v1_recommend | 相似影片推荐完成，movie_id=26350539, 返回条数=20
+2026-04-15 09:55:01 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:01] "GET /api/v1/recommend/item?movie_id=26350539&n=20 HTTP/1.1" 200 -
+2026-04-15 09:55:51 | INFO | app.api.v1_search | search started, query_len=0, n=20, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-15 09:55:51 | INFO | app.api.v1_search | search completed, query_len=0, total=168, returned=20
+2026-04-15 09:55:51 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:51] "GET /api/v1/search?n=20&offset=0&source=click_tag&search_mode=smart&tag_id=2445 HTTP/1.1" 200 -
+2026-04-15 09:55:51 | INFO | app.api.v1_search | search started, query_len=0, n=20, offset=20, passthrough_keys=['search_mode', 'source']
+2026-04-15 09:55:51 | INFO | app.api.v1_search | search completed, query_len=0, total=168, returned=20
+2026-04-15 09:55:51 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:51] "GET /api/v1/search?n=20&offset=20&source=click_tag&search_mode=smart&tag_id=2445 HTTP/1.1" 200 -
+2026-04-15 09:55:55 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:55:55 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:55:55 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=40, item_preview=[5301572, 2988163, 1968438, 1903060, 20254226], elapsed_ms=0.78
+2026-04-15 09:55:55 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=40
+2026-04-15 09:55:55 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=40, total_before_pop=60, has_next=True
+2026-04-15 09:55:55 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.32
+2026-04-15 09:55:55 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:55] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:55:57 | INFO | app.api.v1_search | search started, query_len=0, n=20, offset=0, passthrough_keys=['search_mode', 'source']
+2026-04-15 09:55:57 | INFO | app.api.v1_search | search completed, query_len=0, total=445, returned=20
+2026-04-15 09:55:57 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:55:57] "GET /api/v1/search?n=20&offset=0&source=click_tag&search_mode=smart&tag_id=3877 HTTP/1.1" 200 -
+2026-04-15 09:56:03 | INFO | app.api.v1_recommend | 收到个性化推荐请求，user_id=649125, mode=pop, n=20
+2026-04-15 09:56:03 | INFO | app.services.recommendation_service | User recommendation request, user_id=649125, mode=pop, n=20
+2026-04-15 09:56:03 | INFO | app.common.redis_cache | User recommendation pop, user_id=649125, key=reco:recommend:user:649125, count=20, returned_count=20, remaining=20, item_preview=[5073852, 26700664, 1303462, 3668291, 26656831], elapsed_ms=0.61
+2026-04-15 09:56:03 | INFO | app.services.recommendation_service | User recommendation pop initial cache read, user_id=649125, n=20, returned=20, remaining=20
+2026-04-15 09:56:03 | INFO | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=20, total_before_pop=40, has_next=True
+2026-04-15 09:56:03 | INFO | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.07
+2026-04-15 09:56:03 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:56:03] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-15 09:56:27 | INFO | werkzeug | 127.0.0.1 - - [15/Apr/2026 09:56:27] "POST /api/v1/recommend/rag/stream HTTP/1.1" 200 -
+2026-04-15 09:56:27 | ERROR | app.api.v1_rag | RAG LLM request failed
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\api\v1_rag.py", line 45, in _generate
+    for piece in chunks:
+                 ^^^^^^
+  File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 87, in stream_chat_completion
+    raise OpenAICompatError("llm_api_base_url_missing")
+app.reco.rag_clients.OpenAICompatError: llm_api_base_url_missing
+2026-04-15 10:05:24 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 10:05:25 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-15 10:16:24 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\reco\\rag_clients.py', reloading
+2026-04-15 10:16:25 | INFO | werkzeug |  * Restarting with stat
+2026-04-15 10:16:46 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:16:46 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:16:46 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-15 10:16:46 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-15 10:16:46 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-15 10:16:46 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-15 10:16:46 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-15 10:16:46 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-15 10:16:46 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-15 10:16:46 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-15 10:16:46 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-15 10:16:46 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-15 10:16:46 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-15 10:16:46 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-15 10:16:46 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-15 10:16:46 | INFO | app.reco.startup | Train queue worker begins
+2026-04-15 10:16:46 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-15 10:16:46 | WARNING | werkzeug |  * Debugger is active!
+2026-04-15 10:16:46 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-15 10:16:49 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-15 10:16:49 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-15 10:16:49 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-15 10:16:49 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-15 10:16:49 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-15 10:17:08 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\reco\\rag_service.py', reloading
+2026-04-15 10:17:09 | INFO | werkzeug |  * Restarting with stat
+2026-04-15 10:17:12 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:17:12 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:17:12 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-15 10:17:12 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-15 10:17:12 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-15 10:17:12 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-15 10:17:12 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-15 10:17:12 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-15 10:17:12 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-15 10:17:12 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-15 10:17:12 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-15 10:17:12 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-15 10:17:12 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-15 10:17:12 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-15 10:17:12 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-15 10:17:12 | INFO | app.reco.startup | Train queue worker begins
+2026-04-15 10:17:12 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-15 10:17:12 | WARNING | werkzeug |  * Debugger is active!
+2026-04-15 10:17:12 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-15 10:17:15 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-15 10:17:15 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-15 10:17:15 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-15 10:17:15 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-15 10:17:15 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-15 10:17:49 | INFO | werkzeug |  * Detected change in 'd:\\project\\Python\\RecommendationService\\app\\reco\\rag_clients.py', reloading
+2026-04-15 10:17:50 | INFO | werkzeug |  * Restarting with stat
+2026-04-15 10:17:54 | INFO | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:17:54 | INFO | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-15 10:17:54 | INFO | app.reco.startup | Startup init tasks begin
+2026-04-15 10:17:54 | INFO | app.reco.startup | Startup init async warmup started, thread_name=reco-startup-init
+2026-04-15 10:17:54 | INFO | app.reco.startup | Starting two-tower full rebuild
+2026-04-15 10:17:54 | INFO | app.reco.startup | Startup refresh worker begins
+2026-04-15 10:17:54 | INFO | app.reco.startup | Startup worker launched, thread_name=reco-startup-refresh-worker
+2026-04-15 10:17:54 | INFO | app.reco.startup | Entering two-tower refresh loop, interval_seconds=86400
+2026-04-15 10:17:54 | INFO | app.reco.startup | Entering cache precompute loop, interval_seconds=600
+2026-04-15 10:17:54 | INFO | app.reco.startup | Cache precompute worker launched, thread_name=reco-cache-precompute-worker
+2026-04-15 10:17:54 | INFO | app.reco.startup | Train queue worker launched, thread_name=reco-train-queue-worker
+2026-04-15 10:17:54 | INFO | app.reco.startup | RAG embedding worker launched, thread_name=reco-rag-embedding-worker
+2026-04-15 10:17:54 | INFO | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-15 10:17:54 | INFO | app.reco.startup | RAG embedding queue worker begins
+2026-04-15 10:17:54 | INFO | app.ops.rag_embedding_worker | RAG embedding worker started, polling_interval_seconds=3.0
+2026-04-15 10:17:54 | INFO | app.reco.startup | Train queue worker begins
+2026-04-15 10:17:54 | INFO | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-15 10:17:54 | WARNING | werkzeug |  * Debugger is active!
+2026-04-15 10:17:54 | INFO | werkzeug |  * Debugger PIN: 608-292-889
+2026-04-15 10:17:57 | INFO | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-15 10:17:57 | INFO | app.reco.rag_service | RAG index loaded from MySQL, rows=0
+2026-04-15 10:17:57 | INFO | app.reco.startup | RAG HNSW index preloaded from MySQL
+2026-04-15 10:17:57 | INFO | app.reco.runtime | Initializing global Recommendation Pipeline...
+2026-04-15 10:17:57 | INFO | app.reco.startup | Global recommendation pipeline preloaded
+2026-04-15 10:18:07 | INFO | app.reco.startup | Scheduled cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}

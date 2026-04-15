@@ -18,6 +18,7 @@ class OpenAICompatError(RuntimeError):
 @dataclass(frozen=True)
 class OpenAICompatConfig:
     base_url: str
+    path: str
     api_key: str | None
     model: str
     timeout_seconds: float = 30.0
@@ -63,7 +64,7 @@ def create_embedding(*, cfg: OpenAICompatConfig, text: str) -> list[float]:
         "input": text,
     }
     data = _post_json(
-        url=_build_url(cfg.base_url, "/embeddings"),
+        url=_build_url(cfg.base_url, cfg.path),
         payload=payload,
         api_key=cfg.api_key,
         timeout_seconds=float(cfg.timeout_seconds),
@@ -97,7 +98,7 @@ def stream_chat_completion(*, cfg: OpenAICompatConfig, system_prompt: str, user_
     }
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = Request(
-        url=_build_url(cfg.base_url, "/chat/completions"),
+        url=_build_url(cfg.base_url, cfg.path),
         data=body,
         method="POST",
         headers=_build_headers(cfg.api_key),
@@ -166,7 +167,7 @@ def complete_chat(*, cfg: OpenAICompatConfig, system_prompt: str, user_prompt: s
         ],
     }
     data = _post_json(
-        url=_build_url(cfg.base_url, "/chat/completions"),
+        url=_build_url(cfg.base_url, cfg.path),
         payload=payload,
         api_key=cfg.api_key,
         timeout_seconds=float(cfg.timeout_seconds),
