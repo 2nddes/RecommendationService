@@ -79,7 +79,7 @@ class MovieRagService:
     def _embedding_cfg(self) -> OpenAICompatConfig:
         return OpenAICompatConfig(
             base_url=str(self._settings.rag.embedding_api_base_url or "").strip(),
-            path=str(self._settings.rag.embedding_api_path or "").strip(),
+            path=str(self._settings.rag.embedding_api_path or "/v1/embeddings").strip(),
             api_key=self._settings.rag.embedding_api_key,
             model=self._settings.rag.embedding_model_name,
             timeout_seconds=30.0,
@@ -88,11 +88,32 @@ class MovieRagService:
     def _llm_cfg(self) -> OpenAICompatConfig:
         return OpenAICompatConfig(
             base_url=str(self._settings.rag.llm_api_base_url or "").strip(),
-            path=str(self._settings.rag.llm_api_path or "").strip(),
+            path=str(self._settings.rag.llm_api_path or "/v1/chat/completions").strip(),
             api_key=self._settings.rag.llm_api_key,
             model=self._settings.rag.llm_model_name,
             timeout_seconds=60.0,
         )
+
+    def list_missing_embedding_movie_ids(self, *, limit: int | None = None) -> list[int]:
+        limit_value = None if limit is None else max(0, int(limit))
+        sql_text = """
+            SELECT m.movie_id
+            FROM movie m
+            LEFT JOIN movie_embeddings me
+              ON me.movie_id = m.movie_id
+             AND COALESCE(OCTET_LENGTH(me.embedding_vector), 0) > 0
+            WHERE m.deleted_at IS NULL
+              AND me.movie_id IS NULL
+            ORDER BY m.movie_id ASC
+        """
+        params: dict[str, Any] = {}
+        if limit_value:
+            sql_text += "\nLIMIT :limit"
+            params["limit"] = int(limit_value)
+
+        with self._ensure_engine().connect() as conn:
+            rows = conn.execute(text(sql_text), params).mappings().all()
+        return [int(row["movie_id"]) for row in rows if row.get("movie_id") is not None]
 
     @staticmethod
     def _vector_to_blob(vec: np.ndarray) -> bytes:
@@ -209,11 +230,23 @@ class MovieRagService:
 
         mark_component_success("rag", details={"rows": int(len(vectors)), "dim": int(dim), "m": int(hnsw_m)})
 
-    def load_from_mysql(self) -> None:
+    def load_from_mysql(self) -> dict[str, Any]:
         try:
             rows = self._fetch_embedding_rows()
             self._build_index_from_rows(rows)
-            logger.info("RAG index loaded from MySQL, rows=%s", len(rows))
+            indexed_rows = len(rows)
+            state = "ready" if indexed_rows > 0 else "empty"
+            logger.info(
+                "RAG index loaded from MySQL, state=%s, source_rows=%s, indexed_rows=%s",
+                state,
+                len(rows),
+                indexed_rows,
+            )
+            return {
+                "state": state,
+                "source_rows": int(len(rows)),
+                "indexed_rows": int(indexed_rows),
+            }
         except Exception as exc:
             mark_component_error("rag", exc, details={"stage": "load_from_mysql"})
             logger.exception("RAG index load failed")
@@ -230,10 +263,95 @@ class MovieRagService:
     def _fetch_movie(self, movie_id: int) -> dict[str, Any] | None:
         sql = text(
             """
-            SELECT movie_id, title, year, COALESCE(summary, '') AS summary
-            FROM movie
-            WHERE movie_id = :movie_id
-              AND deleted_at IS NULL
+            SELECT
+                m.movie_id,
+                m.title,
+                m.year,
+                m.duration_min,
+                COALESCE(m.summary, '') AS summary,
+                COALESCE(
+                    (
+                        SELECT GROUP_CONCAT(d.person_name ORDER BY d.sort_id ASC SEPARATOR ', ')
+                        FROM (
+                            SELECT p.person_name AS person_name, MIN(mp.movie_person_id) AS sort_id
+                            FROM movie_person mp
+                            JOIN person p ON p.person_id = mp.person_id
+                            WHERE mp.movie_id = m.movie_id
+                              AND mp.person_role = 'director'
+                              AND COALESCE(TRIM(p.person_name), '') <> ''
+                            GROUP BY p.person_name
+                        ) d
+                    ),
+                    ''
+                ) AS directors,
+                COALESCE(
+                    (
+                        SELECT GROUP_CONCAT(a.person_name ORDER BY a.sort_id ASC SEPARATOR ', ')
+                        FROM (
+                            SELECT p.person_name AS person_name, MIN(mp.movie_person_id) AS sort_id
+                            FROM movie_person mp
+                            JOIN person p ON p.person_id = mp.person_id
+                            WHERE mp.movie_id = m.movie_id
+                              AND mp.person_role = 'actor'
+                              AND COALESCE(TRIM(p.person_name), '') <> ''
+                            GROUP BY p.person_name
+                        ) a
+                    ),
+                    ''
+                ) AS actors,
+                COALESCE(
+                    (
+                        SELECT GROUP_CONCAT(r.region_name ORDER BY r.sort_id ASC SEPARATOR ', ')
+                        FROM (
+                            SELECT COALESCE(NULLIF(TRIM(dr.name_cn), ''), TRIM(dr.name_en)) AS region_name, MIN(mr.region_id) AS sort_id
+                            FROM movie_region mr
+                            JOIN dict_region dr ON dr.region_id = mr.region_id
+                            WHERE mr.movie_id = m.movie_id
+                              AND COALESCE(NULLIF(TRIM(dr.name_cn), ''), TRIM(dr.name_en), '') <> ''
+                            GROUP BY COALESCE(NULLIF(TRIM(dr.name_cn), ''), TRIM(dr.name_en))
+                        ) r
+                    ),
+                    ''
+                ) AS regions,
+                COALESCE(
+                    (
+                        SELECT GROUP_CONCAT(l.language_name ORDER BY l.is_primary DESC, l.sort_id ASC SEPARATOR ', ')
+                        FROM (
+                            SELECT
+                                COALESCE(NULLIF(TRIM(dl.name_cn), ''), TRIM(dl.name_en)) AS language_name,
+                                MAX(CASE WHEN ml.is_primary = 1 THEN 1 ELSE 0 END) AS is_primary,
+                                MIN(ml.lang_id) AS sort_id
+                            FROM movie_language ml
+                            JOIN dict_language dl ON dl.lang_id = ml.lang_id
+                            WHERE ml.movie_id = m.movie_id
+                              AND COALESCE(NULLIF(TRIM(dl.name_cn), ''), TRIM(dl.name_en), '') <> ''
+                            GROUP BY COALESCE(NULLIF(TRIM(dl.name_cn), ''), TRIM(dl.name_en))
+                        ) l
+                    ),
+                    ''
+                ) AS languages,
+                COALESCE(
+                    (
+                        SELECT GROUP_CONCAT(t.tag_name ORDER BY t.vote_up DESC, t.hot_score DESC, t.tag_id ASC SEPARATOR ', ')
+                        FROM (
+                            SELECT
+                                td.tag_id AS tag_id,
+                                td.tag_name AS tag_name,
+                                COALESCE(mt.vote_up, 0) AS vote_up,
+                                COALESCE(mt.hot_score, 0) AS hot_score
+                            FROM movie_tag mt
+                            JOIN tag_dict td ON td.tag_id = mt.tag_id
+                            WHERE mt.movie_id = m.movie_id
+                              AND COALESCE(TRIM(td.tag_name), '') <> ''
+                            ORDER BY COALESCE(mt.vote_up, 0) DESC, COALESCE(mt.hot_score, 0) DESC, td.tag_id ASC
+                            LIMIT 4
+                        ) t
+                    ),
+                    ''
+                ) AS top_tags
+            FROM movie m
+            WHERE m.movie_id = :movie_id
+              AND m.deleted_at IS NULL
             LIMIT 1
             """
         )
@@ -245,17 +363,76 @@ class MovieRagService:
             "movie_id": int(row["movie_id"]),
             "title": str(row.get("title") or "").strip(),
             "year": int(row["year"]) if row.get("year") is not None else None,
+            "duration_min": int(row["duration_min"]) if row.get("duration_min") is not None else None,
+            "directors": str(row.get("directors") or "").strip(),
+            "actors": str(row.get("actors") or "").strip(),
+            "regions": str(row.get("regions") or "").strip(),
+            "languages": str(row.get("languages") or "").strip(),
+            "top_tags": str(row.get("top_tags") or "").strip(),
             "summary": str(row.get("summary") or "").strip(),
         }
 
+    def list_active_movie_ids(self) -> list[int]:
+        sql = text(
+            """
+            SELECT movie_id
+            FROM movie
+            WHERE deleted_at IS NULL
+            ORDER BY movie_id ASC
+            """
+        )
+        with self._ensure_engine().connect() as conn:
+            rows = conn.execute(sql).mappings().all()
+        return [int(row["movie_id"]) for row in rows if row.get("movie_id") is not None]
+
+    def prune_stale_embeddings(self) -> int:
+        sql = text(
+            """
+            DELETE FROM movie_embeddings
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM movie
+                WHERE movie.movie_id = movie_embeddings.movie_id
+                  AND movie.deleted_at IS NULL
+            )
+            """
+        )
+        with self._ensure_engine().begin() as conn:
+            rs = conn.execute(sql)
+        return max(0, int(rs.rowcount or 0))
+
     @staticmethod
-    def _build_chunk_text(movie: dict[str, Any]) -> str:
-        title = movie.get("title") or "Unknown"
-        year = movie.get("year")
-        summary = movie.get("summary") or ""
+    def _format_scalar(value: Any) -> str:
+        if value is None:
+            return ""
+        return " ".join(str(value).split()).strip()
+
+    def _truncate_summary(self, summary: str) -> str:
+        text = str(summary or "").strip()
+        max_chars = max(0, int(self._settings.rag.embedding_summary_max_chars))
+        if max_chars > 0 and len(text) > max_chars:
+            return text[:max_chars].strip()
+        return text
+
+    def _build_chunk_text(self, movie: dict[str, Any]) -> str:
+        title = self._format_scalar(movie.get("title"))
+        year = self._format_scalar(movie.get("year"))
+        directors = self._format_scalar(movie.get("directors"))
+        duration_min = self._format_scalar(movie.get("duration_min"))
+        regions = self._format_scalar(movie.get("regions"))
+        languages = self._format_scalar(movie.get("languages"))
+        top_tags = self._format_scalar(movie.get("top_tags"))
+        actors = self._format_scalar(movie.get("actors"))
+        summary = self._truncate_summary(self._format_scalar(movie.get("summary")))
         return (
             f"movie_title: {title}\n"
-            f"release_year: {year if year is not None else 'unknown'}\n"
+            f"release_year: {year}\n"
+            f"director: {directors}\n"
+            f"duration_minutes: {duration_min}\n"
+            f"country_or_region: {regions}\n"
+            f"language: {languages}\n"
+            f"top_vote_tags: {top_tags}\n"
+            f"actors: {actors}\n"
             f"summary: {summary}"
         )
 
@@ -303,42 +480,7 @@ class MovieRagService:
                 raise RuntimeError("movie_embeddings_insert_failed: empty_insert_id")
             return int(rs.lastrowid)
 
-    def _sync_index_item(self, *, emb_id: int, movie_id: int, chunk_text: str, vector: np.ndarray) -> None:
-        self.ensure_loaded()
-        faiss = self._ensure_faiss_module()
-        vec = self._normalize(np.asarray(vector, dtype=np.float32).reshape(-1))
-        if vec.size <= 0:
-            raise RuntimeError("embedding_vector_empty")
-
-        with self._lock:
-            if self._dim is None:
-                dim = int(vec.size)
-                hnsw_m = max(8, int(self._settings.rag.index_hnsw_m))
-                base = faiss.IndexHNSWFlat(dim, hnsw_m, faiss.METRIC_INNER_PRODUCT)
-                base.hnsw.efSearch = max(32, int(self._settings.rag.index_hnsw_ef_search))
-                self._index = faiss.IndexIDMap2(base)
-                self._dim = dim
-
-            if int(vec.size) != int(self._dim):
-                raise RuntimeError(f"embedding_dim_mismatch: expected={self._dim}, got={vec.size}")
-
-            if self._index is None:
-                raise RuntimeError("rag_index_not_initialized")
-
-            old_id = self._faiss_by_movie.get(int(movie_id))
-            if old_id is not None and int(old_id) != int(emb_id):
-                try:
-                    self._index.remove_ids(np.asarray([int(old_id)], dtype=np.int64))
-                except Exception:
-                    logger.warning("RAG remove old vector failed, old_id=%s", old_id, exc_info=True)
-
-            self._index.remove_ids(np.asarray([int(emb_id)], dtype=np.int64))
-            self._index.add_with_ids(vec.reshape(1, -1), np.asarray([int(emb_id)], dtype=np.int64))
-            self._movie_by_faiss[int(emb_id)] = int(movie_id)
-            self._faiss_by_movie[int(movie_id)] = int(emb_id)
-            self._chunk_by_faiss[int(emb_id)] = chunk_text
-
-    def upsert_one(self, movie_id: int) -> int:
+    def upsert_one(self, movie_id: int, *, refresh_index: bool = True) -> int:
         movie = self._fetch_movie(int(movie_id))
         if movie is None:
             raise RuntimeError(f"movie_not_found: {movie_id}")
@@ -350,7 +492,8 @@ class MovieRagService:
             raise RuntimeError("embedding_vector_empty")
 
         emb_id = self._upsert_embedding_row(movie_id=int(movie_id), chunk_text=chunk_text, vector=vector)
-        self._sync_index_item(emb_id=emb_id, movie_id=int(movie_id), chunk_text=chunk_text, vector=vector)
+        if refresh_index:
+            self.load_from_mysql()
         self._cache_faiss_mapping(emb_id=int(emb_id), movie_id=int(movie_id))
         return int(emb_id)
 

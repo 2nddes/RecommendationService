@@ -4,14 +4,45 @@ import json
 import logging
 from typing import Any, Dict, List
 
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-
 from app.common.settings import Settings
+from app.ops.task_ops import TASK_TYPE_TRAIN, UNSET, claim_next_task, create_task, get_task_by_id, list_tasks, update_task
 from app.reco.training.common import TrainOutcome, get_mysql_engine, log_event, log_exception, to_train_outcome
 
 
 logger = logging.getLogger(__name__)
+
+
+def _merge_metrics(payload: Dict[str, Any], result: Dict[str, Any], error: str | None) -> Dict[str, Any]:
+    merged: Dict[str, Any] = {}
+    if isinstance(payload, dict):
+        merged.update(payload)
+    if isinstance(result, dict):
+        merged.update(result)
+    if error and "error" not in merged:
+        merged["error"] = error
+    return merged
+
+
+def _map_train_job(task: Dict[str, Any]) -> Dict[str, Any]:
+    payload = task.get("payload") or {}
+    result = task.get("result") or {}
+    error = task.get("error")
+    mode = str(payload.get("mode") or "full")
+    return {
+        "id": int(task["id"]),
+        "task_ref": task.get("task_ref"),
+        "mode": mode,
+        "status": task.get("status"),
+        "metrics": _merge_metrics(payload, result, error),
+        "payload": payload,
+        "progress": task.get("progress") or {},
+        "result": result,
+        "error": error,
+        "created_at": task.get("created_at"),
+        "updated_at": task.get("updated_at"),
+        "started_at": task.get("started_at"),
+        "finished_at": task.get("finished_at"),
+    }
 
 
 def _rebuild_global_pipeline_singleton(*, reason: str) -> None:
@@ -122,59 +153,23 @@ def refresh_current_models(settings: Settings) -> Dict[str, Any]:
 
 
 def create_model_train_job(*, mysql_dsn: str | None, mode: str = "full", metrics: Dict[str, Any] | None = None) -> int:
-    engine = get_mysql_engine(mysql_dsn, logger=logger)
-
-    sql = """
-    INSERT INTO model_train_job(mode, status, metrics)
-    VALUES (:mode, 'pending', CAST(:metrics AS JSON))
-    """
     payload = {"queued": True}
     if isinstance(metrics, dict):
         payload.update(metrics)
-    try:
-        with engine.begin() as conn:
-            rs = conn.execute(text(sql), {"mode": str(mode), "metrics": json.dumps(payload, ensure_ascii=False)})
-            new_id = rs.lastrowid
-    except SQLAlchemyError as e:
-        raise RuntimeError(f"create_model_train_job_failed: {e}") from e
-
-    if new_id is None:
-        raise RuntimeError("create_model_train_job_failed: empty_insert_id")
-    return int(new_id)
+    payload["mode"] = str(mode)
+    return create_task(
+        mysql_dsn=mysql_dsn,
+        task_type=TASK_TYPE_TRAIN,
+        status="pending",
+        payload=payload,
+    )
 
 
 def claim_next_model_train_job(*, mysql_dsn: str | None) -> Dict[str, Any] | None:
-    engine = get_mysql_engine(mysql_dsn, logger=logger)
-
-    select_sql = text(
-        """
-        SELECT id, mode, status, metrics, created_at, finished_at
-        FROM model_train_job
-        WHERE status = 'pending'
-        ORDER BY id ASC
-        LIMIT 1
-        FOR UPDATE
-        """
-    )
-    update_sql = text(
-        """
-        UPDATE model_train_job
-        SET status = 'processing'
-        WHERE id = :job_id
-        """
-    )
-
-    try:
-        with engine.begin() as conn:
-            row = conn.execute(select_sql).mappings().first()
-            if row is None:
-                return None
-            job_id = int(row.get("id"))
-            conn.execute(update_sql, {"job_id": job_id})
-    except SQLAlchemyError as e:
-        raise RuntimeError(f"claim_model_train_job_failed: {e}") from e
-
-    return get_model_train_job(mysql_dsn=mysql_dsn, job_id=job_id)
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_TRAIN)
+    if task is None:
+        return None
+    return _map_train_job(task)
 
 
 def update_model_train_job(
@@ -185,62 +180,27 @@ def update_model_train_job(
     metrics: Dict[str, Any] | None = None,
     set_finished_at: bool = False,
 ) -> None:
-    engine = get_mysql_engine(mysql_dsn, logger=logger)
-
-    updates = ["status = :status"]
-    params: Dict[str, Any] = {"status": str(status), "job_id": int(job_id)}
-
-    if metrics is not None:
-        updates.append("metrics = CAST(:metrics AS JSON)")
-        params["metrics"] = json.dumps(metrics, ensure_ascii=False)
-    if set_finished_at:
-        updates.append("finished_at = CURRENT_TIMESTAMP")
-
-    sql = f"UPDATE model_train_job SET {', '.join(updates)} WHERE id = :job_id"
-
-    try:
-        with engine.begin() as conn:
-            conn.execute(text(sql), params)
-    except SQLAlchemyError as e:
-        raise RuntimeError(f"update_model_train_job_failed: {e}") from e
+    error = metrics.get("error") if isinstance(metrics, dict) else None
+    update_task(
+        mysql_dsn=mysql_dsn,
+        task_id=job_id,
+        status=str(status),
+        result=metrics if isinstance(metrics, dict) else UNSET,
+        error=error if metrics is not None or str(status) == "completed" else UNSET,
+        set_finished_at=bool(set_finished_at),
+        set_started_at_if_null=str(status) == "processing",
+    )
 
 
 def get_model_train_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any] | None:
-    engine = get_mysql_engine(mysql_dsn, logger=logger)
-
-    sql = """
-    SELECT id, mode, status, metrics, created_at, finished_at
-    FROM model_train_job
-    WHERE id = :job_id
-    LIMIT 1
-    """
-
     try:
-        with engine.connect() as conn:
-            row = conn.execute(text(sql), {"job_id": int(job_id)}).mappings().first()
-    except SQLAlchemyError as e:
-        log_exception(logger, "train.job.get_failed", e, job_id=job_id)
-        raise RuntimeError(f"get_model_train_job_failed: {type(e).__name__}: {e}") from e
-
-    if row is None:
+        task = get_task_by_id(mysql_dsn=mysql_dsn, task_id=job_id, task_type=TASK_TYPE_TRAIN)
+    except RuntimeError as exc:
+        log_exception(logger, "train.job.get_failed", exc, job_id=job_id)
+        raise
+    if task is None:
         return None
-
-    created_at = row.get("created_at")
-    finished_at = row.get("finished_at")
-    metrics = row.get("metrics")
-    if metrics is None:
-        metrics = {}
-    if isinstance(metrics, str):
-        metrics = json.loads(metrics)
-
-    return {
-        "id": int(row.get("id")),
-        "mode": row.get("mode"),
-        "status": row.get("status"),
-        "metrics": metrics,
-        "created_at": created_at.isoformat() if created_at is not None else None,
-        "finished_at": finished_at.isoformat() if finished_at is not None else None,
-    }
+    return _map_train_job(task)
 
 
 def list_model_train_jobs(
@@ -250,54 +210,16 @@ def list_model_train_jobs(
     offset: int = 0,
     status: str | None = None,
 ) -> List[Dict[str, Any]]:
-    engine = get_mysql_engine(mysql_dsn, logger=logger)
-
-    clauses = []
-    params: Dict[str, Any] = {
-        "limit": int(limit),
-        "offset": int(offset),
-    }
-
-    if status:
-        clauses.append("status = :status")
-        params["status"] = str(status)
-
-    where_sql = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-    sql = f"""
-    SELECT id, mode, status, metrics, created_at, finished_at
-    FROM model_train_job
-    {where_sql}
-    ORDER BY id DESC
-    LIMIT :limit OFFSET :offset
-    """
-
     try:
-        with engine.connect() as conn:
-            rows = conn.execute(text(sql), params).mappings().all()
-    except SQLAlchemyError as e:
-        log_exception(logger, "train.job.list_failed", e, limit=limit, offset=offset, status=status)
-        raise RuntimeError(f"list_model_train_jobs_failed: {type(e).__name__}: {e}") from e
-
-    out: List[Dict[str, Any]] = []
-    for row in rows:
-        created_at = row.get("created_at")
-        finished_at = row.get("finished_at")
-        metrics = row.get("metrics")
-        if metrics is None:
-            metrics = {}
-        if isinstance(metrics, str):
-            metrics = json.loads(metrics)
-
-        out.append(
-            {
-                "id": int(row.get("id")),
-                "mode": row.get("mode"),
-                "status": row.get("status"),
-                "metrics": metrics,
-                "created_at": created_at.isoformat() if created_at is not None else None,
-                "finished_at": finished_at.isoformat() if finished_at is not None else None,
-            }
+        result = list_tasks(
+            mysql_dsn=mysql_dsn,
+            limit=int(limit),
+            offset=int(offset),
+            status=str(status) if status else None,
+            task_type=TASK_TYPE_TRAIN,
         )
-
-    return out
+    except RuntimeError as exc:
+        log_exception(logger, "train.job.list_failed", exc, limit=limit, offset=offset, status=status)
+        raise
+    return [_map_train_job(task) for task in result["items"]]
 

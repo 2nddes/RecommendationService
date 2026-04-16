@@ -99,19 +99,21 @@
         "dynamic_pos_weight_cap": 20.0
     },
     "rag": {
-        "embedding_api_base_url": null,
-        "embedding_api_path": null,
-        "embedding_api_key": null,
-        "embedding_model_name": "BAAI/bge-large-zh-v1.5",
+        "embedding_api_base_url": "https://api.siliconflow.cn",
+        "embedding_api_path": "/v1/embeddings",
+        "embedding_api_key": "sk-draqtvsyixcjfyldydmbhbjmxlcelzthghbxbqmeejecstkg",
+        "embedding_model_name": "Qwen/Qwen3-Embedding-0.6B",
         "llm_api_base_url": "https://generativelanguage.googleapis.com",
         "llm_api_path": "/v1beta2/models/gemini-1.5-flash-latest:generateContent",
         "llm_api_key": "AIzaSyA5inxOFFE3ADqixqkc5cDJJbeW8xBO7rg",
         "llm_model_name": "gemini-1.5-flash-latest",
         "ann_topk_default": 8,
-        "redis_result_ttl_seconds": 300,
+        "redis_result_ttl_seconds": 30000,
         "index_hnsw_m": 32,
         "index_hnsw_ef_search": 64,
-        "embedding_job_max_retry": 3
+        "embedding_job_max_retry": 1,
+        "embedding_summary_max_chars": 1200,
+        "rebuild_log_every_movies": 100
     },
     "tag_recall": {
         "enabled": true,

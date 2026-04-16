@@ -58,19 +58,31 @@ CREATE TABLE `dict_region`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 512 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '国家地区标准字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for model_train_job
+-- Table structure for ops_task
 -- ----------------------------
-DROP TABLE IF EXISTS `model_train_job`;
-CREATE TABLE `model_train_job`  (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `mode` enum('full','incremental') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'full' COMMENT '训练模式',
-  `status` enum('pending','processing','completed','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'pending',
-  `metrics` json NULL COMMENT '模型指标(JSON)',
-  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `finished_at` datetime NULL DEFAULT NULL,
+DROP TABLE IF EXISTS `ops_task`;
+CREATE TABLE `ops_task`  (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '任务主键ID',
+  `task_ref_override` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '迁移旧任务时保留的稳定任务ID',
+  `task_type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务类型',
+  `status` enum('pending','processing','completed','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '任务状态',
+  `parent_task_id` bigint unsigned NULL DEFAULT NULL COMMENT '父任务主键ID',
+  `retry_count` int unsigned NOT NULL DEFAULT 0 COMMENT '已重试次数',
+  `error` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '错误信息',
+  `payload` json NULL COMMENT '任务输入与上下文(JSON)',
+  `progress` json NULL COMMENT '任务进度(JSON)',
+  `result` json NULL COMMENT '任务结果(JSON)',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `started_at` timestamp NULL DEFAULT NULL COMMENT '开始处理时间',
+  `finished_at` timestamp NULL DEFAULT NULL COMMENT '完成时间',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 30 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '模型训练任务表' ROW_FORMAT = DYNAMIC;
+  UNIQUE INDEX `uk_task_ref_override`(`task_ref_override` ASC) USING BTREE,
+  INDEX `idx_type_status_created`(`task_type` ASC, `status` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_parent_created`(`parent_task_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_status_created`(`status` ASC, `created_at` ASC) USING BTREE,
+  CONSTRAINT `fk_ops_task_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `ops_task` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '统一任务表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie
@@ -427,22 +439,5 @@ CREATE TABLE `movie_embeddings` (
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_movie_id` (`movie_id`)
+  UNIQUE KEY `uk_movie_id` (`movie_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='movie embedding cold storage';
-
--- ----------------------------
--- Table structure for rag_embedding_job
--- ----------------------------
-DROP TABLE IF EXISTS `rag_embedding_job`;
-CREATE TABLE `rag_embedding_job` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'job id',
-  `movie_id` BIGINT UNSIGNED NOT NULL COMMENT 'target movie id',
-  `status` ENUM('pending','processing','completed','failed') NOT NULL DEFAULT 'pending' COMMENT 'job status',
-  `retry_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'retry count',
-  `error` VARCHAR(1000) NULL DEFAULT NULL COMMENT 'last error message',
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_status_created` (`status`, `created_at`),
-  KEY `idx_movie_id` (`movie_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='rag embedding async queue';

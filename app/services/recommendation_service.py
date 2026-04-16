@@ -14,6 +14,9 @@ from app.reco.types import RequestContext
 
 logger = logging.getLogger(__name__)
 
+_USER_RECO_WAIT_POLL_SECONDS = 0.2
+_USER_RECO_LOCK_RECHECK_SECONDS = 1.0
+
 
 class RecommendationService:
     def __init__(self, settings: Settings) -> None:
@@ -30,14 +33,14 @@ class RecommendationService:
         mode = self._resolve_user_reco_delivery_mode()
         req_start = perf_counter()
         if mode == "pop":
-            logger.info(
+            logger.debug(
                 "User recommendation request, user_id=%s, mode=%s, n=%s",
                 user_id,
                 mode,
                 page_size,
             )
         else:
-            logger.info(
+            logger.debug(
                 "User recommendation request, user_id=%s, mode=%s, page=%s, page_size=%s",
                 user_id,
                 mode,
@@ -149,16 +152,97 @@ class RecommendationService:
             )
             raise
 
+    def _user_reco_wait_timeout_seconds(self) -> float:
+        return max(float(self._settings.cache.user_reco_build_lock_seconds), _USER_RECO_WAIT_POLL_SECONDS)
+
+    def _wait_for_peer_user_recommendation_page(
+        self,
+        *,
+        user_id: int,
+        page: int,
+        page_size: int,
+        token: str,
+    ) -> tuple[list[int], int, int, float, bool]:
+        attempts = 0
+        wait_started = perf_counter()
+        deadline = wait_started + self._user_reco_wait_timeout_seconds()
+        next_lock_recheck = wait_started + _USER_RECO_LOCK_RECHECK_SECONDS
+        cache_items: list[int] = []
+        total = 0
+        while perf_counter() < deadline:
+            sleep(_USER_RECO_WAIT_POLL_SECONDS)
+            attempts += 1
+            cache_items, total = self._cache_repo.load_user_recommendation_page(
+                user_id=user_id,
+                page=page,
+                page_size=page_size,
+            )
+            logger.debug(
+                "User recommendation paged wait retry, user_id=%s, page=%s, page_size=%s, attempt=%s, returned=%s, total=%s",
+                user_id,
+                page,
+                page_size,
+                attempts,
+                len(cache_items),
+                total,
+            )
+            if total > 0:
+                return cache_items, total, attempts, (perf_counter() - wait_started) * 1000.0, False
+            now = perf_counter()
+            if now >= next_lock_recheck:
+                next_lock_recheck = now + _USER_RECO_LOCK_RECHECK_SECONDS
+                if self._cache_repo.try_acquire_user_recommendation_lock(user_id=user_id, token=token):
+                    return cache_items, total, attempts, (perf_counter() - wait_started) * 1000.0, True
+        return cache_items, total, attempts, (perf_counter() - wait_started) * 1000.0, False
+
+    def _wait_for_peer_user_recommendation_pop(
+        self,
+        *,
+        user_id: int,
+        count: int,
+        token: str,
+    ) -> tuple[list[int], int, int, float, bool]:
+        attempts = 0
+        wait_started = perf_counter()
+        deadline = wait_started + self._user_reco_wait_timeout_seconds()
+        next_lock_recheck = wait_started + _USER_RECO_LOCK_RECHECK_SECONDS
+        cache_items: list[int] = []
+        remaining = 0
+        while perf_counter() < deadline:
+            sleep(_USER_RECO_WAIT_POLL_SECONDS)
+            attempts += 1
+            cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=count)
+            logger.debug(
+                "User recommendation pop wait retry, user_id=%s, n=%s, attempt=%s, returned=%s, remaining=%s",
+                user_id,
+                count,
+                attempts,
+                len(cache_items),
+                remaining,
+            )
+            if cache_items or remaining > 0:
+                return cache_items, remaining, attempts, (perf_counter() - wait_started) * 1000.0, False
+            now = perf_counter()
+            if now >= next_lock_recheck:
+                next_lock_recheck = now + _USER_RECO_LOCK_RECHECK_SECONDS
+                if self._cache_repo.try_acquire_user_recommendation_lock(user_id=user_id, token=token):
+                    return cache_items, remaining, attempts, (perf_counter() - wait_started) * 1000.0, True
+        return cache_items, remaining, attempts, (perf_counter() - wait_started) * 1000.0, False
+
     def _recommend_user_paged(self, *, user_id: int, page: int, page_size: int) -> tuple[dict, bool]:
         build_target = max(int(self._settings.cache.user_reco_cache_size), 1)
         start = (page - 1) * page_size
         end = start + page_size - 1
+        cache_state = "initial_hit"
+        build_reason = "none"
+        wait_attempts = 0
+        wait_elapsed_ms = 0.0
         cache_items, total = self._cache_repo.load_user_recommendation_page(
             user_id=user_id,
             page=page,
             page_size=page_size,
         )
-        logger.info(
+        logger.debug(
             "User recommendation paged initial cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
             user_id,
             page,
@@ -171,6 +255,7 @@ class RecommendationService:
 
         cache_hit = total > 0
         if not cache_hit:
+            cache_state = "cache_miss"
             token = uuid4().hex
             logger.warning(
                 "User recommendation paged cache miss, user_id=%s, page=%s, page_size=%s, build_target=%s, action=acquire_build_lock",
@@ -193,7 +278,7 @@ class RecommendationService:
                         page=page,
                         page_size=page_size,
                     )
-                    logger.info(
+                    logger.debug(
                         "User recommendation paged double-check cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
                         user_id,
                         page,
@@ -204,6 +289,8 @@ class RecommendationService:
                         total,
                     )
                     if total <= 0:
+                        cache_state = "build_under_lock"
+                        build_reason = "double_check_empty"
                         logger.info(
                             "User recommendation paged cache build required, user_id=%s, page=%s, page_size=%s, build_target=%s, reason=double_check_empty",
                             user_id,
@@ -217,7 +304,7 @@ class RecommendationService:
                             page=page,
                             page_size=page_size,
                         )
-                        logger.info(
+                        logger.debug(
                             "User recommendation paged post-build cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
                             user_id,
                             page,
@@ -236,59 +323,91 @@ class RecommendationService:
                     page,
                     page_size,
                 )
-                for attempt in range(1, 5):
-                    sleep(0.05)
-                    cache_items, total = self._cache_repo.load_user_recommendation_page(
-                        user_id=user_id,
-                        page=page,
-                        page_size=page_size,
-                    )
-                    logger.warning(
-                        "User recommendation paged wait retry, user_id=%s, page=%s, page_size=%s, attempt=%s, returned=%s, total=%s",
-                        user_id,
-                        page,
-                        page_size,
-                        attempt,
-                        len(cache_items),
-                        total,
-                    )
-                    if total > 0:
-                        break
-
-            if total <= 0:
-                logger.warning(
-                    "User recommendation paged fallback build required, user_id=%s, page=%s, page_size=%s, build_target=%s, reason=cache_still_empty",
-                    user_id,
-                    page,
-                    page_size,
-                    build_target,
-                )
-                self._build_user_recommendation_cache(user_id=user_id, build_target=build_target, fallback_log=True)
-                cache_items, total = self._cache_repo.load_user_recommendation_page(
+                cache_items, total, wait_attempts, wait_elapsed_ms, acquired_after_wait = self._wait_for_peer_user_recommendation_page(
                     user_id=user_id,
                     page=page,
                     page_size=page_size,
+                    token=token,
                 )
-                logger.warning(
-                    "User recommendation paged post-fallback cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
-                    user_id,
-                    page,
-                    page_size,
-                    start,
-                    end,
-                    len(cache_items),
-                    total,
-                )
+                if total > 0:
+                    cache_state = "peer_build_completed"
+                elif acquired_after_wait:
+                    cache_state = "build_after_wait"
+                    build_reason = "lock_reacquired_after_wait"
+                    logger.info(
+                        "User recommendation paged build lock reacquired after wait, user_id=%s, page=%s, page_size=%s, wait_attempts=%s, wait_elapsed_ms=%.2f",
+                        user_id,
+                        page,
+                        page_size,
+                        wait_attempts,
+                        wait_elapsed_ms,
+                    )
+                    try:
+                        cache_items, total = self._cache_repo.load_user_recommendation_page(
+                            user_id=user_id,
+                            page=page,
+                            page_size=page_size,
+                        )
+                        logger.debug(
+                            "User recommendation paged double-check cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
+                            user_id,
+                            page,
+                            page_size,
+                            start,
+                            end,
+                            len(cache_items),
+                            total,
+                        )
+                        if total <= 0:
+                            logger.info(
+                                "User recommendation paged cache build required, user_id=%s, page=%s, page_size=%s, build_target=%s, reason=lock_reacquired_after_wait",
+                                user_id,
+                                page,
+                                page_size,
+                                build_target,
+                            )
+                            self._build_user_recommendation_cache(user_id=user_id, build_target=build_target)
+                            cache_items, total = self._cache_repo.load_user_recommendation_page(
+                                user_id=user_id,
+                                page=page,
+                                page_size=page_size,
+                            )
+                            logger.debug(
+                                "User recommendation paged post-build cache read, user_id=%s, page=%s, page_size=%s, start=%s, end=%s, returned=%s, total=%s",
+                                user_id,
+                                page,
+                                page_size,
+                                start,
+                                end,
+                                len(cache_items),
+                                total,
+                            )
+                    finally:
+                        self._cache_repo.release_user_recommendation_lock(user_id=user_id, token=token)
+                else:
+                    cache_state = "miss_empty_after_wait"
+                    logger.warning(
+                        "User recommendation paged cache unavailable after wait, user_id=%s, page=%s, page_size=%s, wait_attempts=%s, wait_elapsed_ms=%.2f, action=return_empty",
+                        user_id,
+                        page,
+                        page_size,
+                        wait_attempts,
+                        wait_elapsed_ms,
+                    )
 
         has_next = (page * page_size) < total
         logger.info(
-            "User recommendation paged return, user_id=%s, page=%s, page_size=%s, returned=%s, total=%s, has_next=%s",
+            "User recommendation paged return, user_id=%s, page=%s, page_size=%s, returned=%s, total=%s, has_next=%s, cache_state=%s, build_reason=%s, wait_attempts=%s, wait_elapsed_ms=%.2f",
             user_id,
             page,
             page_size,
             len(cache_items),
             total,
             has_next,
+            cache_state,
+            build_reason,
+            wait_attempts,
+            wait_elapsed_ms,
         )
         return (
             {
@@ -308,8 +427,12 @@ class RecommendationService:
             logger.info("User recommendation pop mode ignores page parameter, user_id=%s, page=%s", user_id, page)
 
         build_target = max(int(self._settings.cache.user_reco_cache_size), 1)
+        cache_state = "initial_hit"
+        build_reason = "none"
+        wait_attempts = 0
+        wait_elapsed_ms = 0.0
         cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=page_size)
-        logger.info(
+        logger.debug(
             "User recommendation pop initial cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
             user_id,
             page_size,
@@ -319,6 +442,7 @@ class RecommendationService:
 
         cache_hit = bool(cache_items) or remaining > 0
         if not cache_hit:
+            cache_state = "cache_miss"
             token = uuid4().hex
             logger.warning(
                 "User recommendation pop cache miss, user_id=%s, n=%s, build_target=%s, action=acquire_build_lock",
@@ -335,7 +459,7 @@ class RecommendationService:
                 )
                 try:
                     cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=page_size)
-                    logger.info(
+                    logger.debug(
                         "User recommendation pop double-check cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
                         user_id,
                         page_size,
@@ -343,6 +467,8 @@ class RecommendationService:
                         remaining,
                     )
                     if not cache_items and remaining <= 0:
+                        cache_state = "build_under_lock"
+                        build_reason = "double_check_empty"
                         logger.info(
                             "User recommendation pop cache build required, user_id=%s, n=%s, build_target=%s, reason=double_check_empty",
                             user_id,
@@ -354,7 +480,7 @@ class RecommendationService:
                             user_id=user_id,
                             count=page_size,
                         )
-                        logger.info(
+                        logger.debug(
                             "User recommendation pop post-build cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
                             user_id,
                             page_size,
@@ -369,46 +495,76 @@ class RecommendationService:
                     user_id,
                     page_size,
                 )
-                for attempt in range(1, 5):
-                    sleep(0.05)
-                    cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=page_size)
-                    logger.warning(
-                        "User recommendation pop wait retry, user_id=%s, n=%s, attempt=%s, returned=%s, remaining=%s",
+                cache_items, remaining, wait_attempts, wait_elapsed_ms, acquired_after_wait = self._wait_for_peer_user_recommendation_pop(
+                    user_id=user_id,
+                    count=page_size,
+                    token=token,
+                )
+                if cache_items or remaining > 0:
+                    cache_state = "peer_build_completed"
+                elif acquired_after_wait:
+                    cache_state = "build_after_wait"
+                    build_reason = "lock_reacquired_after_wait"
+                    logger.info(
+                        "User recommendation pop build lock reacquired after wait, user_id=%s, n=%s, wait_attempts=%s, wait_elapsed_ms=%.2f",
                         user_id,
                         page_size,
-                        attempt,
-                        len(cache_items),
-                        remaining,
+                        wait_attempts,
+                        wait_elapsed_ms,
                     )
-                    if cache_items or remaining > 0:
-                        break
-
-            if not cache_items and remaining <= 0:
-                logger.warning(
-                    "User recommendation pop fallback build required, user_id=%s, n=%s, build_target=%s, reason=cache_still_empty",
-                    user_id,
-                    page_size,
-                    build_target,
-                )
-                self._build_user_recommendation_cache(user_id=user_id, build_target=build_target, fallback_log=True)
-                cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=page_size)
-                logger.warning(
-                    "User recommendation pop post-fallback cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
-                    user_id,
-                    page_size,
-                    len(cache_items),
-                    remaining,
-                )
+                    try:
+                        cache_items, remaining = self._cache_repo.pop_user_recommendation_items(user_id=user_id, count=page_size)
+                        logger.debug(
+                            "User recommendation pop double-check cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
+                            user_id,
+                            page_size,
+                            len(cache_items),
+                            remaining,
+                        )
+                        if not cache_items and remaining <= 0:
+                            logger.info(
+                                "User recommendation pop cache build required, user_id=%s, n=%s, build_target=%s, reason=lock_reacquired_after_wait",
+                                user_id,
+                                page_size,
+                                build_target,
+                            )
+                            self._build_user_recommendation_cache(user_id=user_id, build_target=build_target)
+                            cache_items, remaining = self._cache_repo.pop_user_recommendation_items(
+                                user_id=user_id,
+                                count=page_size,
+                            )
+                            logger.debug(
+                                "User recommendation pop post-build cache read, user_id=%s, n=%s, returned=%s, remaining=%s",
+                                user_id,
+                                page_size,
+                                len(cache_items),
+                                remaining,
+                            )
+                    finally:
+                        self._cache_repo.release_user_recommendation_lock(user_id=user_id, token=token)
+                else:
+                    cache_state = "miss_empty_after_wait"
+                    logger.warning(
+                        "User recommendation pop cache unavailable after wait, user_id=%s, n=%s, wait_attempts=%s, wait_elapsed_ms=%.2f, action=return_empty",
+                        user_id,
+                        page_size,
+                        wait_attempts,
+                        wait_elapsed_ms,
+                    )
 
         total_before_pop = int(remaining + len(cache_items))
         logger.info(
-            "User recommendation pop return, user_id=%s, n=%s, returned=%s, remaining=%s, total_before_pop=%s, has_next=%s",
+            "User recommendation pop return, user_id=%s, n=%s, returned=%s, remaining=%s, total_before_pop=%s, has_next=%s, cache_state=%s, build_reason=%s, wait_attempts=%s, wait_elapsed_ms=%.2f",
             user_id,
             page_size,
             len(cache_items),
             remaining,
             total_before_pop,
             remaining > 0,
+            cache_state,
+            build_reason,
+            wait_attempts,
+            wait_elapsed_ms,
         )
         return (
             {
@@ -424,7 +580,7 @@ class RecommendationService:
         )
 
     def recommend_item(self, *, movie_id: int, n: int) -> dict:
-        logger.info("Item recommendation started, movie_id=%s, n=%s", movie_id, n)
+        logger.debug("Item recommendation started, movie_id=%s, n=%s", movie_id, n)
         cfg = self._settings.two_tower
         item_vec = build_item_vector(movie_id, cfg, mysql_dsn=self._settings.core.mysql_dsn)
         if item_vec is None:
@@ -450,7 +606,7 @@ class RecommendationService:
         return {"source_id": movie_id, "items": items, "n": n}
 
     def recommend_trending(self, *, window: str, n: int) -> dict:
-        logger.info("Trending recommendation started, window=%s, n=%s", window, n)
+        logger.debug("Trending recommendation started, window=%s, n=%s", window, n)
         items = self._cache_repo.load_trending(window=window, n=n)
         if items:
             logger.info("Trending recommendation cache hit, window=%s, returned=%s", window, len(items))

@@ -141,8 +141,10 @@ class MMOESettings:
 class RagSettings:
     embedding_model_name: str = "BAAI/bge-large-zh-v1.5"
     embedding_api_base_url: str | None = None
+    embedding_api_path: str | None = "/v1/embeddings"
     embedding_api_key: str | None = None
     llm_api_base_url: str | None = None
+    llm_api_path: str | None = "/v1/chat/completions"
     llm_api_key: str | None = None
     llm_model_name: str = "gpt-4o-mini"
     ann_topk_default: int = 8
@@ -150,6 +152,8 @@ class RagSettings:
     index_hnsw_m: int = 32
     index_hnsw_ef_search: int = 64
     embedding_job_max_retry: int = 3
+    embedding_summary_max_chars: int = 1200
+    rebuild_log_every_movies: int = 100
 
 
 @dataclass(frozen=True)

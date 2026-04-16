@@ -116,10 +116,12 @@ class MMoERanker(Ranker):
         ranked.sort(key=lambda x: x.score, reverse=True)
         sort_ms = (perf_counter() - sort_start) * 1000.0
         total_ms = (perf_counter() - rank_start) * 1000.0
+        model_version = os.path.basename(self.model_path or "")
         logger.info(
-            "event=reco.rank.mmoe.done | user_id=%s | candidate_count=%s | tensor_build_ms=%.2f | infer_ms=%.2f | sort_ms=%.2f | elapsed_ms=%.2f",
+            "event=reco.rank.mmoe.done | user_id=%s | candidate_count=%s | model_version=%s | tensor_build_ms=%.2f | infer_ms=%.2f | sort_ms=%.2f | elapsed_ms=%.2f",
             ctx.user_id,
             len(candidates),
+            model_version,
             tensor_ready_ms,
             infer_ms,
             sort_ms,
@@ -197,10 +199,11 @@ class MMoERanker(Ranker):
         fallback_reasons = [str(x) for x in (aux.get("_fallback_reasons") or [])]
         if fallback_reasons:
             logger.warning(
-                "MMoE inference uses fallback/default features. reasons=%s user_id=%s candidate_count=%s",
-                "; ".join(fallback_reasons),
+                "event=reco.rank.mmoe.fallback_features | user_id=%s | candidate_count=%s | reason_count=%s | reasons=%s",
                 uid,
                 len(candidates),
+                len(fallback_reasons),
+                "; ".join(fallback_reasons),
             )
 
         user_profile = aux.get("user_profile") or {}
@@ -309,10 +312,11 @@ class MMoERanker(Ranker):
             )
         if padded_long_interest_cnt > 0:
             logger.warning(
-                "MMoE inference uses PAD+mask for missing long-interest sequence. padded=%s total=%s user_id=%s",
+                "event=reco.rank.mmoe.long_interest_missing | user_id=%s | padded=%s | total=%s | padded_ratio=%.4f",
+                uid,
                 padded_long_interest_cnt,
                 len(candidates),
-                uid,
+                float(padded_long_interest_cnt) / max(float(len(candidates)), 1.0),
             )
 
         return (

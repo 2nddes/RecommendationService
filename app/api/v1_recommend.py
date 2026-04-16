@@ -50,7 +50,7 @@ def recommend_user():
 
         page = 1
         page_size = n
-        logger.info("收到个性化推荐请求，user_id=%s, mode=%s, n=%s", user_id, mode, n)
+        logger.debug("收到个性化推荐请求，user_id=%s, mode=%s, n=%s", user_id, mode, n)
     else:
         if request.args.get("n") is not None:
             raise ParamError("invalid request for paged mode, use 'page' and 'page_size' only")
@@ -63,7 +63,7 @@ def recommend_user():
         if page_size < 1 or page_size > 100:
             raise ParamError("invalid 'page_size', expected integer in [1, 100]")
 
-        logger.info("收到个性化推荐请求，user_id=%s, mode=%s, page=%s, page_size=%s", user_id, mode, page, page_size)
+        logger.debug("收到个性化推荐请求，user_id=%s, mode=%s, page=%s, page_size=%s", user_id, mode, page, page_size)
 
     service = build_recommendation_service(settings)
     data = service.recommend_user(user_id=user_id, page=page, page_size=page_size)
@@ -86,13 +86,13 @@ def recommend_item():
 
     movie_id = as_int(movie_id_raw, name="movie_id")
     n = as_int(request.args.get("n", 8), name="n")
-    logger.info("收到相似影片推荐请求，movie_id=%s, n=%s", movie_id, n)
+    logger.debug("收到相似影片推荐请求，movie_id=%s, n=%s", movie_id, n)
 
     settings = get_settings()
     service = build_recommendation_service(settings)
 
     data = service.recommend_item(movie_id=movie_id, n=n)
-    logger.info("相似影片推荐完成，movie_id=%s, 返回条数=%s", movie_id, len(data.get("items") or []))
+    logger.debug("相似影片推荐完成，movie_id=%s, 返回条数=%s", movie_id, len(data.get("items") or []))
     return ok(data)
 
 
@@ -115,6 +115,6 @@ def recommend_trending():
     settings = get_settings()
     service = build_recommendation_service(settings)
     data = service.recommend_trending(window=window, n=n)
-    logger.info("趋势推荐完成，window=%s, n=%s, 返回条数=%s", window, n, len(data.get("items") or []))
+    logger.debug("趋势推荐完成，window=%s, n=%s, 返回条数=%s", window, n, len(data.get("items") or []))
     return ok(data)
 

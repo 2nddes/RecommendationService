@@ -50,6 +50,24 @@ python -m app.ops.train_worker
 - `--once`：只处理一个任务后退出
 - `--interval 3`：轮询间隔秒数
 
+## RAG Embedding 断点续建脚本
+
+当 `movie_embeddings` 中已有部分电影 embedding，且希望只补齐缺失项时，可直接运行：
+
+```bash
+python -m app.ops.rag_embedding_resume
+```
+
+常用参数：
+
+- `--limit 500`：最多只补 500 部电影
+
+脚本行为保持最小化：
+
+- 只查询 `movie_embeddings` 中还没有 embedding 的电影
+- 只向 `movie_embeddings` 插入新行
+- 不会删除或更新任何已有行
+
 ## 核心推荐接口 (Recommendation APIs)
 这些接口主要服务于 C 端用户体验，由 Spring Boot 获取 ID 列表后，查询数据库组装电影详情返回给 Vue。
 

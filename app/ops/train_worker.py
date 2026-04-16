@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 def _job_target(job: dict) -> tuple[str | None, str | None]:
-    metrics = job.get("metrics") or {}
-    if not isinstance(metrics, dict):
+    payload = job.get("payload") or {}
+    if not isinstance(payload, dict):
         return None, None
-    component = metrics.get("component")
-    model = metrics.get("model")
+    component = payload.get("component")
+    model = payload.get("model")
     return (str(component) if component is not None else None, str(model) if model is not None else None)
 
 
@@ -72,7 +72,7 @@ def run_loop(*, interval_seconds: float = 3.0) -> None:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Independent train worker for model_train_job queue")
+    parser = argparse.ArgumentParser(description="Independent train worker for unified ops_task queue")
     parser.add_argument("--once", action="store_true", help="Process at most one pending job and exit")
     parser.add_argument("--interval", type=float, default=3.0, help="Polling interval in seconds")
     return parser.parse_args()

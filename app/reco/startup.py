@@ -3,12 +3,14 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from time import perf_counter
 from typing import Any
 
+from app.common.logging_setup import get_process_role
 from app.common.runtime_health import mark_component_error, mark_component_state, mark_component_success
 from app.common.settings import Settings
 from app.ops.cache_ops import run_all_cache_precompute
-from app.reco.online.runtime import get_pipeline, get_settings
+from app.reco.online.runtime import get_pipeline
 from app.reco.recall.two_tower import (
     build_hnsw_index,
     load_latest_local_model,
@@ -21,9 +23,11 @@ _start_lock = threading.RLock()
 _worker_thread: threading.Thread | None = None
 _cache_worker_thread: threading.Thread | None = None
 _train_worker_thread: threading.Thread | None = None
-_rag_embedding_worker_thread: threading.Thread | None = None
+_rag_rebuild_worker_thread: threading.Thread | None = None
+
 
 def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
+    started = perf_counter()
     logger.info("Starting two-tower full rebuild")
     cfg = settings.two_tower
     loaded = load_latest_local_model(settings)
@@ -33,7 +37,12 @@ def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
         cfg=cfg,
         mysql_dsn=settings.core.mysql_dsn,
     )
-    logger.info("Two-tower rebuild finished, items=%s, index_path=%s", int(count), cfg.index_path)
+    logger.info(
+        "Two-tower rebuild finished, items=%s, index_path=%s, elapsed_ms=%.2f",
+        int(count),
+        cfg.index_path,
+        (perf_counter() - started) * 1000.0,
+    )
     return {
         "items_indexed": int(count),
         "vector_db": cfg.vector_db_path,
@@ -43,6 +52,7 @@ def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
 
 
 def _run_startup_once(settings: Settings) -> None:
+    started = perf_counter()
     logger.info("Startup init tasks begin")
     mark_component_state("warmup", ready=False, status="running")
     try:
@@ -51,14 +61,24 @@ def _run_startup_once(settings: Settings) -> None:
 
         from app.reco.rag_service import get_movie_rag_service
 
-        get_movie_rag_service(settings).load_from_mysql()
-        logger.info("RAG HNSW index preloaded from MySQL")
+        rag_status = get_movie_rag_service(settings).load_from_mysql()
+        logger.info(
+            "RAG HNSW index preloaded from MySQL, state=%s, source_rows=%s, indexed_rows=%s",
+            rag_status.get("state"),
+            rag_status.get("source_rows"),
+            rag_status.get("indexed_rows"),
+        )
 
         get_pipeline()
         logger.info("Global recommendation pipeline preloaded")
 
         summary = run_all_cache_precompute(settings)
-        logger.info("Startup cache precompute finished, summary=%s", summary)
+        logger.info(
+            "Startup cache precompute finished, elapsed_ms=%.2f, summary=%s",
+            (perf_counter() - started) * 1000.0,
+            summary,
+        )
+        logger.info("Startup init tasks completed, elapsed_ms=%.2f", (perf_counter() - started) * 1000.0)
 
         mark_component_success("warmup", details={"mode": "async"})
     except Exception as exc:
@@ -86,8 +106,13 @@ def _cache_precompute_worker(settings: Settings) -> None:
     while True:
         time.sleep(interval)
         try:
+            started = perf_counter()
             summary = run_all_cache_precompute(settings)
-            logger.info("Scheduled cache precompute finished, summary=%s", summary)
+            logger.info(
+                "Scheduled cache precompute finished, elapsed_ms=%.2f, summary=%s",
+                (perf_counter() - started) * 1000.0,
+                summary,
+            )
             mark_component_success("cache_precompute", details={"worker": "scheduled"})
         except Exception as exc:
             logger.exception("Cache precompute iteration failed")
@@ -109,28 +134,31 @@ def _train_queue_worker(settings: Settings) -> None:
         logger.exception("Train queue worker crashed")
 
 
-def _rag_embedding_queue_worker(settings: Settings) -> None:
+def _rag_rebuild_queue_worker(settings: Settings) -> None:
     if not settings.core.mysql_dsn:
-        logger.warning("RAG embedding queue worker skipped: mysql_dsn is not configured")
+        logger.warning("RAG rebuild worker skipped: mysql_dsn is not configured")
         return
 
     from app.ops.rag_embedding_worker import run_loop
 
-    logger.info("RAG embedding queue worker begins")
+    logger.info("RAG rebuild worker begins")
     try:
         run_loop(interval_seconds=3.0)
     except Exception:
-        logger.exception("RAG embedding queue worker crashed")
+        logger.exception("RAG rebuild worker crashed")
 
 
 def start_startup_jobs(settings: Settings) -> None:
-    global _started, _worker_thread, _cache_worker_thread, _train_worker_thread, _rag_embedding_worker_thread
+    global _started, _worker_thread, _cache_worker_thread, _train_worker_thread, _rag_rebuild_worker_thread
     with _start_lock:
+        if get_process_role() == "loader":
+            logger.info("Startup jobs skipped in loader process")
+            return
+
         if _started:
             logger.info("Startup jobs already initialized, skipping duplicate launch")
             return
 
-        settings = get_settings()
         _started = True
         mark_component_state("warmup", ready=False, status="pending", details={"mode": "async"})
 
@@ -171,11 +199,11 @@ def start_startup_jobs(settings: Settings) -> None:
         _train_worker_thread.start()
         logger.info("Train queue worker launched, thread_name=%s", _train_worker_thread.name)
 
-        _rag_embedding_worker_thread = threading.Thread(
-            target=_rag_embedding_queue_worker,
+        _rag_rebuild_worker_thread = threading.Thread(
+            target=_rag_rebuild_queue_worker,
             args=(settings,),
-            name="reco-rag-embedding-worker",
+            name="reco-rag-rebuild-worker",
             daemon=True,
         )
-        _rag_embedding_worker_thread.start()
-        logger.info("RAG embedding worker launched, thread_name=%s", _rag_embedding_worker_thread.name)
+        _rag_rebuild_worker_thread.start()
+        logger.info("RAG rebuild worker launched, thread_name=%s", _rag_rebuild_worker_thread.name)

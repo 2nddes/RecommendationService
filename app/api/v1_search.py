@@ -33,6 +33,18 @@ def _as_passthrough_params() -> dict[str, Any]:
     return passthrough
 
 
+def _resolve_search_mode(*, query: str, tag_ids: list[int]) -> str:
+    has_query = bool(str(query).strip())
+    has_tags = bool(tag_ids)
+    if has_query and has_tags:
+        return "mixed"
+    if has_query:
+        return "query_only"
+    if has_tags:
+        return "tag_only"
+    return "empty"
+
+
 def _build_search_sql(*, query: str, n: int, offset: int, tag_ids: list[int]):
     query = query.strip()
     has_query = bool(query)
@@ -167,8 +179,10 @@ def search():
         raise RuntimeError("MYSQL_DSN is required for search")
 
     logger.info(
-        "search started, query_len=%s, n=%s, offset=%s, passthrough_keys=%s",
+        "search started, mode=%s, query_len=%s, tag_count=%s, n=%s, offset=%s, passthrough_keys=%s",
+        _resolve_search_mode(query=query, tag_ids=tag_ids),
         len(query),
+        len(tag_ids),
         n,
         offset,
         sorted(list(passthrough.keys())),
@@ -207,8 +221,10 @@ def search():
         )
 
     logger.info(
-        "search completed, query_len=%s, total=%s, returned=%s",
+        "search completed, mode=%s, query_len=%s, tag_count=%s, total=%s, returned=%s",
+        _resolve_search_mode(query=query, tag_ids=tag_ids),
         len(query),
+        len(tag_ids),
         total,
         len(results),
     )

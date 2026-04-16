@@ -22,26 +22,29 @@ class RecommendationPipeline:
 
     def recommend(self, ctx: RequestContext) -> List[int]:
         pipeline_start = perf_counter()
-        logger.info("推荐流水线开始，user_id=%s, movie_id=%s, n=%s", ctx.user_id, ctx.movie_id, ctx.n)
+        logger.debug("推荐流水线开始，user_id=%s, movie_id=%s, n=%s", ctx.user_id, ctx.movie_id, ctx.n)
         recall_start = perf_counter()
         candidates = self._recall(ctx)
         recall_ms = (perf_counter() - recall_start) * 1000.0
-        logger.info("召回阶段完成，候选数=%s, elapsed_ms=%.2f", len(candidates), recall_ms)
+        logger.debug("召回阶段完成，候选数=%s, elapsed_ms=%.2f", len(candidates), recall_ms)
 
         rank_start = perf_counter()
         ranked = self.ranker.rank(ctx, candidates)
         rank_ms = (perf_counter() - rank_start) * 1000.0
-        logger.info("排序阶段完成，结果数=%s, 排序器=%s, elapsed_ms=%.2f", len(ranked), self.ranker.name, rank_ms)
+        logger.debug("排序阶段完成，结果数=%s, 排序器=%s, elapsed_ms=%.2f", len(ranked), self.ranker.name, rank_ms)
 
         rerank_start = perf_counter()
         reranked = self.reranker.rerank(ctx, ranked)
         final_items = [x.item_id for x in reranked[: max(ctx.n, 0)]]
         rerank_ms = (perf_counter() - rerank_start) * 1000.0
         total_ms = (perf_counter() - pipeline_start) * 1000.0
-        logger.info("重排阶段完成，返回条数=%s, 重排器=%s, elapsed_ms=%.2f", len(final_items), self.reranker.name, rerank_ms)
         logger.info(
-            "推荐流水线完成，user_id=%s, candidate_count=%s, ranked_count=%s, returned_count=%s, recall_ms=%.2f, rank_ms=%.2f, rerank_ms=%.2f, elapsed_ms=%.2f",
+            "推荐流水线完成，user_id=%s, movie_id=%s, recaller_count=%s, ranker=%s, reranker=%s, candidate_count=%s, ranked_count=%s, returned_count=%s, recall_ms=%.2f, rank_ms=%.2f, rerank_ms=%.2f, elapsed_ms=%.2f",
             ctx.user_id,
+            ctx.movie_id,
+            len(self.recallers),
+            self.ranker.name,
+            self.reranker.name,
             len(candidates),
             len(ranked),
             len(final_items),
@@ -78,7 +81,7 @@ class RecommendationPipeline:
                     prev = merged[c.item_id]
                     if c.score > prev.score:
                         merged[c.item_id] = c
-            logger.info("召回器执行完成，recaller=%s, 新增候选=%s, 累计候选=%s", recaller.name, len(merged) - before_count, len(merged))
+            logger.debug("召回器执行完成，recaller=%s, 新增候选=%s, 累计候选=%s", recaller.name, len(merged) - before_count, len(merged))
 
         return list(merged.values())
 

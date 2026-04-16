@@ -117,7 +117,7 @@ def load_user_recommendation_page(
             return []
         rows = client.lrange(key, max(int(start), 0), max(int(end), 0))
         items = [int(raw) for raw in rows]
-        logger.info(
+        logger.debug(
             "User recommendation page load, user_id=%s, key=%s, start=%s, end=%s, returned_count=%s, elapsed_ms=%.2f",
             user_id,
             key,
@@ -146,7 +146,7 @@ def load_user_recommendation_total(settings: Settings, *, user_id: int) -> int:
         if client is None:
             return 0
         total = int(client.llen(key) or 0)
-        logger.info(
+        logger.debug(
             "User recommendation total load, user_id=%s, key=%s, total=%s, elapsed_ms=%.2f",
             user_id,
             key,
@@ -181,7 +181,7 @@ def pop_user_recommendation_items(settings: Settings, *, user_id: int, count: in
         rows, _trim_result, remaining = pipe.execute()
         items = [int(raw) for raw in rows]
         remaining_count = int(remaining or 0)
-        logger.info(
+        logger.debug(
             "User recommendation pop, user_id=%s, key=%s, count=%s, returned_count=%s, remaining=%s, item_preview=%s, elapsed_ms=%.2f",
             user_id,
             key,
@@ -312,7 +312,7 @@ def store_user_recommendation_items(settings: Settings, *, user_id: int, items: 
         client = get_redis_client(settings)
         if client is None:
             return 0
-        pipe = client.pipeline(transaction=False)
+        pipe = client.pipeline(transaction=True)
         pipe.delete(key)
         if normalized:
             pipe.rpush(key, *[str(item_id) for item_id in normalized])
@@ -349,17 +349,20 @@ def try_acquire_user_recommendation_lock(
     key = user_recommendation_lock_key(settings, user_id)
     ttl = int(ttl_seconds if ttl_seconds is not None else settings.cache.user_reco_build_lock_seconds)
     started = perf_counter()
+    token_tail = str(token or "")[-8:]
     try:
         client = get_redis_client(settings)
         if client is None:
             return False
         acquired = bool(client.set(key, token, nx=True, ex=max(ttl, 1)))
-        logger.info(
-            "User recommendation lock acquire, user_id=%s, key=%s, ttl=%s, acquired=%s, elapsed_ms=%.2f",
+        logger.log(
+            logging.INFO if acquired else logging.DEBUG,
+            "User recommendation lock acquire, user_id=%s, key=%s, ttl=%s, acquired=%s, token_tail=%s, elapsed_ms=%.2f",
             user_id,
             key,
             ttl,
             acquired,
+            token_tail,
             (perf_counter() - started) * 1000.0,
         )
         return acquired
@@ -379,6 +382,7 @@ def release_user_recommendation_lock(settings: Settings, *, user_id: int, token:
 
     key = user_recommendation_lock_key(settings, user_id)
     started = perf_counter()
+    token_tail = str(token or "")[-8:]
     try:
         client = get_redis_client(settings)
         if client is None:
@@ -394,10 +398,11 @@ def release_user_recommendation_lock(settings: Settings, *, user_id: int, token:
             or 0
         )
         logger.info(
-            "User recommendation lock release, user_id=%s, key=%s, released=%s, elapsed_ms=%.2f",
+            "User recommendation lock release, user_id=%s, key=%s, released=%s, token_tail=%s, elapsed_ms=%.2f",
             user_id,
             key,
             bool(released),
+            token_tail,
             (perf_counter() - started) * 1000.0,
         )
     except Exception:
