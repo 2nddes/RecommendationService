@@ -23,13 +23,6 @@
 ## 2. 鉴权
 
 ### 2.1 内部密钥
-
-如果配置了 `settings.core.internal_secret`，所有请求都需要携带：
-
-```http
-X-Internal-Secret: <secret>
-```
-
 未配置时不强制校验。
 
 ### 2.2 当前服务不处理用户登录态
@@ -93,7 +86,6 @@ X-Internal-Secret: <secret>
     "failed_jobs": 0,
     "pruned_embeddings": 18,
     "flush_count": 4,
-    "max_retry": 3
   },
   "result": {
     "scope": "full_rebuild",

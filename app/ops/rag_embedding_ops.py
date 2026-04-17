@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 RAG_REBUILD_SCOPE_FULL = "full_rebuild"
 RAG_REBUILD_SCOPE_SINGLE = "single_movie"
 RAG_REBUILD_SCOPES = {RAG_REBUILD_SCOPE_FULL, RAG_REBUILD_SCOPE_SINGLE}
-DEFAULT_FAILURE_SAMPLE_LIMIT = 20
 
 
 def _iso(value: Any) -> str | None:
@@ -34,30 +33,6 @@ def _iso(value: Any) -> str | None:
         return value.isoformat()
     return str(value)
 
-
-def _json_loads(value: Any) -> Dict[str, Any]:
-    if value is None:
-        return {}
-    if isinstance(value, dict):
-        return dict(value)
-    if isinstance(value, str):
-        loaded = json.loads(value)
-        return dict(loaded) if isinstance(loaded, dict) else {"value": loaded}
-    return {"value": value}
-
-
-def _normalize_scope(scope: str | None) -> str:
-    value = str(scope or "").strip().lower() or RAG_REBUILD_SCOPE_FULL
-    if value not in RAG_REBUILD_SCOPES:
-        raise ValueError(f"invalid rag rebuild scope: {scope}")
-    return value
-
-
-def _normalize_movie_id(movie_id: int | None) -> int:
-    value = int(movie_id or 0)
-    if value <= 0:
-        raise ValueError(f"invalid movie_id: {movie_id}")
-    return value
 
 
 def _normalize_movie_ids(movie_ids: Iterable[int] | None) -> list[int]:
@@ -77,25 +52,22 @@ def _default_progress(
     scope: str,
     total_movies: int = 0,
     pruned_embeddings: int = 0,
-    max_retry: int | None = None,
 ) -> Dict[str, Any]:
     progress = {
-        "scope": _normalize_scope(scope),
-        "total_movies": max(0, int(total_movies)),
+        "scope": scope,
+        "total_movies": int(total_movies or 0),
         "processed_movies": 0,
         "completed_jobs": 0,
         "failed_jobs": 0,
-        "pruned_embeddings": max(0, int(pruned_embeddings)),
+        "pruned_embeddings": int(pruned_embeddings or 0),
         "flush_count": 0,
     }
-    if max_retry is not None:
-        progress["max_retry"] = max(1, int(max_retry))
     return progress
 
 
 def _sanitize_progress(progress: Dict[str, Any] | None) -> Dict[str, Any]:
     current = dict(progress or {})
-    current["scope"] = _normalize_scope(current.get("scope"))
+    current["scope"] = current.get("scope")
     for key in (
         "total_movies",
         "processed_movies",
@@ -104,35 +76,14 @@ def _sanitize_progress(progress: Dict[str, Any] | None) -> Dict[str, Any]:
         "pruned_embeddings",
         "flush_count",
     ):
-        current[key] = max(0, int(current.get(key) or 0))
-    if current.get("max_retry") is not None:
-        current["max_retry"] = max(1, int(current.get("max_retry") or 1))
+        current[key] = int(current.get(key) or 0)
     return current
-
-
-def _cap_failure_samples(samples: Iterable[Dict[str, Any]] | None, *, limit: int = DEFAULT_FAILURE_SAMPLE_LIMIT) -> list[Dict[str, Any]]:
-    capped: list[Dict[str, Any]] = []
-    for sample in samples or []:
-        if len(capped) >= max(1, int(limit)):
-            break
-        current = dict(sample or {})
-        movie_id = current.get("movie_id")
-        if movie_id is not None:
-            current["movie_id"] = int(movie_id)
-        attempts = current.get("attempts")
-        if attempts is not None:
-            current["attempts"] = max(1, int(attempts))
-        error = current.get("error")
-        if error is not None:
-            current["error"] = str(error)[:1000]
-        capped.append(current)
-    return capped
 
 
 def _sanitize_result(result: Dict[str, Any] | None) -> Dict[str, Any]:
     current = dict(result or {})
     if current.get("scope") is not None:
-        current["scope"] = _normalize_scope(current.get("scope"))
+        current["scope"] = current.get("scope")
     for key in (
         "movie_id",
         "total_movies",
@@ -141,11 +92,13 @@ def _sanitize_result(result: Dict[str, Any] | None) -> Dict[str, Any]:
         "failed_jobs",
         "pruned_embeddings",
         "elapsed_ms",
-        "max_retry",
     ):
         if current.get(key) is not None:
-            current[key] = max(0, int(current.get(key) or 0))
-    current["failure_samples"] = _cap_failure_samples(current.get("failure_samples"))
+            try:
+                current[key] = int(current.get(key) or 0)
+            except (TypeError, ValueError):
+                current[key] = 0
+
     return current
 
 
@@ -184,14 +137,13 @@ def create_rag_rebuild_job(
     movie_id: int | None = None,
     request_id: str | None = None,
 ) -> int:
-    normalized_scope = _normalize_scope(scope)
-    payload: Dict[str, Any] = {"scope": normalized_scope}
+    payload: Dict[str, Any] = {"scope": scope}
     if request_id:
         payload["request_id"] = str(request_id)
 
     total_movies = 0
-    if normalized_scope == RAG_REBUILD_SCOPE_SINGLE:
-        payload["movie_id"] = _normalize_movie_id(movie_id)
+    if scope == RAG_REBUILD_SCOPE_SINGLE:
+        payload["movie_id"] = movie_id
         total_movies = 1
 
     return int(
@@ -200,7 +152,7 @@ def create_rag_rebuild_job(
             task_type=TASK_TYPE_RAG_REBUILD,
             status="pending",
             payload=payload,
-            progress=_default_progress(scope=normalized_scope, total_movies=total_movies),
+            progress=_default_progress(scope=scope, total_movies=total_movies),
             result={},
         )
     )

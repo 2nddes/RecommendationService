@@ -7,7 +7,7 @@ from flask import Flask, request
 
 from app.api.v1 import v1_bp
 from app.common.errors import register_error_handlers
-from app.common.logging_setup import configure_logging, get_request_id, set_request_id
+from app.common.logging_setup import configure_logging
 from app.common.settings import Settings
 from app.reco.startup import start_startup_jobs
 

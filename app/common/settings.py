@@ -21,7 +21,6 @@ def _load_raw_config() -> dict[str, Any]:
 
 @dataclass(frozen=True)
 class CoreSettings:
-    internal_secret: str | None = None
     mysql_dsn: str | None = None
     reranking_seed: int | None = None
 
@@ -149,7 +148,6 @@ class RagSettings:
     redis_result_ttl_seconds: int = 300
     index_hnsw_m: int = 32
     index_hnsw_ef_search: int = 64
-    embedding_job_max_retry: int = 3
     embedding_summary_max_chars: int = 1200
     rebuild_log_every_movies: int = 100
 

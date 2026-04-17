@@ -375,7 +375,6 @@ Method: POST
 - `redis_result_ttl_seconds`
 - `index_hnsw_m`
 - `index_hnsw_ef_search`
-- `embedding_job_max_retry`
 
 ### RAG stream protocol
 `POST /api/v1/recommend/rag/stream` now emits SSE events:

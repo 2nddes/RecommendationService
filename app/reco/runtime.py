@@ -31,27 +31,26 @@ def get_settings() -> Settings:
         return _global_settings
 
 
-def initialize_pipeline(settings: Settings, *, reason: str) -> RecommendationPipeline:
+def initialize_pipeline(settings: Settings) -> RecommendationPipeline:
     global _global_settings, _global_pipeline
 
     try:
         pipeline = build_pipeline(settings)
     except Exception as exc:
         logger.exception("Global Recommendation Pipeline initialization failed")
-        mark_component_error("pipeline", exc, details={"stage": "build_pipeline", "reason": reason})
+        mark_component_error("pipeline", exc, details={"stage": "build_pipeline"})
         raise
 
     with _lock:
         _global_settings = settings
         _global_pipeline = pipeline
 
-    logger.info("Global Recommendation Pipeline initialized, reason=%s", reason)
-    mark_component_success("pipeline", details={"reason": reason})
+    mark_component_success("pipeline")
     return pipeline
 
 
-def rebuild_pipeline(*, settings: Settings | None = None, reason: str) -> RecommendationPipeline:
-    return initialize_pipeline(settings or get_settings(), reason=reason)
+def rebuild_pipeline(*, settings: Settings | None = None) -> RecommendationPipeline:
+    return initialize_pipeline(settings or get_settings())
 
 
 def get_pipeline() -> RecommendationPipeline:

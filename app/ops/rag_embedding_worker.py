@@ -80,8 +80,6 @@ def _build_result_snapshot(
         "elapsed_ms": max(0, int(round(float(elapsed_ms)))),
         "failure_samples": list(failure_samples[:DEFAULT_FAILURE_SAMPLE_LIMIT]),
     }
-    if progress.get("max_retry") is not None:
-        result["max_retry"] = max(1, int(progress.get("max_retry") or 1))
 
     movie_id = payload.get("movie_id")
     if movie_id is not None:
@@ -95,7 +93,6 @@ def _flush_progress(
     job_id: int,
     payload: dict[str, Any],
     progress: dict[str, Any],
-    failure_samples: list[dict[str, Any]],
     started_at: float,
 ) -> None:
     progress["flush_count"] = int(progress.get("flush_count") or 0) + 1
@@ -107,7 +104,6 @@ def _flush_progress(
         result=_build_result_snapshot(
             payload=payload,
             progress=progress,
-            failure_samples=failure_samples,
             elapsed_ms=elapsed_ms,
         ),
         status="processing",
@@ -141,7 +137,6 @@ def _log_first_failure(*, job_id: int, movie_id: int, attempt: int, error: str) 
 def _run_job(settings: Settings, job: dict[str, Any]) -> None:
     job_id = int(job["id"])
     payload = dict(job.get("payload") or {})
-    max_retry = max(1, int(settings.rag.embedding_job_max_retry))
     log_every_movies = max(1, int(settings.rag.rebuild_log_every_movies))
     started_at = perf_counter()
     failure_samples: list[dict[str, Any]] = []
@@ -154,7 +149,6 @@ def _run_job(settings: Settings, job: dict[str, Any]) -> None:
         "failed_jobs": 0,
         "pruned_embeddings": 0,
         "flush_count": 0,
-        "max_retry": max_retry,
     }
 
     try:
@@ -189,30 +183,14 @@ def _run_job(settings: Settings, job: dict[str, Any]) -> None:
 
         rag_service = get_movie_rag_service(settings)
         for movie_id in movie_ids:
-            last_error: str | None = None
-            for attempt in range(1, max_retry + 1):
-                try:
-                    rag_service.upsert_one(movie_id=int(movie_id), refresh_index=False)
-                    progress["completed_jobs"] = int(progress.get("completed_jobs") or 0) + 1
-                    break
-                except Exception as exc:
-                    last_error = f"{type(exc).__name__}: {exc}"
-                    _log_first_failure(
-                        job_id=job_id,
-                        movie_id=int(movie_id),
-                        attempt=attempt,
-                        error=last_error,
-                    )
-                    if attempt >= max_retry:
-                        progress["failed_jobs"] = int(progress.get("failed_jobs") or 0) + 1
-                        if len(failure_samples) < DEFAULT_FAILURE_SAMPLE_LIMIT:
-                            failure_samples.append(
-                                {
-                                    "movie_id": int(movie_id),
-                                    "error": last_error,
-                                    "attempts": int(attempt),
-                                }
-                            )
+            try:
+                rag_service.upsert_one(movie_id=int(movie_id), refresh_index=False)
+                progress["completed_jobs"] = int(progress.get("completed_jobs") or 0) + 1
+                break
+            except Exception as exc:
+                logger.warning("RAG rebuild embedding failed, task_id=%s, movie_id=%s, error=%s", job_id, movie_id, exc)
+                progress["failed_jobs"] = int(progress.get("failed_jobs") or 0) + 1
+
 
             progress["processed_movies"] = int(progress.get("processed_movies") or 0) + 1
             if (
@@ -224,7 +202,6 @@ def _run_job(settings: Settings, job: dict[str, Any]) -> None:
                     job_id=job_id,
                     payload=payload,
                     progress=progress,
-                    failure_samples=failure_samples,
                     started_at=started_at,
                 )
 

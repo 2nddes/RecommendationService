@@ -1,0 +1,23 @@
+2026-04-17 23:03:24 | INFO | pid=30296 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-17 23:03:24 | INFO | pid=30296 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-17 23:03:24 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-17 23:03:24 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-17 23:03:27 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-17 23:03:27 | INFO | pid=30296 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-17 23:03:27 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-17 23:03:27 | INFO | pid=30296 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-17 23:03:28 | INFO | pid=30296 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-17 23:03:59 | INFO | pid=30296 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-17 23:03:59 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-17 23:06:00 | INFO | pid=30296 | thread=MainThread | werkzeug | Press CTRL+C to quit

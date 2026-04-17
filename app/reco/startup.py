@@ -79,7 +79,7 @@ def run_startup_warmup(settings: Settings) -> None:
     mark_component_state("warmup", ready=False, status="running")
 
     try:
-        refresh_recommendation_runtime(settings, reason="startup", rebuild_two_tower_index=True)
+        refresh_recommendation_runtime(settings, rebuild_two_tower_index=True)
         logger.info("Global recommendation pipeline initialized")
         initialize_movie_rag_service(settings)
         logger.info("Global RAG service initialized")
@@ -112,7 +112,6 @@ def _two_tower_refresh_worker(settings: Settings) -> None:
         try:
             refresh_recommendation_runtime(
                 settings,
-                reason="two_tower_refresh_worker",
                 rebuild_two_tower_index=True,
             )
             mark_component_success(component, details={"interval_seconds": int(interval_seconds)})

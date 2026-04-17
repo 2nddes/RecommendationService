@@ -309,16 +309,13 @@ def list_tasks(
     }
 
 
-def claim_next_task(*, mysql_dsn: str | None, task_type: str, max_retry: int | None = None) -> Dict[str, Any] | None:
+def claim_next_task(*, mysql_dsn: str | None, task_type: str) -> Dict[str, Any] | None:
     engine = get_mysql_engine(mysql_dsn, logger=logger, event_prefix="task.mysql_engine")
     clauses = [
         "task_type = :task_type",
         "status = 'pending'",
     ]
     params: Dict[str, Any] = {"task_type": str(task_type)}
-    if max_retry is not None:
-        clauses.append("retry_count < :max_retry")
-        params["max_retry"] = int(max_retry)
     select_sql = text(
         f"""
         SELECT id
