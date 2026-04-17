@@ -164,40 +164,38 @@ def load_user_recommendation_total(settings: Settings, *, user_id: int) -> int:
 
 
 def pop_user_recommendation_items(settings: Settings, *, user_id: int, count: int) -> tuple[list[int], int]:
-    normalized = max(int(count), 0)
-    if normalized <= 0:
+    if count <= 0:
         return [], load_user_recommendation_total(settings, user_id=user_id)
 
     key = user_recommendation_list_key(settings, user_id)
-    started = perf_counter()
     try:
         client = get_redis_client(settings)
         if client is None:
+            logger.warning("No Redis client during recommendation pop, user_id=%s, key=%s, count=%s", user_id, key, count)
             return [], 0
         pipe = client.pipeline(transaction=True)
-        pipe.lrange(key, 0, normalized - 1)
-        pipe.ltrim(key, normalized, -1)
+        pipe.lrange(key, 0, count - 1)
+        pipe.ltrim(key, count, -1)
         pipe.llen(key)
         rows, _trim_result, remaining = pipe.execute()
         items = [int(raw) for raw in rows]
         remaining_count = int(remaining or 0)
         logger.debug(
-            "User recommendation pop, user_id=%s, key=%s, count=%s, returned_count=%s, remaining=%s, item_preview=%s, elapsed_ms=%.2f",
+            "User recommendation pop, user_id=%s, key=%s, count=%s, returned_count=%s, remaining=%s, item_preview=%s",
             user_id,
             key,
-            normalized,
+            count,
             len(items),
             remaining_count,
             items[:5],
-            (perf_counter() - started) * 1000.0,
         )
         return items, remaining_count
     except Exception:
         logger.exception(
-            "User recommendation pop failed, user_id=%s, key=%s, count=%s",
+            "User recommendation pop failed during redis, user_id=%s, key=%s, count=%s",
             user_id,
             key,
-            normalized,
+            count,
         )
         raise
 

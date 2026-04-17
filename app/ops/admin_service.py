@@ -5,6 +5,7 @@ import logging
 import secrets
 from typing import Any, Dict
 
+from app.common.runtime_health import snapshot_runtime_health
 from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
 from app.ops.model_ops import create_model_train_job
@@ -276,9 +277,8 @@ def get_admin_status(settings: Settings) -> Dict[str, Any]:
             "two_tower_model_path": settings.two_tower.model_path,
             "two_tower_index_path": settings.two_tower.index_path,
             "two_tower_vector_db_path": settings.two_tower.vector_db_path,
-            "two_tower_startup_build": settings.two_tower.startup_build,
-            "two_tower_daily_update_interval_hours": settings.two_tower.daily_update_interval_hours,
         },
         "artifacts": store.get_all(),
+        "runtime_health": snapshot_runtime_health(),
     }
 

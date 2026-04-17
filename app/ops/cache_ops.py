@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import text
 
-from app.common.runtime_health import mark_component_success
 from app.common.redis_cache import (
     get_redis_client,
     store_tag_recall_items,
@@ -329,10 +328,8 @@ def refresh_tag_inverted_recall_cache(settings: Settings) -> dict[str, int]:
 
 
 def run_all_cache_precompute(settings: Settings) -> dict[str, dict[str, int]]:
-    summary = {
+    return {
         "features": refresh_feature_cache(settings),
         "trending": refresh_trending_cache(settings),
         "tag_recall": refresh_tag_inverted_recall_cache(settings),
     }
-    mark_component_success("cache_precompute", details=summary)
-    return summary

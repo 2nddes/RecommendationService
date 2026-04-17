@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextvars import ContextVar
 import logging
-import os
 import re
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -11,34 +10,7 @@ from app.common.settings import Settings
 
 
 _configured = False
-_request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
 _ansi_escape_re = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
-
-
-def get_process_role() -> str:
-    if os.environ.get("RECO_APP_DEBUG") == "1":
-        return "serving" if os.environ.get("WERKZEUG_RUN_MAIN") == "true" else "loader"
-    return "app"
-
-
-def set_request_id(request_id: str | None) -> None:
-    normalized = str(request_id or "").strip() or "-"
-    _request_id_var.set(normalized)
-
-
-def get_request_id() -> str:
-    return _request_id_var.get()
-
-
-def clear_request_id() -> None:
-    _request_id_var.set("-")
-
-
-class _ContextFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        record.request_id = get_request_id()
-        record.process_role = get_process_role()
-        return True
 
 
 class _SanitizingFormatter(logging.Formatter):
@@ -53,15 +25,9 @@ def _repo_root() -> Path:
 
 def _build_formatter() -> logging.Formatter:
     return _SanitizingFormatter(
-        "%(asctime)s | %(levelname)s | %(process_role)s | pid=%(process)d | thread=%(threadName)s | rid=%(request_id)s | %(name)s | %(message)s",
+        "%(asctime)s | %(levelname)s | pid=%(process)d | thread=%(threadName)s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
-
-def _ensure_handler_context(handler: logging.Handler) -> None:
-    if not any(isinstance(existing, _ContextFilter) for existing in handler.filters):
-        handler.addFilter(_ContextFilter())
-    handler.setFormatter(_build_formatter())
 
 
 def configure_logging() -> Path:
@@ -74,7 +40,7 @@ def configure_logging() -> Path:
         _remove_console_handlers(root_logger)
         handler = _find_file_handler(root_logger)
         if handler is not None:
-            _ensure_handler_context(handler)
+            handler.setFormatter(_build_formatter())
             return Path(handler.baseFilename)
 
     settings = Settings.from_config()
@@ -101,7 +67,7 @@ def configure_logging() -> Path:
         root_logger.addHandler(file_handler)
 
     file_handler.setLevel(level)
-    _ensure_handler_context(file_handler)
+    file_handler.setFormatter(_build_formatter())
 
     _configured = True
     logging.getLogger(__name__).info("Logging initialized. log_file=%s", str(log_file))

@@ -5,106 +5,130 @@ import threading
 import time
 from time import perf_counter
 from typing import Any
+from typing import Callable
 
-from app.common.logging_setup import get_process_role
+from app.ops.cache_ops import run_all_cache_precompute
 from app.common.runtime_health import mark_component_error, mark_component_state, mark_component_success
 from app.common.settings import Settings
-from app.ops.cache_ops import run_all_cache_precompute
-from app.reco.online.runtime import get_pipeline
-from app.reco.recall.two_tower import (
-    build_hnsw_index,
-    load_latest_local_model,
-)
+from app.reco.online.runtime import initialize_pipeline, set_settings
+from app.reco.rag_service import initialize_movie_rag_service
+from app.reco.ranking.mmoe import load_latest_local_model as load_latest_mmoe_local_model
+from app.reco.recall.two_tower import build_hnsw_index, load_latest_local_model as load_latest_two_tower_local_model
 
 
 logger = logging.getLogger(__name__)
-_started = False
-_start_lock = threading.RLock()
-_worker_thread: threading.Thread | None = None
-_cache_worker_thread: threading.Thread | None = None
-_train_worker_thread: threading.Thread | None = None
-_rag_rebuild_worker_thread: threading.Thread | None = None
+
+_worker_threads: dict[str, threading.Thread] = {}
+
+
+def _load_active_recommendation_models(settings: Settings) -> dict[str, str]:
+    mmoe_model_path = load_latest_mmoe_local_model(settings)
+    if not mmoe_model_path:
+        raise RuntimeError("mmoe_model_not_found")
+
+    two_tower_model_path = load_latest_two_tower_local_model(settings)
+    if not two_tower_model_path:
+        raise RuntimeError("two_tower_model_not_found")
+
+    return {
+        "mmoe_model_path": mmoe_model_path,
+        "two_tower_model_path": two_tower_model_path,
+    }
 
 
 def _run_two_tower_full_build(settings: Settings) -> dict[str, Any]:
-    started = perf_counter()
-    logger.info("Starting two-tower full rebuild")
     cfg = settings.two_tower
-    loaded = load_latest_local_model(settings)
-
+    logger.info("Starting two-tower full rebuild")
     count = build_hnsw_index(
         index_path=cfg.index_path,
         cfg=cfg,
         mysql_dsn=settings.core.mysql_dsn,
     )
     logger.info(
-        "Two-tower rebuild finished, items=%s, index_path=%s, elapsed_ms=%.2f",
+        "Two-tower rebuild finished, items=%s, index_path=%s",
         int(count),
         cfg.index_path,
-        (perf_counter() - started) * 1000.0,
     )
     return {
         "items_indexed": int(count),
         "vector_db": cfg.vector_db_path,
         "index_path": cfg.index_path,
-        "model_path": loaded,
+        "model_path": cfg.model_path,
     }
 
 
-def _run_startup_once(settings: Settings) -> None:
-    started = perf_counter()
-    logger.info("Startup init tasks begin")
+def refresh_recommendation_runtime(
+    settings: Settings,
+    *,
+    rebuild_two_tower_index: bool,
+) -> dict[str, Any]:
+    model_paths = _load_active_recommendation_models(settings)
+    two_tower_status: dict[str, Any] | None = None
+    if rebuild_two_tower_index:
+        two_tower_status = _run_two_tower_full_build(settings)
+
+    initialize_pipeline(settings)
+    return {
+        **model_paths,
+        "two_tower": two_tower_status,
+    }
+
+
+def run_startup_warmup(settings: Settings) -> None:
+    logger.info("Startup warmup begins")
     mark_component_state("warmup", ready=False, status="running")
+
     try:
-        if settings.two_tower.startup_build:
-            _run_two_tower_full_build(settings)
-
-        from app.reco.rag_service import get_movie_rag_service
-
-        rag_status = get_movie_rag_service(settings).load_from_mysql()
-        logger.info(
-            "RAG HNSW index preloaded from MySQL, state=%s, source_rows=%s, indexed_rows=%s",
-            rag_status.get("state"),
-            rag_status.get("source_rows"),
-            rag_status.get("indexed_rows"),
-        )
-
-        get_pipeline()
-        logger.info("Global recommendation pipeline preloaded")
+        refresh_recommendation_runtime(settings, reason="startup", rebuild_two_tower_index=True)
+        logger.info("Global recommendation pipeline initialized")
+        initialize_movie_rag_service(settings)
+        logger.info("Global RAG service initialized")
 
         summary = run_all_cache_precompute(settings)
         logger.info(
-            "Startup cache precompute finished, elapsed_ms=%.2f, summary=%s",
-            (perf_counter() - started) * 1000.0,
+            "Startup cache precompute finished, summary=%s",
             summary,
         )
-        logger.info("Startup init tasks completed, elapsed_ms=%.2f", (perf_counter() - started) * 1000.0)
 
-        mark_component_success("warmup", details={"mode": "async"})
+        logger.info("Startup warmup completed")
+        mark_component_success("warmup", details={"reason": "startup"})
     except Exception as exc:
-        logger.exception("Startup init tasks failed")
-        mark_component_error("warmup", exc, details={"mode": "async"})
+        logger.exception("Startup warmup failed")
+        mark_component_error("warmup", exc, details={"reason": "startup"})
+        raise
 
 
-def _startup_worker(settings: Settings) -> None:
-    logger.info("Startup refresh worker begins")
-    interval = settings.two_tower.daily_update_interval_hours * 3600.0
-    logger.info("Entering two-tower refresh loop, interval_seconds=%s", int(interval))
+def _mark_worker_running(component: str, *, details: dict[str, Any] | None = None) -> None:
+    mark_component_state(component, ready=True, status="running", details=details)
+
+
+def _two_tower_refresh_worker(settings: Settings) -> None:
+    component = "two_tower_refresh_worker"
+    interval_seconds = settings.two_tower.daily_update_interval_hours * 3600.0
+    _mark_worker_running(component, details={"interval_seconds": int(interval_seconds)})
+    logger.info("Two-tower refresh worker begins, interval_seconds=%s", int(interval_seconds))
     while True:
-        time.sleep(interval)
+        time.sleep(interval_seconds)
         try:
-            _run_two_tower_full_build(settings)
-            mark_component_success("pipeline", details={"worker": "refresh"})
+            refresh_recommendation_runtime(
+                settings,
+                reason="two_tower_refresh_worker",
+                rebuild_two_tower_index=True,
+            )
+            mark_component_success(component, details={"interval_seconds": int(interval_seconds)})
+            _mark_worker_running(component, details={"interval_seconds": int(interval_seconds)})
         except Exception as exc:
             logger.exception("Two-tower refresh iteration failed")
-            mark_component_error("pipeline", exc, details={"worker": "refresh"})
+            mark_component_error(component, exc, details={"interval_seconds": int(interval_seconds)})
 
 
 def _cache_precompute_worker(settings: Settings) -> None:
-    interval = max(float(settings.cache.trending_refresh_interval_seconds), 60.0)
-    logger.info("Entering cache precompute loop, interval_seconds=%s", int(interval))
+    component = "cache_precompute_worker"
+    interval_seconds = max(float(settings.cache.trending_refresh_interval_seconds), 60.0)
+    _mark_worker_running(component, details={"interval_seconds": int(interval_seconds)})
+    logger.info("Cache precompute worker begins, interval_seconds=%s", int(interval_seconds))
     while True:
-        time.sleep(interval)
+        time.sleep(interval_seconds)
         try:
             started = perf_counter()
             summary = run_all_cache_precompute(settings)
@@ -113,97 +137,63 @@ def _cache_precompute_worker(settings: Settings) -> None:
                 (perf_counter() - started) * 1000.0,
                 summary,
             )
-            mark_component_success("cache_precompute", details={"worker": "scheduled"})
+            mark_component_success(component, details={"interval_seconds": int(interval_seconds)})
+            _mark_worker_running(component, details={"interval_seconds": int(interval_seconds)})
         except Exception as exc:
             logger.exception("Cache precompute iteration failed")
-            mark_component_error("cache_precompute", exc, details={"worker": "scheduled"})
+            mark_component_error(component, exc, details={"interval_seconds": int(interval_seconds)})
 
 
 def _train_queue_worker(settings: Settings) -> None:
-    # Keep this in-process for dev convenience so DB pending jobs are consumed automatically.
+    component = "train_queue_worker"
     if not settings.core.mysql_dsn:
         logger.warning("Train queue worker skipped: mysql_dsn is not configured")
+        mark_component_state(component, ready=False, status="skipped")
         return
 
     from app.ops.train_worker import run_loop
 
+    _mark_worker_running(component)
     logger.info("Train queue worker begins")
     try:
         run_loop(interval_seconds=3.0)
-    except Exception:
+    except Exception as exc:
         logger.exception("Train queue worker crashed")
+        mark_component_error(component, exc)
 
 
 def _rag_rebuild_queue_worker(settings: Settings) -> None:
+    component = "rag_rebuild_worker"
     if not settings.core.mysql_dsn:
         logger.warning("RAG rebuild worker skipped: mysql_dsn is not configured")
+        mark_component_state(component, ready=False, status="skipped")
         return
 
     from app.ops.rag_embedding_worker import run_loop
 
+    _mark_worker_running(component)
     logger.info("RAG rebuild worker begins")
     try:
         run_loop(interval_seconds=3.0)
-    except Exception:
+    except Exception as exc:
         logger.exception("RAG rebuild worker crashed")
+        mark_component_error(component, exc)
+
+
+def _start_worker(name: str, target: Callable[[Settings], None], settings: Settings) -> None:
+    thread = threading.Thread(target=target, args=(settings,), name=name, daemon=True)
+    thread.start()
+    _worker_threads[name] = thread
 
 
 def start_startup_jobs(settings: Settings) -> None:
-    global _started, _worker_thread, _cache_worker_thread, _train_worker_thread, _rag_rebuild_worker_thread
-    with _start_lock:
-        if get_process_role() == "loader":
-            logger.info("Startup jobs skipped in loader process")
-            return
 
-        if _started:
-            logger.info("Startup jobs already initialized, skipping duplicate launch")
-            return
-
-        _started = True
-        mark_component_state("warmup", ready=False, status="pending", details={"mode": "async"})
-
-        # Startup initialization is asynchronous: service can start and expose readiness state.
-        init_thread = threading.Thread(
-            target=_run_startup_once,
-            args=(settings,),
-            name="reco-startup-init",
-            daemon=True,
-        )
-        init_thread.start()
-        logger.info("Startup init async warmup started, thread_name=%s", init_thread.name)
-
-        _worker_thread = threading.Thread(
-            target=_startup_worker,
-            args=(settings,),
-            name="reco-startup-refresh-worker",
-            daemon=True,
-        )
-        _worker_thread.start()
-        logger.info("Startup worker launched, thread_name=%s", _worker_thread.name)
-
-        _cache_worker_thread = threading.Thread(
-            target=_cache_precompute_worker,
-            args=(settings,),
-            name="reco-cache-precompute-worker",
-            daemon=True,
-        )
-        _cache_worker_thread.start()
-        logger.info("Cache precompute worker launched, thread_name=%s", _cache_worker_thread.name)
-
-        _train_worker_thread = threading.Thread(
-            target=_train_queue_worker,
-            args=(settings,),
-            name="reco-train-queue-worker",
-            daemon=True,
-        )
-        _train_worker_thread.start()
-        logger.info("Train queue worker launched, thread_name=%s", _train_worker_thread.name)
-
-        _rag_rebuild_worker_thread = threading.Thread(
-            target=_rag_rebuild_queue_worker,
-            args=(settings,),
-            name="reco-rag-rebuild-worker",
-            daemon=True,
-        )
-        _rag_rebuild_worker_thread.start()
-        logger.info("RAG rebuild worker launched, thread_name=%s", _rag_rebuild_worker_thread.name)
+    try:
+        set_settings(settings)
+        run_startup_warmup(settings)
+        _start_worker("reco-two-tower-refresh-worker", _two_tower_refresh_worker, settings)
+        _start_worker("reco-cache-precompute-worker", _cache_precompute_worker, settings)
+        _start_worker("reco-train-queue-worker", _train_queue_worker, settings)
+        _start_worker("reco-rag-rebuild-worker", _rag_rebuild_queue_worker, settings)
+    except Exception:
+        raise

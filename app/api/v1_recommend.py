@@ -17,8 +17,7 @@ def _resolve_user_reco_delivery_mode(settings) -> str:
     raw_mode = str(settings.cache.user_reco_delivery_mode or "paged").strip().lower()
     if raw_mode in {"paged", "pop"}:
         return raw_mode
-    logger.warning("用户推荐缓存读取模式非法，fallback到paged，mode=%s", raw_mode)
-    return "paged"
+    raise RuntimeError(f"invalid_user_reco_delivery_mode: {raw_mode}")
 
 
 @recommend_bp.get("/recommend/user")

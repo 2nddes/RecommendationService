@@ -22,7 +22,10 @@ _components: dict[str, ComponentHealth] = {
     "warmup": ComponentHealth(name="warmup", ready=False, status="pending"),
     "pipeline": ComponentHealth(name="pipeline", ready=False, status="pending"),
     "rag": ComponentHealth(name="rag", ready=False, status="pending"),
-    "cache_precompute": ComponentHealth(name="cache_precompute", ready=False, status="pending"),
+    "two_tower_refresh_worker": ComponentHealth(name="two_tower_refresh_worker", ready=False, status="pending"),
+    "cache_precompute_worker": ComponentHealth(name="cache_precompute_worker", ready=False, status="pending"),
+    "train_queue_worker": ComponentHealth(name="train_queue_worker", ready=False, status="pending"),
+    "rag_rebuild_worker": ComponentHealth(name="rag_rebuild_worker", ready=False, status="pending"),
 }
 
 
@@ -73,7 +76,8 @@ def snapshot_runtime_health() -> dict[str, Any]:
 
     warmup_ready = bool(components.get("warmup", {}).get("ready"))
     pipeline_ready = bool(components.get("pipeline", {}).get("ready"))
-    overall_ready = warmup_ready and pipeline_ready
+    rag_ready = bool(components.get("rag", {}).get("ready"))
+    overall_ready = warmup_ready and pipeline_ready and rag_ready
 
     return {
         "generated_at": _now_iso(),
@@ -81,6 +85,7 @@ def snapshot_runtime_health() -> dict[str, Any]:
             "ready": overall_ready,
             "warmup_ready": warmup_ready,
             "pipeline_ready": pipeline_ready,
+            "rag_ready": rag_ready,
         },
         "components": components,
     }

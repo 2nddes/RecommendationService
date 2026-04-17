@@ -30,7 +30,7 @@ class RecommendationService:
         if page_size < 1:
             raise ValueError("'page_size' must be >= 1")
 
-        mode = self._resolve_user_reco_delivery_mode()
+        mode = self._settings.cache.user_reco_delivery_mode
         req_start = perf_counter()
         if mode == "pop":
             logger.debug(
@@ -62,48 +62,26 @@ class RecommendationService:
         )
         return payload
 
-    def _resolve_user_reco_delivery_mode(self) -> str:
-        raw_mode = str(self._settings.cache.user_reco_delivery_mode or "paged").strip().lower()
-        if raw_mode in {"paged", "pop"}:
-            return raw_mode
-        logger.warning("Invalid user_reco_delivery_mode=%s, fallback to paged", raw_mode)
-        return "paged"
 
-    def _build_user_recommendation_cache(self, *, user_id: int, build_target: int, fallback_log: bool = False) -> int:
-        if fallback_log:
-            logger.warning(
-                "User recommendation cache fallback build started, user_id=%s, build_target=%s",
-                user_id,
-                build_target,
-            )
-        else:
-            logger.info(
-                "User recommendation cache build started, user_id=%s, build_target=%s",
-                user_id,
-                build_target,
-            )
+    def _build_user_recommendation_cache(self, *, user_id: int, build_target: int) -> int:
+        logger.info(
+            "User recommendation cache build started, user_id=%s, build_target=%s",
+            user_id,
+            build_target,
+        )
 
         build_start = perf_counter()
         try:
             pipeline = get_pipeline()
             ctx = RequestContext(user_id=user_id, n=build_target)
             built_items = pipeline.recommend(ctx)
-            if fallback_log:
-                logger.warning(
-                    "User recommendation cache fallback pipeline result, user_id=%s, build_target=%s, built_count=%s, item_preview=%s",
-                    user_id,
-                    build_target,
-                    len(built_items),
-                    built_items[:5],
-                )
-            else:
-                logger.info(
-                    "User recommendation cache pipeline result, user_id=%s, build_target=%s, built_count=%s, item_preview=%s",
-                    user_id,
-                    build_target,
-                    len(built_items),
-                    built_items[:5],
-                )
+            logger.info(
+                "User recommendation cache pipeline result, user_id=%s, build_target=%s, built_count=%s, item_preview=%s",
+                user_id,
+                build_target,
+                len(built_items),
+                built_items[:5],
+            )
             if not built_items:
                 logger.warning(
                     "User recommendation cache build returned empty items, user_id=%s, build_target=%s",
@@ -112,43 +90,26 @@ class RecommendationService:
                 )
 
             stored = self._cache_repo.store_user_recommendation(user_id=user_id, items=built_items)
-            if fallback_log:
-                logger.warning(
-                    "User recommendation cache fallback stored, user_id=%s, build_target=%s, stored_count=%s",
-                    user_id,
-                    build_target,
-                    stored,
-                )
-                logger.warning(
-                    "User recommendation cache fallback build completed, user_id=%s, build_target=%s, built_count=%s, stored_count=%s, elapsed_ms=%.2f",
-                    user_id,
-                    build_target,
-                    len(built_items),
-                    stored,
-                    (perf_counter() - build_start) * 1000.0,
-                )
-            else:
-                logger.info(
-                    "User recommendation cache stored, user_id=%s, build_target=%s, stored_count=%s",
-                    user_id,
-                    build_target,
-                    stored,
-                )
-                logger.info(
-                    "User recommendation cache build completed, user_id=%s, build_target=%s, built_count=%s, stored_count=%s, elapsed_ms=%.2f",
-                    user_id,
-                    build_target,
-                    len(built_items),
-                    stored,
-                    (perf_counter() - build_start) * 1000.0,
-                )
+            logger.info(
+                "User recommendation cache stored, user_id=%s, build_target=%s, stored_count=%s",
+                user_id,
+                build_target,
+                stored,
+            )
+            logger.info(
+                "User recommendation cache build completed, user_id=%s, build_target=%s, built_count=%s, stored_count=%s, elapsed_ms=%.2f",
+                user_id,
+                build_target,
+                len(built_items),
+                stored,
+                (perf_counter() - build_start) * 1000.0,
+            )
             return int(stored if stored > 0 else len(built_items))
         except Exception:
             logger.exception(
-                "User recommendation cache build failed, user_id=%s, build_target=%s, fallback=%s",
+                "User recommendation cache build failed, user_id=%s, build_target=%s",
                 user_id,
                 build_target,
-                fallback_log,
             )
             raise
 
@@ -423,9 +384,7 @@ class RecommendationService:
         )
 
     def _recommend_user_pop(self, *, user_id: int, page: int, page_size: int) -> tuple[dict, bool]:
-        if page != 1:
-            logger.info("User recommendation pop mode ignores page parameter, user_id=%s, page=%s", user_id, page)
-
+        
         build_target = max(int(self._settings.cache.user_reco_cache_size), 1)
         cache_state = "initial_hit"
         build_reason = "none"
@@ -445,7 +404,7 @@ class RecommendationService:
             cache_state = "cache_miss"
             token = uuid4().hex
             logger.warning(
-                "User recommendation pop cache miss, user_id=%s, n=%s, build_target=%s, action=acquire_build_lock",
+                "Pop cache miss, acquire lock to build cache, user_id=%s, n=%s, build_target=%s, action=acquire_build_lock",
                 user_id,
                 page_size,
                 build_target,
@@ -581,13 +540,12 @@ class RecommendationService:
 
     def recommend_item(self, *, movie_id: int, n: int) -> dict:
         logger.debug("Item recommendation started, movie_id=%s, n=%s", movie_id, n)
-        cfg = self._settings.two_tower
-        item_vec = build_item_vector(movie_id, cfg, mysql_dsn=self._settings.core.mysql_dsn)
+        item_vec = build_item_vector(movie_id, mysql_dsn=self._settings.core.mysql_dsn)
         if item_vec is None:
             logger.warning("Item recommendation failed: item vector missing, movie_id=%s", movie_id)
             raise ValueError(f"Item vector not found for movie_id: {movie_id}")
 
-        pairs = ann_search(item_vec, k=max(n + 1, n), cfg=cfg)
+        pairs = ann_search(item_vec, k=max(n + 1, n))
         logger.info("Item recommendation ANN finished, movie_id=%s, ann_candidates=%s", movie_id, len(pairs))
         items: list[int] = []
         for item_id, _score in pairs:
@@ -606,20 +564,20 @@ class RecommendationService:
         return {"source_id": movie_id, "items": items, "n": n}
 
     def recommend_trending(self, *, window: str, n: int) -> dict:
-        logger.debug("Trending recommendation started, window=%s, n=%s", window, n)
+        logger.debug("Trending started, window=%s, n=%s", window, n)
         items = self._cache_repo.load_trending(window=window, n=n)
         if items:
-            logger.info("Trending recommendation cache hit, window=%s, returned=%s", window, len(items))
+            logger.info("Trending cache hit, window=%s, returned=%s", window, len(items))
         else:
-            logger.info("Trending recommendation cache miss, window=%s", window)
+            logger.info("Trending cache miss, window=%s", window)
             pairs = self._trending_repo.fetch_item_scores(window=window, n=max(n, self._settings.cache.trending_topk))
             items = [item_id for item_id, _score in pairs[:n]]
             if pairs:
                 stored = self._cache_repo.store_trending(window=window, pairs=pairs)
-                logger.info("Trending recommendation cache backfill done, window=%s, stored=%s", window, stored)
+                logger.info("Trending cache backfill done, window=%s, stored=%s", window, stored)
             else:
-                logger.warning("Trending recommendation fallback returned empty, window=%s", window)
-        logger.info("Trending recommendation completed, window=%s, returned=%s", window, len(items))
+                logger.warning("Trending fallback returned empty, window=%s", window)
+        logger.info("Trending completed, window=%s, returned=%s", window, len(items))
         return {"window": window, "items": items, "n": n}
 
 

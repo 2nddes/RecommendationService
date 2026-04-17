@@ -1,19 +1,21 @@
 from __future__ import annotations
 
+import os
+
 from app.common.settings import Settings
 from app.reco.pipeline import RecommendationPipeline
+from app.reco.ranking.mmoe import MMoERanker, load_mmoe_bundle
 from app.reco.recall.tag_inverted import TagInvertedRecall
 from app.reco.recall.two_tower import (
     TwoTowerRecall,
-    load_latest_local_model as load_latest_two_tower_model,
+    initialize_two_tower_runtime,
 )
-from app.reco.ranking.mmoe import MMoERanker, load_latest_local_model as load_latest_mmoe_model
 from app.reco.reranking.random_shuffle import RandomShuffleReranker
 
 
 def build_pipeline(settings: Settings) -> RecommendationPipeline:
-    # Ensure active two-tower model path is synced with latest artifact before serving.
-    load_latest_two_tower_model(settings)
+    initialize_two_tower_runtime(settings.two_tower)
+    mmoe_bundle, mmoe_model = load_mmoe_bundle(settings.mmoe.model_path)
 
     recallers = [
         TwoTowerRecall(
@@ -33,7 +35,9 @@ def build_pipeline(settings: Settings) -> RecommendationPipeline:
     return RecommendationPipeline(
         recallers=recallers,
         ranker=MMoERanker(
-            model_path=load_latest_mmoe_model(settings),
+            bundle=mmoe_bundle,
+            model=mmoe_model,
+            model_version=os.path.basename(settings.mmoe.model_path),
             use_mysql_features=True,
             mysql_dsn=settings.core.mysql_dsn,
         ),

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from app.reco.runtime import get_pipeline, get_settings, rebuild_pipeline, reload_settings, reset_pipeline
+from app.reco.runtime import get_pipeline, get_settings, initialize_pipeline, rebuild_pipeline, set_settings
 
 __all__ = [
     "get_pipeline",
     "get_settings",
-    "reload_settings",
-    "reset_pipeline",
+    "initialize_pipeline",
     "rebuild_pipeline",
+    "set_settings",
 ]

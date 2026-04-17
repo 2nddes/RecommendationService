@@ -33,7 +33,7 @@ class TwoTowerRecall(Recaller):
 
         if ctx.user_id is not None:
             user_id = int(ctx.user_id)
-            query_vec = build_user_vector(user_id, self.cfg, mysql_dsn=self.mysql_dsn)
+            query_vec = build_user_vector(user_id, mysql_dsn=self.mysql_dsn)
             excluded = fetch_user_excluded_items(
                 user_id,
                 mysql_dsn=self.mysql_dsn,
@@ -57,7 +57,7 @@ class TwoTowerRecall(Recaller):
             )
             return []
 
-        pairs = ann_search(query_vec, k=max(int(self.cfg.recall_topk), int(ctx.n)), cfg=self.cfg)
+        pairs = ann_search(query_vec, k=max(int(self.cfg.recall_topk), int(ctx.n)))
         out: List[Candidate] = []
         for item_id, score in pairs:
             if int(item_id) in excluded:

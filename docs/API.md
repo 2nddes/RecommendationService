@@ -498,8 +498,6 @@ Query 参数：
 - `config.two_tower_model_path`
 - `config.two_tower_index_path`
 - `config.two_tower_vector_db_path`
-- `config.two_tower_startup_build`
-- `config.two_tower_daily_update_interval_hours`
 - `artifacts`
 
 ## 9. 任务类型与 Worker

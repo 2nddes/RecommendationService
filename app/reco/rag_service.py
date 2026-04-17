@@ -252,13 +252,9 @@ class MovieRagService:
             logger.exception("RAG index load failed")
             raise
 
-    def ensure_loaded(self) -> None:
-        if self._index_ready:
-            return
-        with self._lock:
-            if self._index_ready:
-                return
-        self.load_from_mysql()
+    def initialize(self) -> dict[str, Any]:
+        self._ensure_faiss_module()
+        return self.load_from_mysql()
 
     def _fetch_movie(self, movie_id: int) -> dict[str, Any] | None:
         sql = text(
@@ -524,9 +520,8 @@ class MovieRagService:
         return movie_id
 
     def _search_faiss_ids(self, *, query: str, k: int) -> list[tuple[int, float]]:
-        self.ensure_loaded()
         if self._index is None or self._dim is None:
-            return []
+            raise RuntimeError("rag_index_not_initialized")
 
         client = get_redis_client(self._settings)
         if client is not None:
@@ -658,10 +653,19 @@ _service: MovieRagService | None = None
 _service_lock = threading.RLock()
 
 
-def get_movie_rag_service(settings: Settings) -> MovieRagService:
+def initialize_movie_rag_service(settings: Settings) -> MovieRagService:
     global _service
     with _service_lock:
-        if _service is not None:
-            return _service
-        _service = MovieRagService(settings)
+        if _service is None:
+            _service = MovieRagService(settings)
+        service = _service
+
+    service.initialize()
+    return service
+
+
+def get_movie_rag_service(_settings: Settings | None = None) -> MovieRagService:
+    with _service_lock:
+        if _service is None:
+            raise RuntimeError("rag_service_not_initialized")
         return _service

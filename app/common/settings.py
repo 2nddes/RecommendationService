@@ -71,13 +71,11 @@ class TwoTowerSettings:
     recall_topk: int = 300
     hr_eval_k: int = 20
     space: str = "cosine"
-    reload_interval_s: float = 2.0
     index_path: str = "data/two_tower_items.hnsw"
     vector_db_path: str = "data/two_tower_vectors.db"
     model_path: str = "data/models/two_tower_latest.pt"
 
-    # Startup and periodic refresh settings.
-    startup_build: bool = True
+    # Periodic refresh settings.
     daily_update_interval_hours: float = 24.0
 
     # Training settings.

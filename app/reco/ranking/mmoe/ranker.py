@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
-import os
 import threading
 from time import perf_counter
 from typing import Any, Dict, List, Sequence
@@ -32,8 +31,6 @@ from .model import MMoENet
 
 
 logger = logging.getLogger(__name__)
-_model_cache_lock = threading.RLock()
-_model_cache: dict[str, tuple[float, Dict[str, Any], MMoENet]] = {}
 _engine_cache_lock = threading.RLock()
 _engine_cache: dict[str, Engine] = {}
 
@@ -55,9 +52,50 @@ def _calc_age_from_birth(birth: Any) -> int | None:
     return max(today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day)), 0)
 
 
+def _build_model_from_bundle(bundle: Dict[str, Any]) -> MMoENet:
+    model_meta = bundle["model_meta"]
+    model = MMoENet(
+        user_vocab_size=int(model_meta["user_vocab_size"]),
+        item_vocab_size=int(model_meta["item_vocab_size"]),
+        num_numeric_features=int(model_meta["num_numeric_features"]),
+        emb_dim=int(model_meta["emb_dim"]),
+        num_experts=int(model_meta["num_experts"]),
+        expert_hidden_dim=int(model_meta["expert_hidden_dim"]),
+        tower_hidden_dim=int(model_meta["tower_hidden_dim"]),
+        gender_vocab_size=int(model_meta.get("gender_vocab_size", 0)),
+        age_bucket_vocab_size=int(model_meta.get("age_bucket_vocab_size", 0)),
+        tag_vocab_size=int(model_meta.get("tag_vocab_size", 0)),
+        use_item_tag_pooling=bool(model_meta.get("use_item_tag_pooling", False)),
+        use_target_attention=bool(model_meta.get("use_target_attention", False)),
+        use_long_interest_pooling=bool(model_meta.get("use_long_interest_pooling", False)),
+    )
+    model.load_state_dict(bundle["state_dict"])
+    return model
+
+
+def load_mmoe_bundle(model_path: str) -> tuple[Dict[str, Any], MMoENet]:
+    path = str(model_path).strip()
+    if not path:
+        raise RuntimeError("mmoe_model_path_is_empty")
+
+    try:
+        bundle = torch.load(path, map_location="cpu")
+    except OSError as exc:
+        raise RuntimeError(f"mmoe_model_not_found: {path}") from exc
+
+    if not isinstance(bundle, dict):
+        raise RuntimeError("mmoe_bundle_invalid")
+
+    model = _build_model_from_bundle(bundle)
+    model.eval()
+    return bundle, model
+
+
 @dataclass(frozen=True)
 class MMoERanker(Ranker):
-    model_path: str | None = None
+    bundle: Dict[str, Any]
+    model: MMoENet
+    model_version: str
     use_mysql_features: bool = True
     mysql_dsn: str | None = None
 
@@ -71,26 +109,21 @@ class MMoERanker(Ranker):
 
         rank_start = perf_counter()
 
-        if not self.model_path:
-            raise RuntimeError("mmoe_model_path_is_empty")
-
-        bundle, model = self._ranker_load_cached_bundle_and_model(self.model_path)
-
-        feature_order = [str(x) for x in bundle.get("feature_order") or bundle_feature_order()]
+        feature_order = [str(x) for x in self.bundle.get("feature_order") or bundle_feature_order()]
         user_ids, item_ids, numeric_rows, gender_ids, age_bucket_ids, item_tag_ids, short_hist_ids, long_tag_ids = (
             self._ranker_build_infer_tensors(
                 ctx=ctx,
                 candidates=candidates,
-                bundle=bundle,
+                bundle=self.bundle,
                 feature_order=feature_order,
-                feature_stats=bundle.get("feature_stats") or {},
+                feature_stats=self.bundle.get("feature_stats") or {},
             )
         )
         tensor_ready_ms = (perf_counter() - rank_start) * 1000.0
 
         infer_start = perf_counter()
         with torch.no_grad():
-            pred = model(
+            pred = self.model(
                 user_ids,
                 item_ids,
                 numeric_rows,
@@ -116,58 +149,17 @@ class MMoERanker(Ranker):
         ranked.sort(key=lambda x: x.score, reverse=True)
         sort_ms = (perf_counter() - sort_start) * 1000.0
         total_ms = (perf_counter() - rank_start) * 1000.0
-        model_version = os.path.basename(self.model_path or "")
         logger.info(
             "event=reco.rank.mmoe.done | user_id=%s | candidate_count=%s | model_version=%s | tensor_build_ms=%.2f | infer_ms=%.2f | sort_ms=%.2f | elapsed_ms=%.2f",
             ctx.user_id,
             len(candidates),
-            model_version,
+            self.model_version,
             tensor_ready_ms,
             infer_ms,
             sort_ms,
             total_ms,
         )
         return ranked
-
-    def _ranker_load_cached_bundle_and_model(self, model_path: str) -> tuple[Dict[str, Any], MMoENet]:
-        try:
-            mtime = os.path.getmtime(model_path)
-        except OSError as e:
-            raise RuntimeError(f"mmoe_model_not_found: {model_path}") from e
-
-        with _model_cache_lock:
-            cached = _model_cache.get(model_path)
-            if cached is not None and cached[0] == mtime:
-                return cached[1], cached[2]
-
-            bundle = torch.load(model_path, map_location="cpu")
-            if not isinstance(bundle, dict):
-                raise RuntimeError("mmoe_bundle_invalid")
-
-            model = self._ranker_build_model_from_bundle(bundle)
-            model.eval()
-            _model_cache[model_path] = (mtime, bundle, model)
-            return bundle, model
-
-    def _ranker_build_model_from_bundle(self, bundle: Dict[str, Any]) -> MMoENet:
-        model_meta = bundle["model_meta"]
-        model = MMoENet(
-            user_vocab_size=int(model_meta["user_vocab_size"]),
-            item_vocab_size=int(model_meta["item_vocab_size"]),
-            num_numeric_features=int(model_meta["num_numeric_features"]),
-            emb_dim=int(model_meta["emb_dim"]),
-            num_experts=int(model_meta["num_experts"]),
-            expert_hidden_dim=int(model_meta["expert_hidden_dim"]),
-            tower_hidden_dim=int(model_meta["tower_hidden_dim"]),
-            gender_vocab_size=int(model_meta.get("gender_vocab_size", 0)),
-            age_bucket_vocab_size=int(model_meta.get("age_bucket_vocab_size", 0)),
-            tag_vocab_size=int(model_meta.get("tag_vocab_size", 0)),
-            use_item_tag_pooling=bool(model_meta.get("use_item_tag_pooling", False)),
-            use_target_attention=bool(model_meta.get("use_target_attention", False)),
-            use_long_interest_pooling=bool(model_meta.get("use_long_interest_pooling", False)),
-        )
-        model.load_state_dict(bundle["state_dict"])
-        return model
 
     def _ranker_build_infer_tensors(
         self,

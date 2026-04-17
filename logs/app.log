@@ -12450,3 +12450,119 @@ app.reco.rag_clients.OpenAICompatError: request_failed: TimeoutError: The read o
  * Running on http://127.0.0.1:5000
  * Running on http://49.140.125.102:5000
 2026-04-17 17:46:12 | INFO | loader | pid=14616 | thread=MainThread | rid=- | werkzeug | Press CTRL+C to quit
+2026-04-17 18:25:58 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 18:25:58 | INFO | app | pid=25380 | thread=MainThread | rid=- | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 18:25:58 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup warmup begins
+2026-04-17 18:25:58 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Starting two-tower full rebuild
+2026-04-17 18:26:05 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw, elapsed_ms=7454.19
+2026-04-17 18:26:06 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-17 18:26:06 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.runtime | Global Recommendation Pipeline initialized, reason=startup
+2026-04-17 18:26:06 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Recommendation runtime refreshed, reason=startup, elapsed_ms=8596.60
+2026-04-17 18:26:06 | INFO | app | pid=25380 | thread=MainThread | rid=- | faiss.loader | Loading faiss with AVX2 support.
+2026-04-17 18:26:07 | INFO | app | pid=25380 | thread=MainThread | rid=- | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-17 18:26:50 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-17 18:26:50 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Global RAG service initialized
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup cache precompute finished, elapsed_ms=227058.59, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup warmup completed, elapsed_ms=227058.91
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=reco-two-tower-refresh-worker | rid=- | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-two-tower-refresh-worker
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=reco-cache-precompute-worker | rid=- | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-cache-precompute-worker
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-train-queue-worker
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-rag-rebuild-worker
+2026-04-17 18:29:45 | INFO | app | pid=25380 | thread=MainThread | rid=- | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | app.reco.startup | Startup jobs skipped in loader process
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-17 20:24:32 | INFO | loader | pid=10496 | thread=MainThread | rid=- | werkzeug | Press CTRL+C to quit
+2026-04-17 20:30:55 | INFO | pid=32360 | thread=MainThread | rid=- | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:30:55 | INFO | pid=32360 | thread=MainThread | rid=- | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:30:56 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Startup warmup begins
+2026-04-17 20:30:56 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Starting two-tower full rebuild
+2026-04-17 20:31:01 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw, elapsed_ms=5320.13
+2026-04-17 20:31:02 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-17 20:31:02 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.runtime | Global Recommendation Pipeline initialized, reason=startup
+2026-04-17 20:31:02 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Recommendation runtime refreshed, reason=startup, elapsed_ms=6469.38
+2026-04-17 20:31:02 | INFO | pid=32360 | thread=MainThread | rid=- | faiss.loader | Loading faiss with AVX2 support.
+2026-04-17 20:31:02 | INFO | pid=32360 | thread=MainThread | rid=- | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-17 20:31:39 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-17 20:31:40 | INFO | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Global RAG service initialized
+2026-04-17 20:33:05 | ERROR | pid=32360 | thread=MainThread | rid=- | app.reco.startup | Startup warmup failed
+Traceback (most recent call last):
+  File "D:\project\Python\RecommendationService\app\reco\startup.py", line 96, in run_startup_warmup
+    summary = run_all_cache_precompute(settings)
+  File "D:\project\Python\RecommendationService\app\ops\cache_ops.py", line 333, in run_all_cache_precompute
+    "trending": refresh_trending_cache(settings),
+                ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "D:\project\Python\RecommendationService\app\ops\cache_ops.py", line 190, in refresh_trending_cache
+    out[window] = int(store_trending_items(settings, window=window, pairs=pairs))
+                      ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\project\Python\RecommendationService\app\common\redis_cache.py", line 219, in store_trending_items
+    pipe.execute()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1955, in execute
+    response = conn.retry.call_with_retry(
+        lambda: execute(conn, stack, raise_on_error),
+        failure_callback,
+        with_failure_count=True,
+    )
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\retry.py", line 120, in call_with_retry
+    return do()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1956, in <lambda>
+    lambda: execute(conn, stack, raise_on_error),
+            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1847, in _execute_pipeline
+    self.raise_first_error(commands, responses)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1855, in raise_first_error
+    raise r
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1842, in _execute_pipeline
+    responses.append(self.parse_response(connection, args[0], **options))
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 1866, in parse_response
+    result = Redis.parse_response(self, connection, command_name, **options)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\client.py", line 780, in parse_response
+    response = connection.read_response()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\redis\connection.py", line 1364, in read_response
+    raise response
+redis.exceptions.ResponseError: Command # 1 (DEL reco:trending:monthly) of pipeline caused error: MISCONF Redis is configured to save RDB snapshots, but it is currently not able to persist on disk. Commands that may modify the data set are disabled, because this instance is configured to report errors during writes if RDB snapshotting fails (stop-writes-on-bgsave-error option). Please check the Redis logs for details about the RDB error.
+2026-04-17 20:34:19 | INFO | pid=8 | thread=MainThread | rid=- | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:34:19 | INFO | pid=8 | thread=MainThread | rid=- | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:34:19 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Startup warmup begins
+2026-04-17 20:34:19 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Starting two-tower full rebuild
+2026-04-17 20:34:23 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw, elapsed_ms=4396.15
+2026-04-17 20:34:24 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-17 20:34:24 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.runtime | Global Recommendation Pipeline initialized, reason=startup
+2026-04-17 20:34:24 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Recommendation runtime refreshed, reason=startup, elapsed_ms=5440.34
+2026-04-17 20:34:24 | INFO | pid=8 | thread=MainThread | rid=- | faiss.loader | Loading faiss with AVX2 support.
+2026-04-17 20:34:24 | INFO | pid=8 | thread=MainThread | rid=- | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-17 20:35:00 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-17 20:35:00 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Global RAG service initialized
+2026-04-17 20:35:00 | INFO | pid=8 | thread=MainThread | rid=- | app.reco.startup | Startup warmup completed, elapsed_ms=41368.65
+2026-04-17 20:35:00 | INFO | pid=8 | thread=MainThread | rid=- | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-17 20:43:27 | INFO | pid=3316 | thread=MainThread | rid=- | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:43:27 | INFO | pid=3316 | thread=MainThread | rid=- | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app.log
+2026-04-17 20:43:27 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup warmup begins
+2026-04-17 20:43:27 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Starting two-tower full rebuild
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw, elapsed_ms=3450.47
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.runtime | Global Recommendation Pipeline initialized, reason=startup
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Recommendation runtime refreshed, reason=startup, elapsed_ms=4176.14
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | faiss.loader | Loading faiss with AVX2 support.
+2026-04-17 20:43:31 | INFO | pid=3316 | thread=MainThread | rid=- | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-17 20:44:02 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-17 20:44:02 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Global RAG service initialized
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup cache precompute finished, elapsed_ms=163854.52, summary={'features': {'movie_features': 140519, 'user_features': 639126}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup warmup completed, elapsed_ms=163854.79
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=reco-two-tower-refresh-worker | rid=- | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-two-tower-refresh-worker
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=reco-cache-precompute-worker | rid=- | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-cache-precompute-worker
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-train-queue-worker
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app.reco.startup | Startup worker launched, thread_name=reco-rag-rebuild-worker
+2026-04-17 20:46:11 | INFO | pid=3316 | thread=MainThread | rid=- | app | 应用初始化完成，接口前缀=/api/v1

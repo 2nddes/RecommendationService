@@ -45,11 +45,14 @@ def _map_train_job(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _rebuild_global_pipeline_singleton(*, reason: str) -> None:
-    """Best-effort refresh of global recommendation runtime after model changes."""
-    from app.reco.runtime import rebuild_pipeline
+def _rebuild_global_pipeline_singleton(*, settings: Settings, reason: str, rebuild_two_tower_index: bool) -> None:
+    from app.reco.startup import refresh_recommendation_runtime
 
-    rebuild_pipeline(reason=reason)
+    refresh_recommendation_runtime(
+        settings,
+        reason=reason,
+        rebuild_two_tower_index=rebuild_two_tower_index,
+    )
     log_event(logger, "info", "train.runtime.pipeline_rebuilt", reason=reason)
 
 
@@ -135,20 +138,24 @@ def train_current_models(
         status="completed",
         train_job_id=train_job_id,
     )
-    _rebuild_global_pipeline_singleton(reason=f"train_current_models:{component}.{model}")
+    _rebuild_global_pipeline_singleton(
+        settings=settings,
+        reason=f"train_current_models:{component}.{model}",
+        rebuild_two_tower_index=component == "recall" and model == "two_tower",
+    )
     return result
 
 
 def refresh_current_models(settings: Settings) -> Dict[str, Any]:
-    from app.reco.ranking.mmoe import load_latest_local_model as load_latest_mmoe_local_model
-    from app.reco.recall.two_tower import load_latest_local_model as load_latest_two_tower_local_model
+    try:
+        _rebuild_global_pipeline_singleton(
+            settings=settings,
+            reason="refresh_current_models",
+            rebuild_two_tower_index=True,
+        )
+    except Exception as exc:
+        return {"status": "failed", "reason": f"{type(exc).__name__}: {exc}"}
 
-    if not load_latest_mmoe_local_model(settings):
-        return {"status": "failed", "reason": "mmoe_model_not_found"}
-    if not load_latest_two_tower_local_model(settings):
-        return {"status": "failed", "reason": "two_tower_model_not_found"}
-
-    _rebuild_global_pipeline_singleton(reason="refresh_current_models")
     return {"status": "completed", "reason": None}
 
 
