@@ -149,7 +149,6 @@ class RagSettings:
     index_hnsw_m: int = 32
     index_hnsw_ef_search: int = 64
     embedding_summary_max_chars: int = 1200
-    rebuild_log_every_movies: int = 100
 
 
 @dataclass(frozen=True)

@@ -107,8 +107,7 @@
         "redis_result_ttl_seconds": 30000,
         "index_hnsw_m": 32,
         "index_hnsw_ef_search": 64,
-        "embedding_summary_max_chars": 1200,
-        "rebuild_log_every_movies": 100
+        "embedding_summary_max_chars": 1200
     },
     "tag_recall": {
         "enabled": true,

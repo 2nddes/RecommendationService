@@ -10,7 +10,7 @@ from app.ops.admin_service import (
     get_admin_status,
     get_task,
     get_tasks,
-    start_rag_rebuild_movie_task,
+    refresh_rag_movie_embedding,
     start_rag_rebuild_task,
     start_train_task,
 )
@@ -92,15 +92,15 @@ def admin_rag_enqueue():
         raise ParamError("invalid 'movie_id', expected positive integer")
 
     settings = get_settings()
-    data = start_rag_rebuild_movie_task(settings, movie_id=int(movie_id))
-    return ok(data, message="RAG single-movie rebuild task queued")
+    data = refresh_rag_movie_embedding(settings, movie_id=int(movie_id))
+    return ok(data, message="RAG single-movie embedding refreshed")
 
 
 @admin_bp.post("/admin/rag/rebuild")
 def admin_rag_rebuild():
     settings = get_settings()
     data = start_rag_rebuild_task(settings)
-    return ok(data, message="RAG full rebuild task started")
+    return ok(data, message="RAG full rebuild task queued")
 
 
 @admin_bp.post("/admin/refresh")

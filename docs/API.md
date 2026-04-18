@@ -71,7 +71,7 @@
   "task_id": "rag_rebuild_job_42",
   "row_id": 42,
   "task_type": "rag_rebuild_job",
-  "status": "processing",
+  "status": "completed",
   "parent_task_id": null,
   "parent_row_id": null,
   "retry_count": 0,
@@ -81,30 +81,30 @@
   },
   "progress": {
     "total_movies": 1000,
-    "processed_movies": 120,
-    "completed_jobs": 120,
-    "failed_jobs": 0,
-    "pruned_embeddings": 18,
-    "flush_count": 4,
+    "processed_movies": 1000,
+    "completed_jobs": 998,
+    "failed_jobs": 2,
+    "pruned_embeddings": 18
   },
   "result": {
     "scope": "full_rebuild",
     "total_movies": 1000,
-    "processed_movies": 120,
-    "completed_jobs": 120,
-    "failed_jobs": 0,
+    "processed_movies": 1000,
+    "completed_jobs": 998,
+    "failed_jobs": 2,
     "pruned_embeddings": 18,
     "elapsed_ms": 15342,
-    "failure_samples": []
+    "index_state": "ready",
+    "source_rows": 998,
+    "indexed_rows": 998
   },
   "created_at": "2026-04-15T08:00:00",
   "updated_at": "2026-04-15T08:03:11",
   "started_at": "2026-04-15T08:00:00",
-  "finished_at": null,
+  "finished_at": "2026-04-15T08:03:11",
   "source": "db",
   "kind": "rag_rebuild_job",
-  "name": "rag_rebuild_job",
-  "rag_rebuild_job_id": 42
+  "name": "rag_rebuild_job"
 }
 ```
 
@@ -116,9 +116,9 @@
 - `parent_task_id`：父任务的公共任务 ID，当前任务类型通常为空
 - `parent_row_id`：父任务的统一任务表主键，当前任务类型通常为空
 - `payload`：任务输入和上下文
-- `progress`：任务进度，仅记录任务级聚合统计信息
+- `progress`：任务级聚合统计信息，只在任务开始和任务结束时写回，不会按电影逐条刷新
 - `result`：任务结果或输出摘要，不记录逐请求或逐电影响应明细
-- `kind`、`name`、`train_job_id`、`rag_rebuild_job_id`：兼容字段
+- `kind`、`name`：兼容字段
 
 ## 4. 健康检查
 
@@ -375,7 +375,7 @@ SSE 事件：
 
 ### 8.2 `POST /admin/rag/enqueue`
 
-提交单电影 RAG 重建任务。
+同步刷新单电影 RAG embedding。
 
 请求体：
 
@@ -385,7 +385,15 @@ SSE 事件：
 }
 ```
 
-响应：返回统一任务对象。任务类型为 `rag_rebuild_job`，`payload.scope=single_movie`，`payload.movie_id` 为目标电影 ID。
+响应：返回即时刷新结果，不写入 `rag_rebuild_job` 任务记录。响应 `data` 示例：
+
+```json
+{
+  "movie_id": 123,
+  "embedding_id": 456,
+  "status": "completed"
+}
+```
 
 ### 8.3 `POST /admin/rag/rebuild`
 
@@ -397,7 +405,7 @@ SSE 事件：
 {}
 ```
 
-响应：返回统一任务对象。任务执行期间的 `progress` 包含：
+响应：返回统一任务对象。任务执行期间只会在开始时写入一次 `processing` 快照，完成或失败时再写入一次最终统计。`progress` 包含：
 
 - `total_movies`
 - `processed_movies`
@@ -408,7 +416,9 @@ SSE 事件：
 任务完成后的 `result` 还会包含：
 
 - `elapsed_ms`
-- `failure_samples`
+- `index_state`
+- `source_rows`
+- `indexed_rows`
 
 ### 8.4 `POST /admin/refresh`
 
@@ -499,4 +509,4 @@ Query 参数：
 - 训练 worker：`python -m app.ops.train_worker`
 - RAG rebuild worker：`python -m app.ops.rag_embedding_worker`
 
-两者都消费统一任务表 `ops_task`。其中 RAG rebuild worker 每次只领取一条 `rag_rebuild_job`，并把整次任务的聚合统计写回同一行。
+两者都消费统一任务表 `ops_task`。其中 RAG rebuild worker 只轮询并消费全量 `rag_rebuild_job`，每次只领取一条任务，并把整次任务的聚合统计写回同一行。

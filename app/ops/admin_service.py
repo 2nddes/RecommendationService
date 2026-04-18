@@ -10,14 +10,13 @@ from app.common.settings import Settings
 from app.ops.artifact_store import get_artifact_store
 from app.ops.model_ops import create_model_train_job
 from app.ops.rag_embedding_ops import (
-    RAG_REBUILD_SCOPE_FULL,
-    RAG_REBUILD_SCOPE_SINGLE,
     create_rag_rebuild_job,
     get_active_rag_rebuild_job,
 )
 from app.ops.task_ops import get_task as get_task_record
 from app.ops.task_ops import list_tasks as list_task_records
 from app.ops.task_ops import resolve_task_row_id
+from app.reco.rag_service import get_movie_rag_service, initialize_movie_rag_service
 
 
 logger = logging.getLogger(__name__)
@@ -48,6 +47,7 @@ def _normalize_task_kind(kind: str | None, *, allow_all: bool) -> str | None:
         return "all" if allow_all else None
     return mapped
 
+
 def _serialize_task(task: Dict[str, Any]) -> Dict[str, Any]:
     row_id = int(task["id"])
     task_type = str(task["task_type"])
@@ -76,7 +76,7 @@ def _serialize_task(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     if task_type == "rag_rebuild_job":
-        scope = payload.get("scope") or progress.get("scope")
+        scope = payload.get("scope") or result.get("scope")
         if scope is not None:
             data["scope"] = str(scope)
         movie_id = payload.get("movie_id")
@@ -120,51 +120,6 @@ def start_train_task(
     return task
 
 
-def _create_rag_rebuild_task(
-    settings: Settings,
-    *,
-    scope: str,
-    movie_id: int | None = None,
-) -> Dict[str, Any]:
-    _validate_rag_rebuild_settings(settings)
-
-    active_job = get_active_rag_rebuild_job(mysql_dsn=settings.core.mysql_dsn)
-    if active_job is not None:
-        raise ValueError(f"rag_rebuild_job_already_running: {active_job['id']}")
-
-    request_id = new_task_id("rag_rebuild")
-    job_id = create_rag_rebuild_job(
-        mysql_dsn=settings.core.mysql_dsn,
-        scope=scope,
-        movie_id=int(movie_id) if movie_id is not None else None,
-        request_id=request_id,
-    )
-
-    logger.info(
-        "RAG rebuild task created, request_id=%s, job_id=%s, scope=%s, movie_id=%s",
-        request_id,
-        job_id,
-        scope,
-        int(movie_id) if movie_id is not None else None,
-    )
-    task = _load_task_view(settings, str(job_id), kind="rag_rebuild_job")
-    if task is None:
-        raise RuntimeError(f"rag_rebuild_task_not_found_after_create: {job_id}")
-    return task
-
-
-def start_rag_rebuild_movie_task(
-    settings: Settings,
-    *,
-    movie_id: int,
-) -> Dict[str, Any]:
-    return _create_rag_rebuild_task(
-        settings,
-        scope=RAG_REBUILD_SCOPE_SINGLE,
-        movie_id=int(movie_id),
-    )
-
-
 def _validate_rag_rebuild_settings(settings: Settings) -> None:
     missing: list[str] = []
     if not settings.core.mysql_dsn:
@@ -177,8 +132,50 @@ def _validate_rag_rebuild_settings(settings: Settings) -> None:
         raise RuntimeError(f"rag_rebuild_config_missing: {', '.join(missing)}")
 
 
+def _get_or_initialize_rag_service(settings: Settings):
+    try:
+        return get_movie_rag_service(settings)
+    except RuntimeError as exc:
+        if str(exc) != "rag_service_not_initialized":
+            raise
+    return initialize_movie_rag_service(settings)
+
+
+def refresh_rag_movie_embedding(
+    settings: Settings,
+    *,
+    movie_id: int,
+) -> Dict[str, Any]:
+    _validate_rag_rebuild_settings(settings)
+    logger.info("开始同步刷新单电影RAG embedding，movie_id=%s", movie_id)
+
+    rag_service = _get_or_initialize_rag_service(settings)
+    embedding_id = rag_service.upsert_one(movie_id=int(movie_id), refresh_index=True)
+    return {
+        "movie_id": int(movie_id),
+        "embedding_id": int(embedding_id),
+        "status": "completed",
+    }
+
+
 def start_rag_rebuild_task(settings: Settings) -> Dict[str, Any]:
-    return _create_rag_rebuild_task(settings, scope=RAG_REBUILD_SCOPE_FULL)
+    _validate_rag_rebuild_settings(settings)
+
+    active_job = get_active_rag_rebuild_job(mysql_dsn=settings.core.mysql_dsn)
+    if active_job is not None:
+        raise ValueError(f"rag_rebuild_job_already_running: {active_job['id']}")
+
+    request_id = new_task_id("rag_rebuild")
+    job_id = create_rag_rebuild_job(
+        mysql_dsn=settings.core.mysql_dsn,
+        request_id=request_id,
+    )
+    logger.info("RAG full rebuild task created, request_id=%s, job_id=%s", request_id, job_id)
+
+    task = _load_task_view(settings, str(job_id), kind="rag_rebuild_job")
+    if task is None:
+        raise RuntimeError(f"rag_rebuild_task_not_found_after_create: {job_id}")
+    return task
 
 
 def get_task(settings: Settings, task_id: str, *, kind: str | None = None) -> Dict[str, Any] | None:

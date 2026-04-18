@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
-from typing import Any, Dict, Iterable
+from typing import Any, Dict
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,7 +12,6 @@ from app.ops.task_ops import (
     claim_next_task,
     create_task,
     get_task_by_id,
-    list_tasks,
     update_task,
 )
 from app.reco.training.common import get_mysql_engine
@@ -22,8 +20,6 @@ from app.reco.training.common import get_mysql_engine
 logger = logging.getLogger(__name__)
 
 RAG_REBUILD_SCOPE_FULL = "full_rebuild"
-RAG_REBUILD_SCOPE_SINGLE = "single_movie"
-RAG_REBUILD_SCOPES = {RAG_REBUILD_SCOPE_FULL, RAG_REBUILD_SCOPE_SINGLE}
 
 
 def _iso(value: Any) -> str | None:
@@ -34,71 +30,55 @@ def _iso(value: Any) -> str | None:
     return str(value)
 
 
-
-def _normalize_movie_ids(movie_ids: Iterable[int] | None) -> list[int]:
-    normalized: list[int] = []
-    seen: set[int] = set()
-    for raw_movie_id in movie_ids or []:
-        movie_id = int(raw_movie_id)
-        if movie_id <= 0 or movie_id in seen:
-            continue
-        seen.add(movie_id)
-        normalized.append(movie_id)
-    return normalized
-
-
-def _default_progress(
-    *,
-    scope: str,
-    total_movies: int = 0,
-    pruned_embeddings: int = 0,
-) -> Dict[str, Any]:
-    progress = {
-        "scope": scope,
-        "total_movies": int(total_movies or 0),
+def _default_progress(*, total_movies: int = 0, pruned_embeddings: int = 0) -> Dict[str, Any]:
+    return {
+        "total_movies": max(0, int(total_movies or 0)),
         "processed_movies": 0,
         "completed_jobs": 0,
         "failed_jobs": 0,
-        "pruned_embeddings": int(pruned_embeddings or 0),
-        "flush_count": 0,
+        "pruned_embeddings": max(0, int(pruned_embeddings or 0)),
     }
-    return progress
 
 
 def _sanitize_progress(progress: Dict[str, Any] | None) -> Dict[str, Any]:
-    current = dict(progress or {})
-    current["scope"] = current.get("scope")
+    current = _default_progress()
+    current.update(dict(progress or {}))
     for key in (
         "total_movies",
         "processed_movies",
         "completed_jobs",
         "failed_jobs",
         "pruned_embeddings",
-        "flush_count",
     ):
-        current[key] = int(current.get(key) or 0)
+        try:
+            current[key] = max(0, int(current.get(key) or 0))
+        except (TypeError, ValueError):
+            current[key] = 0
     return current
 
 
 def _sanitize_result(result: Dict[str, Any] | None) -> Dict[str, Any]:
     current = dict(result or {})
     if current.get("scope") is not None:
-        current["scope"] = current.get("scope")
+        current["scope"] = str(current.get("scope"))
+    if current.get("index_state") is not None:
+        current["index_state"] = str(current.get("index_state"))
     for key in (
-        "movie_id",
         "total_movies",
         "processed_movies",
         "completed_jobs",
         "failed_jobs",
         "pruned_embeddings",
         "elapsed_ms",
+        "source_rows",
+        "indexed_rows",
     ):
-        if current.get(key) is not None:
-            try:
-                current[key] = int(current.get(key) or 0)
-            except (TypeError, ValueError):
-                current[key] = 0
-
+        if current.get(key) is None:
+            continue
+        try:
+            current[key] = max(0, int(current.get(key) or 0))
+        except (TypeError, ValueError):
+            current[key] = 0
     return current
 
 
@@ -106,14 +86,12 @@ def _map_rag_rebuild_job_row(row: Dict[str, Any]) -> Dict[str, Any]:
     payload = row.get("payload") or {}
     progress = row.get("progress") or {}
     result = row.get("result") or {}
-    scope = payload.get("scope") or progress.get("scope") or result.get("scope") or RAG_REBUILD_SCOPE_FULL
-    movie_id = payload.get("movie_id")
+    scope = payload.get("scope") or result.get("scope") or RAG_REBUILD_SCOPE_FULL
     return {
         "id": int(row["id"]),
         "status": str(row["status"]),
         "task_ref": row.get("task_ref"),
         "scope": str(scope),
-        "movie_id": int(movie_id) if movie_id is not None else None,
         "total_movies": int(progress.get("total_movies") or result.get("total_movies") or 0),
         "processed_movies": int(progress.get("processed_movies") or result.get("processed_movies") or 0),
         "completed_jobs": int(progress.get("completed_jobs") or result.get("completed_jobs") or 0),
@@ -130,21 +108,10 @@ def _map_rag_rebuild_job_row(row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def create_rag_rebuild_job(
-    *,
-    mysql_dsn: str | None,
-    scope: str,
-    movie_id: int | None = None,
-    request_id: str | None = None,
-) -> int:
-    payload: Dict[str, Any] = {"scope": scope}
+def create_rag_rebuild_job(*, mysql_dsn: str | None, request_id: str | None = None) -> int:
+    payload: Dict[str, Any] = {"scope": RAG_REBUILD_SCOPE_FULL}
     if request_id:
         payload["request_id"] = str(request_id)
-
-    total_movies = 0
-    if scope == RAG_REBUILD_SCOPE_SINGLE:
-        payload["movie_id"] = movie_id
-        total_movies = 1
 
     return int(
         create_task(
@@ -152,7 +119,7 @@ def create_rag_rebuild_job(
             task_type=TASK_TYPE_RAG_REBUILD,
             status="pending",
             payload=payload,
-            progress=_default_progress(scope=scope, total_movies=total_movies),
+            progress=_default_progress(),
             result={},
         )
     )
@@ -236,7 +203,7 @@ def fail_rag_rebuild_job(
     progress: Dict[str, Any] | None = None,
     result: Dict[str, Any] | None = None,
 ) -> None:
-    current_progress = _sanitize_progress(progress) if progress is not None else _default_progress(scope=RAG_REBUILD_SCOPE_FULL)
+    current_progress = _sanitize_progress(progress) if progress is not None else _default_progress()
     current_result = _sanitize_result(result)
     update_rag_rebuild_job_snapshot(
         mysql_dsn=mysql_dsn,
@@ -275,31 +242,3 @@ def fail_processing_rag_rebuild_jobs(*, mysql_dsn: str | None, error: str) -> in
     except SQLAlchemyError as exc:
         raise RuntimeError(f"fail_processing_rag_rebuild_jobs_failed: {type(exc).__name__}: {exc}") from exc
     return max(0, int(rs.rowcount or 0))
-
-
-def get_rag_rebuild_job(*, mysql_dsn: str | None, job_id: int) -> Dict[str, Any] | None:
-    task = get_task_by_id(mysql_dsn=mysql_dsn, task_id=job_id, task_type=TASK_TYPE_RAG_REBUILD)
-    if task is None:
-        return None
-    return _map_rag_rebuild_job_row(task)
-
-
-def list_rag_rebuild_jobs(
-    *,
-    mysql_dsn: str | None,
-    limit: int = 50,
-    offset: int = 0,
-    status: str | None = None,
-) -> list[Dict[str, Any]]:
-    result = list_tasks(
-        mysql_dsn=mysql_dsn,
-        limit=int(limit),
-        offset=int(offset),
-        status=str(status) if status else None,
-        task_type=TASK_TYPE_RAG_REBUILD,
-    )
-    return [_map_rag_rebuild_job_row(row) for row in result["items"]]
-
-
-def normalize_rag_rebuild_movie_ids(movie_ids: Iterable[int] | None) -> list[int]:
-    return _normalize_movie_ids(movie_ids)
