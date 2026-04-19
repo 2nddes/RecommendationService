@@ -7,7 +7,7 @@ from typing import Iterator
 
 from flask import Blueprint, Response, request, stream_with_context
 
-from app.common.validation import as_int, as_str
+from app.common.validation import as_str, as_bool
 from app.reco.online.runtime import get_settings
 from app.reco.rag_clients import OpenAICompatError
 from app.reco.rag_service import get_movie_rag_service
@@ -32,12 +32,10 @@ def _sse(event: str, payload: dict) -> str:
 def recommend_rag_stream():
     payload = request.get_json(silent=True) or {}
     query = as_str(payload.get("query"), name="query").strip()
-    n = as_int(payload.get("n", 8), name="n")
+    thinking = as_bool(payload.get("thinking", False), name="thinking")
 
     if not query:
         raise ValueError("query cannot be empty")
-    if n <= 0:
-        raise ValueError("n must be positive")
 
     query_preview = _preview_text(query)
     settings = get_settings()
@@ -51,24 +49,24 @@ def recommend_rag_stream():
         first_chunk_ms: float | None = None
         try:
             logger.info(
-                "RAG stream request started, query_len=%s, query_preview=%s, n=%s",
+                "RAG stream request started, query_len=%s, query_preview=%s, thinking=%s",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
             )
             logger.info(
-                "RAG stream start event emitted, query_len=%s, query_preview=%s, n=%s",
+                "RAG stream start event emitted, query_len=%s, query_preview=%s, thinking=%s",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
             )
-            yield _sse("start", {"query": query, "n": int(n)})
-            cited_movie_ids, chunks = rag_service.stream_answer(query=query, n=n)
+            yield _sse("start", {"query": query, "thinking": bool(thinking)})
+            cited_movie_ids, chunks = rag_service.stream_answer(query=query, thinking=thinking)
             logger.info(
-                "RAG stream evidence ready, query_len=%s, query_preview=%s, n=%s, cited_count=%s, cited_preview=%s",
+                "RAG stream evidence ready, query_len=%s, query_preview=%s, thinking=%s, cited_count=%s, cited_preview=%s",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
                 len(cited_movie_ids),
                 cited_movie_ids[:5],
             )
@@ -78,10 +76,10 @@ def recommend_rag_stream():
                 if first_chunk_ms is None:
                     first_chunk_ms = (perf_counter() - started_at) * 1000.0
                     logger.info(
-                        "RAG stream first answer chunk, query_len=%s, query_preview=%s, n=%s, first_chunk_ms=%.2f, cited_count=%s",
+                        "RAG stream first answer chunk, query_len=%s, query_preview=%s, thinking=%s, first_chunk_ms=%.2f, cited_count=%s",
                         len(query),
                         query_preview,
-                        int(n),
+                        bool(thinking),
                         first_chunk_ms,
                         len(cited_movie_ids),
                     )
@@ -91,10 +89,10 @@ def recommend_rag_stream():
 
             elapsed_ms = (perf_counter() - started_at) * 1000.0
             logger.info(
-                "RAG stream completed, query_len=%s, query_preview=%s, n=%s, cited_count=%s, chunk_count=%s, chars=%s, first_chunk_ms=%s, elapsed_ms=%.2f",
+                "RAG stream completed, query_len=%s, query_preview=%s, thinking=%s, cited_count=%s, chunk_count=%s, chars=%s, first_chunk_ms=%s, elapsed_ms=%.2f",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
                 len(cited_movie_ids),
                 chunk_count,
                 sent_chars,
@@ -111,10 +109,10 @@ def recommend_rag_stream():
             )
         except OpenAICompatError as exc:
             logger.exception(
-                "RAG LLM request failed, query_len=%s, query_preview=%s, n=%s, chunk_count=%s, chars=%s, elapsed_ms=%.2f",
+                "RAG LLM request failed, query_len=%s, query_preview=%s, thinking=%s, chunk_count=%s, chars=%s, elapsed_ms=%.2f",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
                 chunk_count,
                 sent_chars,
                 (perf_counter() - started_at) * 1000.0,
@@ -122,10 +120,10 @@ def recommend_rag_stream():
             yield _sse("error", {"message": str(exc), "type": "llm_error"})
         except Exception as exc:
             logger.exception(
-                "RAG stream failed, query_len=%s, query_preview=%s, n=%s, chunk_count=%s, chars=%s, elapsed_ms=%.2f",
+                "RAG stream failed, query_len=%s, query_preview=%s, thinking=%s, chunk_count=%s, chars=%s, elapsed_ms=%.2f",
                 len(query),
                 query_preview,
-                int(n),
+                bool(thinking),
                 chunk_count,
                 sent_chars,
                 (perf_counter() - started_at) * 1000.0,

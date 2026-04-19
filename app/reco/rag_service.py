@@ -703,10 +703,10 @@ class MovieRagService:
         )
         return out
 
-    def stream_answer(self, *, query: str, n: int) -> tuple[list[int], Iterator[str]]:
+    def stream_answer(self, *, query: str, thinking: bool = False) -> tuple[list[int], Iterator[str]]:
         started = perf_counter()
         query_preview = _preview_text(query)
-        evidence = self.retrieve_evidence(query=query, n=n)
+        evidence = self.retrieve_evidence(query=query, n=self._settings.rag.ann_topk_default)
         retrieve_ms = (perf_counter() - started) * 1000.0
         cited_ids = [int(e.movie_id) for e in evidence]
 
@@ -726,10 +726,9 @@ class MovieRagService:
         )
         user_prompt = f"user_query: {query}\n\nretrieval_evidence:\n{context}"
         logger.info(
-            "RAG answer stream prepared, query_len=%s, query_preview=%s, requested_n=%s, evidence_count=%s, cited_count=%s, context_chars=%s, prompt_chars=%s, llm_model=%s, retrieve_ms=%.2f, elapsed_ms=%.2f",
+            "RAG answer stream prepared, query_len=%s, query_preview=%s, evidence_count=%s, cited_count=%s, context_chars=%s, prompt_chars=%s, llm_model=%s, retrieve_ms=%.2f, elapsed_ms=%.2f",
             len(query),
             query_preview,
-            int(n),
             len(evidence),
             len(cited_ids),
             len(context),
@@ -738,7 +737,7 @@ class MovieRagService:
             retrieve_ms,
             (perf_counter() - started) * 1000.0,
         )
-        stream = stream_chat_completion(cfg=self._llm_cfg(), system_prompt=system_prompt, user_prompt=user_prompt)
+        stream = stream_chat_completion(cfg=self._llm_cfg(), system_prompt=system_prompt, user_prompt=user_prompt, thinking=thinking)
         return cited_ids, stream
 
 

@@ -1,0 +1,442 @@
+{
+    "info": {
+        "_postman_id": "2cc12539-fbc2-4ec1-9c0d-7e4da5591b1e",
+        "name": "RecommendationService API",
+        "description": "Hand-maintained Postman collection for the current Flask implementation under /api/v1.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:5000/api/v1"
+        },
+        {
+            "key": "userId",
+            "value": "1001"
+        },
+        {
+            "key": "movieId",
+            "value": "123"
+        },
+        {
+            "key": "taskId",
+            "value": "train_job_1"
+        },
+        {
+            "key": "queryText",
+            "value": "想看高分悬疑推理电影"
+        },
+        {
+            "key": "searchText",
+            "value": "科幻 诺兰"
+        },
+        {
+            "key": "limit",
+            "value": "20"
+        },
+        {
+            "key": "offset",
+            "value": "0"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health",
+            "item": [
+                {
+                    "name": "GET /health",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Returns summary readiness."
+                    }
+                },
+                {
+                    "name": "GET /health/runtime",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/runtime",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "runtime"
+                            ]
+                        },
+                        "description": "Returns component-level runtime health snapshot."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Recommend",
+            "item": [
+                {
+                    "name": "GET /recommend/user",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/recommend/user?user_id={{userId}}&page=1&page_size=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "recommend",
+                                "user"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{userId}}"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page_size",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Default request uses paged mode shape. If the server runs in pop mode, replace page/page_size with n."
+                    }
+                },
+                {
+                    "name": "GET /recommend/item",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/recommend/item?movie_id={{movieId}}&n=8",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "recommend",
+                                "item"
+                            ],
+                            "query": [
+                                {
+                                    "key": "movie_id",
+                                    "value": "{{movieId}}"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "8"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /recommend/trending",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/recommend/trending?window=weekly&n=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "recommend",
+                                "trending"
+                            ],
+                            "query": [
+                                {
+                                    "key": "window",
+                                    "value": "weekly"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Search",
+            "item": [
+                {
+                    "name": "GET /search",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/search?query={{searchText}}&n={{limit}}&offset={{offset}}&tag_id=1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "query",
+                                    "value": "{{searchText}}"
+                                },
+                                {
+                                    "key": "n",
+                                    "value": "{{limit}}"
+                                },
+                                {
+                                    "key": "offset",
+                                    "value": "{{offset}}"
+                                },
+                                {
+                                    "key": "tag_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "At least one of query or tag_id is required. Non-reserved query keys are echoed back in passthrough."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "RAG",
+            "item": [
+                {
+                    "name": "POST /recommend/rag/stream",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "text/event-stream"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"{{queryText}}\",\n  \"n\": 8\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/recommend/rag/stream",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "recommend",
+                                "rag",
+                                "stream"
+                            ]
+                        },
+                        "description": "SSE endpoint. Postman can send the request, but streamed chunks may be buffered depending on the client version."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "POST /admin/train",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"component\": \"ranking\",\n  \"model\": \"mmoe\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/train",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "train"
+                            ]
+                        },
+                        "description": "Queues a training job. Supported combinations in current worker logic are ranking/xgb, ranking/mmoe, recall/two_tower."
+                    }
+                },
+                {
+                    "name": "POST /admin/rag/enqueue",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"movie_id\": {{movieId}}\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/rag/enqueue",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "rag",
+                                "enqueue"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /admin/rag/rebuild",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/rag/rebuild",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "rag",
+                                "rebuild"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /admin/refresh",
+                    "request": {
+                        "method": "POST",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/refresh",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "refresh"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/tasks/{task_id}",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/tasks/{{taskId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "tasks",
+                                "{{taskId}}"
+                            ]
+                        },
+                        "description": "taskId may be a numeric row id or a public task ref like train_job_12."
+                    }
+                },
+                {
+                    "name": "GET /admin/tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/tasks?source=all&limit={{limit}}&offset={{offset}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "tasks"
+                            ],
+                            "query": [
+                                {
+                                    "key": "source",
+                                    "value": "all"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "{{limit}}"
+                                },
+                                {
+                                    "key": "offset",
+                                    "value": "{{offset}}"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /admin/status",
+                    "request": {
+                        "method": "GET",
+                        "header": [ ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "status"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

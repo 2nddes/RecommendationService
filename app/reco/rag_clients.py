@@ -110,12 +110,13 @@ def create_embedding(*, cfg: OpenAICompatConfig, text: str) -> list[float]:
     return out
 
 
-def stream_chat_completion(*, cfg: OpenAICompatConfig, system_prompt: str, user_prompt: str) -> Iterator[str]:
+def stream_chat_completion(*, cfg: OpenAICompatConfig, system_prompt: str, user_prompt: str, thinking: bool = False) -> Iterator[str]:
     if not cfg.base_url:
         raise OpenAICompatError("llm_api_base_url_missing")
 
     payload = {
         "model": cfg.model,
+        "enable_thinking": thinking,
         "stream": True,
         "temperature": 0.2,
         "messages": [
