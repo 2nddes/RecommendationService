@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from time import perf_counter
 from typing import List
 
 from app.common.redis_cache import load_tag_recall_items
@@ -13,6 +14,13 @@ from app.reco.types import Candidate, RequestContext
 
 
 logger = logging.getLogger(__name__)
+
+
+def _format_tag_preview(preference_tags: list[tuple[str, int, float]], *, limit: int = 5) -> list[str]:
+    preview: list[str] = []
+    for tag_type, tag_id, pref_weight in preference_tags[: max(int(limit), 0)]:
+        preview.append(f"{tag_type}:{int(tag_id)}:{float(pref_weight):.2f}")
+    return preview
 
 
 def _fetch_user_genre_preferences(
@@ -163,6 +171,7 @@ class TagInvertedRecall(Recaller):
         return merged[:limit]
 
     def recall(self, ctx: RequestContext) -> List[Candidate]:
+        started = perf_counter()
         if ctx.user_id is None:
             logger.warning(
                 "用户ID为空，tag倒排召回跳过，user_id=%s, movie_id=%s, n=%s",
@@ -181,28 +190,68 @@ class TagInvertedRecall(Recaller):
             return []
 
         user_id = int(ctx.user_id)
+        preference_started = perf_counter()
         preference_tags = self._fetch_user_preference_tags(user_id)
+        preference_fetch_ms = (perf_counter() - preference_started) * 1000.0
+        genre_tag_count = sum(1 for tag_type, _tag_id, _pref in preference_tags if tag_type == "genre")
+        director_tag_count = sum(1 for tag_type, _tag_id, _pref in preference_tags if tag_type == "director")
         if not preference_tags:
-            logger.info("用户无有效标签偏好，tag倒排召回返回空，user_id=%s", user_id)
+            logger.info(
+                "用户无有效标签偏好，tag倒排召回返回空，user_id=%s, requested_n=%s, preference_fetch_ms=%.2f, elapsed_ms=%.2f",
+                user_id,
+                target_n,
+                preference_fetch_ms,
+                (perf_counter() - started) * 1000.0,
+            )
             return []
 
         tag_specs = [(tag_type, tag_id) for tag_type, tag_id, _pref in preference_tags]
+        redis_started = perf_counter()
         rows_by_spec = load_tag_recall_items(
             self.settings,
             tag_specs=tag_specs,
             per_tag_topn=max(int(self.cfg.per_tag_fetch_m), 1),
         )
-        if not rows_by_spec:
-            logger.info("Redis倒排索引未命中，tag倒排召回返回空，user_id=%s", user_id)
+        redis_fetch_ms = (perf_counter() - redis_started) * 1000.0
+        redis_hit_tags = sum(1 for rows in rows_by_spec.values() if rows)
+        redis_rows = sum(len(rows) for rows in rows_by_spec.values())
+        if logger.isEnabledFor(logging.DEBUG):
+            missing_specs = [
+                f"{tag_type}:{tag_id}"
+                for tag_type, tag_id in tag_specs
+                if not (rows_by_spec.get((tag_type, tag_id)) or [])
+            ]
+            logger.debug(
+                "tag倒排召回偏好详情，user_id=%s, preference_preview=%s, missing_tag_specs=%s",
+                user_id,
+                _format_tag_preview(preference_tags),
+                missing_specs[:10],
+            )
+        if not rows_by_spec or redis_hit_tags <= 0:
+            logger.info(
+                "Redis倒排索引未命中，tag倒排召回返回空，user_id=%s, requested_tags=%s, genre_tags=%s, director_tags=%s, redis_hit_tags=%s, redis_rows=%s, preference_fetch_ms=%.2f, redis_fetch_ms=%.2f, elapsed_ms=%.2f",
+                user_id,
+                len(tag_specs),
+                genre_tag_count,
+                director_tag_count,
+                redis_hit_tags,
+                redis_rows,
+                preference_fetch_ms,
+                redis_fetch_ms,
+                (perf_counter() - started) * 1000.0,
+            )
             return []
 
+        excluded_started = perf_counter()
         excluded = fetch_user_excluded_items(
             user_id,
             mysql_dsn=self.mysql_dsn,
             recent_limit=max(int(self.cfg.recent_interaction_limit), 0),
         )
+        excluded_fetch_ms = (perf_counter() - excluded_started) * 1000.0
 
         merged_scores: dict[int, float] = {}
+        filtered_excluded = 0
         # 用户权重当前按决策固定为 1.0，仅用于保留后续扩展点。
         user_tag_weight = 1.0
         for tag_type, tag_id, _pref in preference_tags:
@@ -211,15 +260,50 @@ class TagInvertedRecall(Recaller):
             for movie_id, zset_score in rows:
                 mid = int(movie_id)
                 if mid in excluded:
+                    filtered_excluded += 1
                     continue
                 merged_scores[mid] = merged_scores.get(mid, 0.0) + (user_tag_weight * float(zset_score))
 
         if not merged_scores:
+            logger.info(
+                "tag倒排召回合并后为空，user_id=%s, requested_tags=%s, genre_tags=%s, director_tags=%s, redis_hit_tags=%s, redis_rows=%s, excluded_count=%s, filtered_excluded=%s, preference_fetch_ms=%.2f, redis_fetch_ms=%.2f, excluded_fetch_ms=%.2f, elapsed_ms=%.2f",
+                user_id,
+                len(tag_specs),
+                genre_tag_count,
+                director_tag_count,
+                redis_hit_tags,
+                redis_rows,
+                len(excluded),
+                filtered_excluded,
+                preference_fetch_ms,
+                redis_fetch_ms,
+                excluded_fetch_ms,
+                (perf_counter() - started) * 1000.0,
+            )
             return []
 
         multiplier = max(int(self.cfg.online_candidate_multiplier), 1)
         out_limit = max(target_n, target_n * multiplier)
         sorted_items = sorted(merged_scores.items(), key=lambda x: x[1], reverse=True)[:out_limit]
+        logger.info(
+            "tag倒排召回完成，user_id=%s, requested_n=%s, requested_tags=%s, genre_tags=%s, director_tags=%s, redis_hit_tags=%s, redis_rows=%s, excluded_count=%s, filtered_excluded=%s, merged_candidates=%s, returned_count=%s, out_limit=%s, preference_fetch_ms=%.2f, redis_fetch_ms=%.2f, excluded_fetch_ms=%.2f, elapsed_ms=%.2f",
+            user_id,
+            target_n,
+            len(tag_specs),
+            genre_tag_count,
+            director_tag_count,
+            redis_hit_tags,
+            redis_rows,
+            len(excluded),
+            filtered_excluded,
+            len(merged_scores),
+            len(sorted_items),
+            out_limit,
+            preference_fetch_ms,
+            redis_fetch_ms,
+            excluded_fetch_ms,
+            (perf_counter() - started) * 1000.0,
+        )
         return [
             Candidate(item_id=int(movie_id), score=float(score), source=self.name)
             for movie_id, score in sorted_items

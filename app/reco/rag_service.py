@@ -5,6 +5,7 @@ import json
 import logging
 import threading
 from dataclasses import dataclass
+from time import perf_counter
 from typing import Any, Dict, Iterable, Iterator, Sequence
 
 import numpy as np
@@ -17,6 +18,13 @@ from app.reco.rag_clients import OpenAICompatConfig, create_embedding, stream_ch
 
 
 logger = logging.getLogger(__name__)
+
+
+def _preview_text(text: str, *, limit: int = 64) -> str:
+    normalized = " ".join(str(text or "").split())
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[: max(int(limit) - 3, 0)] + "..."
 
 
 @dataclass(frozen=True)
@@ -523,9 +531,14 @@ class MovieRagService:
         if self._index is None or self._dim is None:
             raise RuntimeError("rag_index_not_initialized")
 
+        started = perf_counter()
+        query_preview = _preview_text(query)
         client = get_redis_client(self._settings)
+        cache_lookup_ms = 0.0
         if client is not None:
+            cache_lookup_started = perf_counter()
             cached = client.get(self._query_cache_key(query, k))
+            cache_lookup_ms = (perf_counter() - cache_lookup_started) * 1000.0
             if cached:
                 try:
                     arr = json.loads(cached)
@@ -535,19 +548,35 @@ class MovieRagService:
                             if isinstance(item, list) and len(item) == 2:
                                 out.append((int(item[0]), float(item[1])))
                         if out:
+                            logger.info(
+                                "RAG FAISS search completed, query_len=%s, query_preview=%s, k=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, embedding_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
+                                len(query),
+                                query_preview,
+                                int(k),
+                                True,
+                                len(out),
+                                cache_lookup_ms,
+                                0.0,
+                                0.0,
+                                (perf_counter() - started) * 1000.0,
+                            )
                             return out
                 except Exception:
                     logger.warning("RAG query cache parse failed", exc_info=True)
 
+        embedding_started = perf_counter()
         vec = np.asarray(create_embedding(cfg=self._embedding_cfg(), text=query), dtype=np.float32).reshape(-1)
         vec = self._normalize(vec)
+        embedding_ms = (perf_counter() - embedding_started) * 1000.0
 
+        ann_started = perf_counter()
         with self._lock:
             if self._index is None or self._dim is None:
                 return []
             if int(vec.size) != int(self._dim):
                 raise RuntimeError(f"query_embedding_dim_mismatch: expected={self._dim}, got={vec.size}")
             scores, ids = self._index.search(vec.reshape(1, -1), int(k))
+        ann_ms = (perf_counter() - ann_started) * 1000.0
 
         out: list[tuple[int, float]] = []
         for faiss_id, score in zip(ids[0], scores[0]):
@@ -559,6 +588,18 @@ class MovieRagService:
         if client is not None and out:
             ttl = max(60, int(self._settings.rag.redis_result_ttl_seconds))
             client.set(self._query_cache_key(query, k), json.dumps(out, ensure_ascii=False), ex=ttl)
+        logger.info(
+            "RAG FAISS search completed, query_len=%s, query_preview=%s, k=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, embedding_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
+            len(query),
+            query_preview,
+            int(k),
+            False,
+            len(out),
+            cache_lookup_ms,
+            embedding_ms,
+            ann_ms,
+            (perf_counter() - started) * 1000.0,
+        )
         return out
 
     def _fetch_movies_by_ids(self, movie_ids: Iterable[int]) -> dict[int, dict[str, Any]]:
@@ -587,21 +628,41 @@ class MovieRagService:
         return out
 
     def retrieve_evidence(self, *, query: str, n: int) -> list[RagEvidence]:
+        started = perf_counter()
+        query_preview = _preview_text(query)
         ann_topk = max(int(n), int(self._settings.rag.ann_topk_default))
         pairs = self._search_faiss_ids(query=query, k=ann_topk)
         if not pairs:
+            logger.info(
+                "RAG evidence retrieval completed, query_len=%s, query_preview=%s, requested_n=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
+                len(query),
+                query_preview,
+                int(n),
+                ann_topk,
+                0,
+                0,
+                0,
+                0,
+                0.0,
+                0.0,
+                (perf_counter() - started) * 1000.0,
+            )
             return []
 
         movie_ids: list[int] = []
         resolved: list[tuple[int, int, float]] = []
+        resolve_started = perf_counter()
         for faiss_id, score in pairs:
             movie_id = self._resolve_movie_id(faiss_id)
             if movie_id is None:
                 continue
             movie_ids.append(int(movie_id))
             resolved.append((int(faiss_id), int(movie_id), float(score)))
+        resolve_ms = (perf_counter() - resolve_started) * 1000.0
 
+        movie_fetch_started = perf_counter()
         movie_map = self._fetch_movies_by_ids(movie_ids)
+        movie_fetch_ms = (perf_counter() - movie_fetch_started) * 1000.0
         out: list[RagEvidence] = []
         seen: set[int] = set()
         for faiss_id, movie_id, score in resolved:
@@ -624,10 +685,29 @@ class MovieRagService:
             )
             if len(out) >= int(n):
                 break
+        cited_preview = [int(item.movie_id) for item in out[:5]]
+        logger.info(
+            "RAG evidence retrieval completed, query_len=%s, query_preview=%s, requested_n=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, cited_preview=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
+            len(query),
+            query_preview,
+            int(n),
+            ann_topk,
+            len(pairs),
+            len(resolved),
+            len(movie_map),
+            len(out),
+            cited_preview,
+            resolve_ms,
+            movie_fetch_ms,
+            (perf_counter() - started) * 1000.0,
+        )
         return out
 
     def stream_answer(self, *, query: str, n: int) -> tuple[list[int], Iterator[str]]:
+        started = perf_counter()
+        query_preview = _preview_text(query)
         evidence = self.retrieve_evidence(query=query, n=n)
+        retrieve_ms = (perf_counter() - started) * 1000.0
         cited_ids = [int(e.movie_id) for e in evidence]
 
         context_rows: list[str] = []
@@ -645,6 +725,19 @@ class MovieRagService:
             "Ground your answer on retrieval evidence and state uncertainty when evidence is weak."
         )
         user_prompt = f"user_query: {query}\n\nretrieval_evidence:\n{context}"
+        logger.info(
+            "RAG answer stream prepared, query_len=%s, query_preview=%s, requested_n=%s, evidence_count=%s, cited_count=%s, context_chars=%s, prompt_chars=%s, llm_model=%s, retrieve_ms=%.2f, elapsed_ms=%.2f",
+            len(query),
+            query_preview,
+            int(n),
+            len(evidence),
+            len(cited_ids),
+            len(context),
+            len(user_prompt),
+            self._settings.rag.llm_model_name,
+            retrieve_ms,
+            (perf_counter() - started) * 1000.0,
+        )
         stream = stream_chat_completion(cfg=self._llm_cfg(), system_prompt=system_prompt, user_prompt=user_prompt)
         return cited_ids, stream
 

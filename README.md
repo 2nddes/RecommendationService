@@ -219,14 +219,14 @@ JSON{
 - 使用 `LangChain` 组织检索流程。
 - 向量库使用 `FAISS`，索引目录来自 `RAG_FAISS_DIR`。
 - Embedding 模型默认 `BAAI/bge-large-zh-v1.5`（可通过 `RAG_EMBEDDING_MODEL_NAME` 修改）。
-- 返回类型为 `text/event-stream`，事件包含：`start`、`movie`、`done`。
+- 返回类型为 `text/event-stream`，事件包含：`start`、`answer_delta`、`answer_done`、`error`。
+- 若通过 Spring Boot 或其他代理转发，代理层必须按 `text/event-stream` 原样透传，禁止缓冲、压缩或先整包读取后再返回。
 
 请求体示例:
 
 JSON{
   "query": "想看高分悬疑推理电影",
-  "n": 8,
-  "rebuild_index": false
+  "n": 8
 }
 
 事件示例:
@@ -235,11 +235,11 @@ JSON{
 event: start
 data: {"query":"想看高分悬疑推理电影","n":8}
 
-event: movie
-data: {"index":1,"item":{"movie_id":123,"title":"...","year":2019,"summary":"...","score":0.31}}
+event: answer_delta
+data: {"text":"推荐片段"}
 
-event: done
-data: {"count":8,"elapsed_ms":386}
+event: answer_done
+data: {"elapsed_ms":386,"cited_movie_ids":[123,456],"chars":128}
 ```
 
 相关配置项（`config.json`）:

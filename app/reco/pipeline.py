@@ -61,6 +61,7 @@ class RecommendationPipeline:
 
         for recaller in self.recallers:
             before_count = len(merged)
+            recaller_start = perf_counter()
             try:
                 recalled = recaller.recall(ctx)
             except Exception:
@@ -81,7 +82,15 @@ class RecommendationPipeline:
                     prev = merged[c.item_id]
                     if c.score > prev.score:
                         merged[c.item_id] = c
-            logger.debug("召回器执行完成，recaller=%s, 新增候选=%s, 累计候选=%s", recaller.name, len(merged) - before_count, len(merged))
+            recaller_ms = (perf_counter() - recaller_start) * 1000.0
+            logger.info(
+                "召回器执行完成，recaller=%s, 返回候选=%s, 新增候选=%s, 累计候选=%s, elapsed_ms=%.2f",
+                recaller.name,
+                len(recalled),
+                len(merged) - before_count,
+                len(merged),
+                recaller_ms,
+            )
 
         return list(merged.values())
 
