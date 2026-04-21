@@ -1,6 +1,6 @@
 # RecommendationService API
 
-更新时间：2026-04-15  
+更新时间：2026-04-20  
 适用范围：当前仓库 Python/Flask 服务对外接口
 
 ## 1. 基础信息
@@ -203,6 +203,11 @@ Query 参数：
 }
 ```
 
+说明：
+
+- 默认优先使用 RAG embedding 做相似片检索。
+- 当当前电影缺少 RAG embedding 时，服务端会自动回退到双塔 item embedding，响应结构不变。
+
 ### 5.3 `GET /recommend/trending`
 
 热门趋势推荐。
@@ -235,19 +240,25 @@ Query 参数：
 
 ### 6.1 `GET /search`
 
-基于 MySQL 的标题/简介检索，并支持按标签过滤。
+基于 MySQL 的标题/简介检索，并支持排序与结构化筛选。
 
 Query 参数：
 
 - `query`：可选，字符串
 - `tag_id`：可选，可多值
+- `sort_by`：可选，默认 `relevance`，支持 `relevance|rating|collect|duration|time`
+- `sort_order`：可选，默认 `desc`
+- `time_window`：可选，支持 `weekly|monthly|half_year`
+- `start_date` / `end_date`：可选，格式 `YYYY-MM-DD`，作用于 `release_date`
+- `duration_min` / `duration_max`：可选，时长筛选
 - `n`：可选，默认 `20`
 - `offset`：可选，默认 `0`
 - 其他任意参数：不会参与 SQL 条件，但会原样回显到 `passthrough`
 
 约束：
 
-- `query` 和 `tag_id` 不能同时为空
+- 至少需要提供 `query`、`tag_id`、任一筛选参数，或使用非默认排序
+- `time_window` 不能和 `start_date` / `end_date` 并用
 - `n` 必须为正整数
 - `offset` 必须为非负整数
 
@@ -259,8 +270,21 @@ Query 参数：
   "tag_ids": [1, 2],
   "n": 20,
   "offset": 0,
+  "sort": {
+    "by": "rating",
+    "order": "desc",
+  },
+  "filters": {
+    "release_date": {
+      "time_window": null,
+      "start_date": "2010-01-01",
+      "end_date": "2025-12-31"
+    },
+    "duration_min": 90,
+    "duration_max": 180
+  },
   "passthrough": {
-    "year_min": "2010"
+    "source": "home-search"
   },
   "total": 126,
   "results": [
@@ -268,15 +292,25 @@ Query 参数：
       "movie_id": 1,
       "title": "Interstellar",
       "year": 2014,
+      "release_date": "2014-11-07",
+      "duration_min": 169,
       "poster": "https://...",
       "summary": "...",
       "rating_avg": 9.2,
       "rating_count": 100000,
+      "bayesian_rating": 9.16,
+      "collect_count": 5821,
       "score": 12.4
     }
   ]
 }
 ```
+
+说明：
+
+- `score` 始终表示默认相关性分。
+- `bayesian_rating` 仍然返回，但不再支持评分范围过滤。
+- 当前搜索始终基于分段查询与实时聚合，不依赖额外统计表。
 
 ## 7. RAG 接口
 
@@ -296,14 +330,14 @@ Content-Type: application/json
 ```json
 {
   "query": "想看高分悬疑推理电影",
-  "n": 8
+  "thinking": false
 }
 ```
 
 约束：
 
 - `query` 必填，去空格后不能为空
-- `n` 必须为正整数
+- `thinking` 可选，默认 `false`
 
 SSE 事件：
 
@@ -312,7 +346,7 @@ SSE 事件：
 ```json
 {
   "query": "想看高分悬疑推理电影",
-  "n": 8
+  "thinking": false
 }
 ```
 
@@ -333,6 +367,8 @@ SSE 事件：
   "chars": 256
 }
 ```
+
+- `answer_done.cited_movie_ids` 表示模型最终输出并通过后端白名单校验的电影 ID，不是全部检索 evidence 的 movie_id 列表。
 
 - `error`
 
@@ -429,7 +465,23 @@ SSE 事件：
 ```json
 {
   "status": "completed",
-  "reason": null
+  "reason": null,
+  "status_snapshot": {
+    "generated_at": "2026-04-20T12:00:00Z",
+    "runtime_summary": {
+      "ready": true,
+      "status": "ok",
+      "component_count": 7,
+      "error_component_count": 0,
+      "not_ready_components": []
+    },
+    "models": {
+      "mmoe": {
+        "category": "ranking",
+        "is_configured_latest": false
+      }
+    }
+  }
 }
 ```
 
@@ -475,8 +527,23 @@ Query 参数：
 
 ```json
 {
-  "items": [],
-  "total": 0,
+  "items": [
+    {
+      "task_id": "train_job_12",
+      "task_type": "train_job",
+      "status": "pending",
+      "display_type": "train",
+      "summary": "ranking/mmoe pending",
+      "progress_percent": 0.0,
+      "is_active": true,
+      "links": {
+        "self": "/api/v1/admin/tasks/train_job_12"
+      }
+    }
+  ],
+  "total": 1,
+  "returned": 1,
+  "has_more": false,
   "limit": 20,
   "offset": 0,
   "source": "all",
@@ -493,14 +560,26 @@ Query 参数：
 
 响应 `data` 顶层字段：
 
-- `config.pipeline.recall`
-- `config.pipeline.ranking`
-- `config.pipeline.reranking`
-- `config.mmoe_model_path`
-- `config.two_tower_model_path`
-- `config.two_tower_index_path`
-- `config.two_tower_vector_db_path`
+- `generated_at`
+- `config`
+- `models`
 - `artifacts`
+- `artifact_summary`
+- `runtime_health`
+- `runtime_summary`
+- `task_capabilities`
+
+推荐前端重点读取：
+
+- `runtime_summary.ready`
+- `runtime_summary.status`
+- `runtime_summary.not_ready_components`
+- `models.<name>.configured`
+- `models.<name>.latest`
+- `models.<name>.is_configured_latest`
+- `task_capabilities`
+
+前端字段提取与展示建议见 `docs/FRONTEND_CHANGE_REFERENCE.md`。
 
 ## 9. 任务类型与 Worker
 

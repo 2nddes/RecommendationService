@@ -1,6 +1,6 @@
 # RecommendationService API
 
-更新时间：2026-04-19
+更新时间：2026-04-20
 
 本文档以当前 Flask 代码实现为准，覆盖已注册的 14 个 HTTP 接口。历史文档中关于鉴权、健康状态和部分接口行为的描述与实现已有漂移，调用方应优先参考本文档。
 
@@ -208,7 +208,8 @@ Query 参数：
 
 说明：
 
-- 若底层无法构建 `movie_id` 的向量，会返回 `400 invalid request`。
+- 默认优先使用 RAG embedding 做相似片检索。
+- 当当前电影缺少 RAG embedding 时，服务端会自动回退到双塔 item embedding；仅当两条路径都无法构建向量时，才会返回 `400 invalid request`。
 - 当前实现不会自动裁剪过大的 `n`。
 
 ### 5.3 GET `/api/v1/recommend/trending`
@@ -245,7 +246,7 @@ Query 参数：
 
 ### 6.1 GET `/api/v1/search`
 
-基于 MySQL 的标题/简介检索，同时支持按标签过滤。
+基于 MySQL 的标题/简介检索，同时支持排序与结构化筛选。
 
 Query 参数：
 
@@ -253,14 +254,39 @@ Query 参数：
 | --- | --- | --- | --- | --- |
 | `query` | string | 否 | 空字符串 | 标题与摘要检索词 |
 | `tag_id` | integer[] | 否 | 空数组 | 可重复传参，例如 `tag_id=1&tag_id=2` |
+| `sort_by` | string | 否 | `relevance` | 排序字段，见下方允许值 |
+| `sort_order` | string | 否 | `desc` | 排序方向：`asc` 或 `desc` |
+| `time_window` | string | 否 | 无 | 基于 `movie.release_date` 的相对时间筛选 |
+| `start_date` | date | 否 | 无 | 基于 `movie.release_date` 的起始日期，格式 `YYYY-MM-DD` |
+| `end_date` | date | 否 | 无 | 基于 `movie.release_date` 的结束日期，格式 `YYYY-MM-DD` |
+| `duration_min` | integer | 否 | 无 | 最小时长（分钟） |
+| `duration_max` | integer | 否 | 无 | 最大时长（分钟） |
 | `n` | integer | 否 | `20` | 必须大于 0，当前没有上限保护 |
 | `offset` | integer | 否 | `0` | 必须大于等于 0 |
 | 其他任意 query 参数 | string 或 string[] | 否 | 无 | 不参与 SQL 条件，仅回显到 `passthrough` |
 
+`sort_by` 允许值：
+
+- `relevance`：默认相关性排序，兼顾标题/摘要匹配和评分人数
+- `rating`：按贝叶斯平均评分排序
+- `collect`：按收藏数排序
+- `duration`：按时长排序
+- `time`：按上映日期排序
+
+`time_window` 允许值：
+
+- `weekly`
+- `monthly`
+- `half_year`
+
 约束：
 
-- `query` 与 `tag_id` 不能同时为空。
+- 至少需要满足以下任一条件：提供 `query`、提供 `tag_id`、提供任一筛选参数、或使用非默认排序。
+- `time_window` 与 `start_date` / `end_date` 不能同时使用。
+- `start_date <= end_date`、`duration_min <= duration_max`。
 - 重复的 `tag_id` 会去重后再查询。
+- `time_window`、`start_date`、`end_date` 均作用于 `movie.release_date`。
+- 历史遗留的 `rating_min/rating_max/collect_min/collect_max/hot_min/hot_max` 现已静默忽略，不再参与过滤，也不会回显到响应中。
 
 成功响应 `data` 示例：
 
@@ -270,8 +296,21 @@ Query 参数：
   "tag_ids": [1, 2],
   "n": 20,
   "offset": 0,
+  "sort": {
+    "by": "rating",
+    "order": "desc",
+  },
+  "filters": {
+    "release_date": {
+      "time_window": null,
+      "start_date": "2010-01-01",
+      "end_date": "2025-12-31"
+    },
+    "duration_min": 90,
+    "duration_max": 180
+  },
   "passthrough": {
-    "year_min": "2010"
+    "source": "home-search"
   },
   "total": 126,
   "results": [
@@ -279,10 +318,14 @@ Query 参数：
       "movie_id": 1,
       "title": "Interstellar",
       "year": 2014,
+      "release_date": "2014-11-07",
+      "duration_min": 169,
       "poster": "https://example.invalid/poster.jpg",
       "summary": "...",
       "rating_avg": 9.2,
       "rating_count": 100000,
+      "bayesian_rating": 9.16,
+      "collect_count": 5821,
       "score": 12.4
     }
   ]
@@ -292,6 +335,10 @@ Query 参数：
 说明：
 
 - `summary` 会在服务端截断到最多 300 个字符，超长时追加 `...`。
+- `score` 始终表示默认相关性分，不会因为 `sort_by` 切换为收藏或时长排序而改变语义。
+- `bayesian_rating` 仍然会返回，但已不再支持评分范围过滤。
+-- 历史遗留的热度指标（如 `hot_score`）已从搜索接口的排序中移除；相关内部表字段可能仍在部分子系统中使用，但不会出现在搜索响应中。
+- 当前搜索始终基于分段查询与实时聚合，不依赖额外统计表。
 - 当前实现需要可用的 `settings.core.mysql_dsn`，否则会返回 `500 service execution failed`。
 - `passthrough` 是“回显字段”，不是“实际过滤条件”。
 
@@ -322,7 +369,7 @@ Content-Type: application/json
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
 | `query` | string | 是 | 无 | 去空白后不能为空 |
-| `n` | integer | 否 | `8` | 必须大于 0 |
+| `thinking` | boolean | 否 | `false` | 是否启用下游模型的 thinking/reasoning 模式 |
 
 事件类型：
 
@@ -364,8 +411,9 @@ Content-Type: application/json
 
 说明：
 
-- 正常完成时，事件顺序通常为：`start` -> `answer_delta`(0..n) -> `answer_done`。
+- 正常完成时，事件顺序通常为：`start` -> `answer_delta`(0..m) -> `answer_done`。
 - 出错时，通常为：`start` -> `error`，也可能在输出若干 `answer_delta` 后再进入 `error`。
+- `answer_done.cited_movie_ids` 表示模型最终输出并通过后端白名单校验的电影 ID，不是全部检索 evidence 的 movie_id 列表。
 - 当前实现会把底层异常文本写入 `error.message`，调用方不应将其直接展示给最终用户。
 - 响应头中已设置 `Cache-Control: no-cache, no-transform`、`Connection: keep-alive`、`X-Accel-Buffering: no`。
 
@@ -421,6 +469,24 @@ Content-Type: application/json
   "source": "db",
   "kind": "train_job",
   "name": "train_job",
+  "display_type": "train",
+  "subject": {
+    "component": "ranking",
+    "model": "mmoe",
+    "mode": "full",
+    "request_id": "train_20260419_090000_abcdef"
+  },
+  "summary": "ranking/mmoe pending",
+  "progress_percent": 0.0,
+  "elapsed_ms": null,
+  "is_active": true,
+  "is_terminal": false,
+  "has_error": false,
+  "links": {
+    "self": "/api/v1/admin/tasks/train_job_12"
+  },
+  "component": "ranking",
+  "model": "mmoe",
   "estimated_time": "unknown"
 }
 ```
@@ -484,7 +550,48 @@ Content-Type: application/json
 ```json
 {
   "status": "completed",
-  "reason": null
+  "reason": null,
+  "status_snapshot": {
+    "generated_at": "2026-04-20T12:00:00Z",
+    "runtime_summary": {
+      "generated_at": "2026-04-20T12:00:00Z",
+      "ready": true,
+      "status": "ok",
+      "component_count": 7,
+      "ready_component_count": 7,
+      "error_component_count": 0,
+      "running_component_count": 3,
+      "pending_component_count": 0,
+      "skipped_component_count": 0,
+      "warmup_ready": true,
+      "pipeline_ready": true,
+      "rag_ready": true,
+      "not_ready_components": []
+    },
+    "models": {
+      "mmoe": {
+        "category": "ranking",
+        "configured": {
+          "model": {
+            "path": "data/models/mmoe_latest.pt",
+            "absolute_path": "D:/project/Python/RecommendationService/data/models/mmoe_latest.pt",
+            "basename": "mmoe_latest.pt",
+            "exists": true
+          }
+        },
+        "latest": {
+          "artifact": {
+            "path": "data/artifacts/mmoe/mmoe_20260407_075522.pt",
+            "absolute_path": "D:/project/Python/RecommendationService/data/artifacts/mmoe/mmoe_20260407_075522.pt",
+            "basename": "mmoe_20260407_075522.pt",
+            "exists": true
+          },
+          "trained_at": "20260407_075522"
+        },
+        "is_configured_latest": false
+      }
+    }
+  }
 }
 ```
 
@@ -492,6 +599,7 @@ Content-Type: application/json
 
 - 失败时会转成 `500 service execution failed`，不会把内部失败原因直接返回给客户端。
 - 当前接口为同步刷新，请避免高频并发调用。
+- 刷新成功后会直接附带一份新的管理员状态快照，前端通常不需要再立即追加一次 `/admin/status` 请求。
 
 ### 8.5 GET `/api/v1/admin/tasks/{task_id}`
 
@@ -521,6 +629,62 @@ Query 参数：
 - 若 `task_type` 与 `kind` 同时出现且不一致，返回 `400 invalid request parameters`。
 - 未找到任务时返回 `404 invalid request`。
 
+成功响应 `data` 示例：
+
+```json
+{
+  "task_id": "rag_rebuild_job_42",
+  "row_id": 42,
+  "task_type": "rag_rebuild_job",
+  "status": "processing",
+  "parent_task_id": null,
+  "parent_row_id": null,
+  "retry_count": 0,
+  "error": null,
+  "payload": {
+    "scope": "full_rebuild",
+    "request_id": "rag_rebuild_20260420_115000_abcdef"
+  },
+  "progress": {
+    "total_movies": 1000,
+    "processed_movies": 420,
+    "completed_jobs": 418,
+    "failed_jobs": 2,
+    "pruned_embeddings": 18
+  },
+  "result": {},
+  "created_at": "2026-04-20T11:50:00",
+  "updated_at": "2026-04-20T11:55:20",
+  "started_at": "2026-04-20T11:50:05",
+  "finished_at": null,
+  "source": "db",
+  "kind": "rag_rebuild_job",
+  "name": "rag_rebuild_job",
+  "display_type": "rag_rebuild",
+  "subject": {
+    "scope": "full_rebuild",
+    "request_id": "rag_rebuild_20260420_115000_abcdef"
+  },
+  "summary": "full_rebuild 420/1000, failed=2",
+  "progress_percent": 42.0,
+  "elapsed_ms": 315000,
+  "is_active": true,
+  "is_terminal": false,
+  "has_error": false,
+  "links": {
+    "self": "/api/v1/admin/tasks/rag_rebuild_job_42"
+  },
+  "scope": "full_rebuild",
+  "counters": {
+    "total_movies": 1000,
+    "processed_movies": 420,
+    "completed_jobs": 418,
+    "failed_jobs": 2,
+    "pruned_embeddings": 18
+  }
+}
+```
+
 ### 8.6 GET `/api/v1/admin/tasks`
 
 查询任务列表。
@@ -542,8 +706,23 @@ Query 参数：
 
 ```json
 {
-  "items": [],
-  "total": 0,
+  "items": [
+    {
+      "task_id": "train_job_12",
+      "task_type": "train_job",
+      "status": "pending",
+      "display_type": "train",
+      "summary": "ranking/mmoe pending",
+      "progress_percent": 0.0,
+      "is_active": true,
+      "links": {
+        "self": "/api/v1/admin/tasks/train_job_12"
+      }
+    }
+  ],
+  "total": 1,
+  "returned": 1,
+  "has_more": false,
   "limit": 20,
   "offset": 0,
   "source": "all",
@@ -566,19 +745,93 @@ Query 参数：
 
 成功响应 `data` 顶层字段：
 
-- `config.pipeline.recall`
-- `config.pipeline.ranking`
-- `config.pipeline.reranking`
-- `config.mmoe_model_path`
-- `config.two_tower_model_path`
-- `config.two_tower_index_path`
-- `config.two_tower_vector_db_path`
+- `generated_at`
+- `config`
+- `models`
 - `artifacts`
+- `artifact_summary`
 - `runtime_health`
+- `runtime_summary`
+- `task_capabilities`
+
+成功响应 `data` 示例：
+
+```json
+{
+  "generated_at": "2026-04-20T12:00:00Z",
+  "config": {
+    "pipeline": {
+      "recall": ["two_tower", "tag_inverted"],
+      "ranking": "mmoe",
+      "reranking": "random_shuffle",
+      "tag_recall_enabled": true
+    },
+    "mmoe_model_path": "data/models/mmoe_latest.pt",
+    "xgb_model_path": "data/models/xgb_latest.json",
+    "two_tower_model_path": "data/models/two_tower_latest.pt",
+    "two_tower_index_path": "data/two_tower_items.hnsw",
+    "two_tower_vector_db_path": "data/two_tower_vectors.db"
+  },
+  "models": {
+    "mmoe": {
+      "category": "ranking",
+      "configured": {
+        "model": {
+          "path": "data/models/mmoe_latest.pt",
+          "absolute_path": "D:/project/Python/RecommendationService/data/models/mmoe_latest.pt",
+          "basename": "mmoe_latest.pt",
+          "exists": true
+        }
+      },
+      "latest": {
+        "artifact": {
+          "path": "data/artifacts/mmoe/mmoe_20260407_075522.pt",
+          "absolute_path": "D:/project/Python/RecommendationService/data/artifacts/mmoe/mmoe_20260407_075522.pt",
+          "basename": "mmoe_20260407_075522.pt",
+          "exists": true
+        },
+        "trained_at": "20260407_075522"
+      },
+      "is_configured_latest": false
+    }
+  },
+  "artifact_summary": {
+    "artifact_key_count": 8,
+    "artifact_keys": [
+      "ranking.mmoe.latest_artifact_path",
+      "ranking.mmoe.latest_trained_at"
+    ],
+    "latest_trained_at": {
+      "mmoe": "20260407_075522",
+      "xgb": "20260302_055445",
+      "two_tower": "20260407_061048"
+    }
+  },
+  "runtime_summary": {
+    "generated_at": "2026-04-20T12:00:00Z",
+    "ready": true,
+    "status": "ok",
+    "component_count": 7,
+    "ready_component_count": 7,
+    "error_component_count": 0,
+    "running_component_count": 3,
+    "pending_component_count": 0,
+    "skipped_component_count": 0,
+    "warmup_ready": true,
+    "pipeline_ready": true,
+    "rag_ready": true,
+    "not_ready_components": []
+  },
+  "task_capabilities": {
+    "sources": ["all", "db", "memory"],
+    "status_values": ["pending", "processing", "completed", "failed"]
+  }
+}
+```
 
 ## 9. 任务对象模型
 
-`/admin/train`、`/admin/rag/rebuild`、`/admin/tasks/{task_id}`、`/admin/tasks` 会返回统一任务对象。当前基础字段如下：
+`/admin/train`、`/admin/rag/rebuild`、`/admin/tasks/{task_id}`、`/admin/tasks` 会返回统一任务对象。当前推荐前端优先使用的字段如下：
 
 ```json
 {
@@ -599,14 +852,43 @@ Query 参数：
   "finished_at": "2026-04-19T09:03:11",
   "source": "db",
   "kind": "rag_rebuild_job",
-  "name": "rag_rebuild_job"
+  "name": "rag_rebuild_job",
+  "display_type": "rag_rebuild",
+  "subject": {
+    "scope": "full_rebuild",
+    "request_id": "rag_rebuild_20260420_115000_abcdef"
+  },
+  "summary": "full_rebuild 1000/1000",
+  "progress_percent": 100.0,
+  "elapsed_ms": 15342,
+  "is_active": false,
+  "is_terminal": true,
+  "has_error": false,
+  "links": {
+    "self": "/api/v1/admin/tasks/rag_rebuild_job_42"
+  },
+  "scope": "full_rebuild",
+  "counters": {
+    "total_movies": 1000,
+    "processed_movies": 1000,
+    "completed_jobs": 998,
+    "failed_jobs": 2,
+    "pruned_embeddings": 18
+  }
 }
 ```
 
-针对 `rag_rebuild_job`，当前还可能附加：
+字段说明：
 
-- `scope`
-- `movie_id`
+- `display_type`：前端可直接用于分组或列表标签，当前为 `train` / `rag_rebuild`
+- `subject`：从 `payload/result` 提取出的稳定主题对象，前端优先读取这里而不是自行拆原始 JSON
+- `summary`：适合任务列表直接展示的摘要文本
+- `progress_percent`：当前进度百分比。`train_job` 没有细粒度进度时，通常只在 `pending=0`、终态=`100`
+- `elapsed_ms`：优先取任务结果中的耗时；缺失时会根据时间戳推导
+- `is_active` / `is_terminal` / `has_error`：前端状态判断快捷字段
+- `links.self`：当前任务详情相对路径
+- `counters`：仅 `rag_rebuild_job` 返回的聚合统计字段
+- `artifact_path` / `trained`：仅 `train_job` 返回的训练结果摘要字段
 
 ## 10. 调用前置条件与注意事项
 

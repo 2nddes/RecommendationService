@@ -230,7 +230,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"query\": \"{{queryText}}\",\n  \"n\": 8\n}",
+                            "raw": "{\n  \"query\": \"{{queryText}}\",\n  \"thinking\": false\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"

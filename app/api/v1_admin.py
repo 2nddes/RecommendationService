@@ -115,7 +115,9 @@ def admin_refresh():
     data = refresh_current_models(settings)
     if str(data.get("status")) == "completed":
         logger.info("模型刷新完成")
-        return ok(data, message="Refresh completed")
+        payload = dict(data)
+        payload["status_snapshot"] = get_admin_status(settings)
+        return ok(payload, message="Refresh completed")
     raise RuntimeError(str(data.get("reason") or "refresh_failed"))
 
 

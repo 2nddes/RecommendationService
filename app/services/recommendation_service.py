@@ -8,7 +8,7 @@ from app.common.settings import Settings
 from app.repositories.cache_repository import CacheRepository
 from app.repositories.trending_repository import TrendingRepository
 from app.reco.online.runtime import get_pipeline
-from app.reco.recall.two_tower import ann_search, build_item_vector
+from app.reco.rag_service import get_movie_rag_service, initialize_movie_rag_service
 from app.reco.types import RequestContext
 
 
@@ -23,6 +23,14 @@ class RecommendationService:
         self._settings = settings
         self._cache_repo = CacheRepository(settings)
         self._trending_repo = TrendingRepository(settings.core.mysql_dsn)
+
+    def _get_or_initialize_rag_service(self):
+        try:
+            return get_movie_rag_service(self._settings)
+        except RuntimeError as exc:
+            if str(exc) != "rag_service_not_initialized":
+                raise
+        return initialize_movie_rag_service(self._settings)
 
     def recommend_user(self, *, user_id: int, page: int, page_size: int) -> dict:
         if page < 1:
@@ -540,26 +548,27 @@ class RecommendationService:
 
     def recommend_item(self, *, movie_id: int, n: int) -> dict:
         logger.debug("Item recommendation started, movie_id=%s, n=%s", movie_id, n)
-        item_vec = build_item_vector(movie_id, mysql_dsn=self._settings.core.mysql_dsn)
-        if item_vec is None:
-            logger.warning("Item recommendation failed: item vector missing, movie_id=%s", movie_id)
-            raise ValueError(f"Item vector not found for movie_id: {movie_id}")
+        rag_service = self._get_or_initialize_rag_service()
+        try:
+            result = rag_service.search_similar_movies(movie_id=movie_id, k=n)
+        except RuntimeError as exc:
+            if str(exc).startswith("item_embedding_not_found_for_movie:"):
+                logger.warning("Item recommendation failed: item embedding missing, movie_id=%s", movie_id)
+                raise ValueError(f"Item vector not found for movie_id: {movie_id}") from exc
+            raise
 
-        pairs = ann_search(item_vec, k=max(n + 1, n))
-        logger.info("Item recommendation ANN finished, movie_id=%s, ann_candidates=%s", movie_id, len(pairs))
-        items: list[int] = []
-        for item_id, _score in pairs:
-            iid = int(item_id)
-            if iid == movie_id:
-                continue
-            items.append(iid)
-            if len(items) >= n:
-                break
+        logger.info(
+            "Item recommendation ANN finished, movie_id=%s, ann_candidates=%s, source=%s",
+            movie_id,
+            len(result.items),
+            result.source,
+        )
+        items = [int(item_id) for item_id, _score in result.items[:n]]
 
         if not items:
-            logger.warning("Item recommendation produced empty result, movie_id=%s, n=%s", movie_id, n)
+            logger.warning("Item recommendation produced empty result, movie_id=%s, n=%s, source=%s", movie_id, n, result.source)
         else:
-            logger.info("Item recommendation completed, movie_id=%s, returned=%s", movie_id, len(items))
+            logger.info("Item recommendation completed, movie_id=%s, returned=%s, source=%s", movie_id, len(items), result.source)
 
         return {"source_id": movie_id, "items": items, "n": n}
 

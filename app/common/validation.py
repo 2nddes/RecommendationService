@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -16,12 +17,39 @@ def as_int(value: Any, *, name: str) -> int:
         raise ParamError(f"invalid '{name}', expected integer")
 
 
+def as_float(value: Any, *, name: str) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise ParamError(f"invalid '{name}', expected number")
+
+
 def as_str(value: Any, *, name: str) -> str:
     if value is None:
         raise ParamError(f"missing '{name}'")
     if not isinstance(value, str):
         raise ParamError(f"invalid '{name}', expected string")
     return value
+
+
+def as_date(value: Any, *, name: str) -> date:
+    if value is None:
+        raise ParamError(f"missing '{name}'")
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if not isinstance(value, str):
+        raise ParamError(f"invalid '{name}', expected YYYY-MM-DD")
+
+    raw = value.strip()
+    if not raw:
+        raise ParamError(f"invalid '{name}', expected YYYY-MM-DD")
+
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        raise ParamError(f"invalid '{name}', expected YYYY-MM-DD")
 
 
 def optional(value: Any, caster: Callable[[Any], Any], default: Any):

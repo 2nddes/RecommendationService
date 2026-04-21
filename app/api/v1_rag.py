@@ -10,7 +10,7 @@ from flask import Blueprint, Response, request, stream_with_context
 from app.common.validation import as_str, as_bool
 from app.reco.online.runtime import get_settings
 from app.reco.rag_clients import OpenAICompatError
-from app.reco.rag_service import get_movie_rag_service
+from app.reco.rag_service import RagAnswerDelta, RagAnswerDone, get_movie_rag_service
 
 
 rag_bp = Blueprint("rag", __name__)
@@ -61,39 +61,51 @@ def recommend_rag_stream():
                 bool(thinking),
             )
             yield _sse("start", {"query": query, "thinking": bool(thinking)})
-            cited_movie_ids, chunks = rag_service.stream_answer(query=query, thinking=thinking)
+            stream_result = rag_service.stream_answer(query=query, thinking=thinking)
+            evidence_movie_ids = stream_result.evidence_movie_ids
             logger.info(
-                "RAG stream evidence ready, query_len=%s, query_preview=%s, thinking=%s, cited_count=%s, cited_preview=%s",
+                "RAG stream evidence ready, query_len=%s, query_preview=%s, thinking=%s, evidence_count=%s, evidence_preview=%s",
                 len(query),
                 query_preview,
                 bool(thinking),
-                len(cited_movie_ids),
-                cited_movie_ids[:5],
+                len(evidence_movie_ids),
+                evidence_movie_ids[:5],
             )
-            for piece in chunks:
+            output_movie_ids: list[int] | None = None
+            for event in stream_result.events:
+                if isinstance(event, RagAnswerDone):
+                    output_movie_ids = event.cited_movie_ids
+                    continue
+
+                piece = event.text if isinstance(event, RagAnswerDelta) else ""
                 if not piece:
                     continue
                 if first_chunk_ms is None:
                     first_chunk_ms = (perf_counter() - started_at) * 1000.0
                     logger.info(
-                        "RAG stream first answer chunk, query_len=%s, query_preview=%s, thinking=%s, first_chunk_ms=%.2f, cited_count=%s",
+                        "RAG stream first answer chunk, query_len=%s, query_preview=%s, thinking=%s, first_chunk_ms=%.2f, evidence_count=%s",
                         len(query),
                         query_preview,
                         bool(thinking),
                         first_chunk_ms,
-                        len(cited_movie_ids),
+                        len(evidence_movie_ids),
                     )
                 sent_chars += len(piece)
                 chunk_count += 1
                 yield _sse("answer_delta", {"text": piece})
 
+            if output_movie_ids is None:
+                raise RuntimeError("rag_output_done_missing")
+
             elapsed_ms = (perf_counter() - started_at) * 1000.0
             logger.info(
-                "RAG stream completed, query_len=%s, query_preview=%s, thinking=%s, cited_count=%s, chunk_count=%s, chars=%s, first_chunk_ms=%s, elapsed_ms=%.2f",
+                "RAG stream completed, query_len=%s, query_preview=%s, thinking=%s, evidence_count=%s, output_count=%s, output_preview=%s, chunk_count=%s, chars=%s, first_chunk_ms=%s, elapsed_ms=%.2f",
                 len(query),
                 query_preview,
                 bool(thinking),
-                len(cited_movie_ids),
+                len(evidence_movie_ids),
+                len(output_movie_ids),
+                output_movie_ids[:5],
                 chunk_count,
                 sent_chars,
                 f"{first_chunk_ms:.2f}" if first_chunk_ms is not None else "n/a",
@@ -103,7 +115,7 @@ def recommend_rag_stream():
                 "answer_done",
                 {
                     "elapsed_ms": int(elapsed_ms),
-                    "cited_movie_ids": cited_movie_ids,
+                    "cited_movie_ids": output_movie_ids,
                     "chars": sent_chars,
                 },
             )

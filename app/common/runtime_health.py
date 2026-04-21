@@ -33,6 +33,13 @@ def _now_iso() -> str:
     return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
+def _serialize_exception(_exc: Exception) -> dict[str, Any]:
+    return {
+        "type": type(_exc).__name__,
+        "message": str(_exc),
+    }
+
+
 def mark_component_state(
     name: str,
     *,
@@ -65,7 +72,7 @@ def mark_component_error(name: str, _exc: Exception, *, details: dict[str, Any] 
         c.ready = False
         c.status = "error"
         c.last_error_at = _now_iso()
-        c.last_error = None
+        c.last_error = _serialize_exception(_exc)
         if details:
             c.details = dict(details)
 
@@ -78,14 +85,31 @@ def snapshot_runtime_health() -> dict[str, Any]:
     pipeline_ready = bool(components.get("pipeline", {}).get("ready"))
     rag_ready = bool(components.get("rag", {}).get("ready"))
     overall_ready = warmup_ready and pipeline_ready and rag_ready
+    ready_component_count = sum(1 for component in components.values() if bool(component.get("ready")))
+    error_component_count = sum(1 for component in components.values() if str(component.get("status") or "") == "error")
+    running_component_count = sum(1 for component in components.values() if str(component.get("status") or "") == "running")
+    pending_component_count = sum(1 for component in components.values() if str(component.get("status") or "") == "pending")
+    skipped_component_count = sum(1 for component in components.values() if str(component.get("status") or "") == "skipped")
 
     return {
         "generated_at": _now_iso(),
         "overall": {
             "ready": overall_ready,
+            "status": "ok" if overall_ready else "degraded",
             "warmup_ready": warmup_ready,
             "pipeline_ready": pipeline_ready,
             "rag_ready": rag_ready,
+            "component_count": len(components),
+            "ready_component_count": ready_component_count,
+            "error_component_count": error_component_count,
+            "running_component_count": running_component_count,
+            "pending_component_count": pending_component_count,
+            "skipped_component_count": skipped_component_count,
+            "not_ready_components": [
+                name
+                for name, component in sorted(components.items())
+                if not bool(component.get("ready"))
+            ],
         },
         "components": components,
     }

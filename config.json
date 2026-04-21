@@ -103,7 +103,7 @@
         "llm_api_path": "/v1/chat/completions",
         "llm_api_key": "sk-draqtvsyixcjfyldydmbhbjmxlcelzthghbxbqmeejecstkg",
         "llm_model_name": "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
-        "ann_topk_default": 8,
+        "ann_topk_default": 10,
         "redis_result_ttl_seconds": 30000,
         "index_hnsw_m": 32,
         "index_hnsw_ef_search": 64,

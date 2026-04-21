@@ -11,7 +11,7 @@
  Target Server Version : 80407 (8.4.7)
  File Encoding         : 65001
 
- Date: 02/04/2026 10:45:26
+ Date: 21/04/2026 15:20:52
 */
 
 SET NAMES utf8mb4;
@@ -58,31 +58,52 @@ CREATE TABLE `dict_region`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 512 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '国家地区标准字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for ops_task
+-- Table structure for direct_message
 -- ----------------------------
-DROP TABLE IF EXISTS `ops_task`;
-CREATE TABLE `ops_task`  (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '任务主键ID',
-  `task_ref_override` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '迁移旧任务时保留的稳定任务ID',
-  `task_type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务类型',
-  `status` enum('pending','processing','completed','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '任务状态',
-  `parent_task_id` bigint unsigned NULL DEFAULT NULL COMMENT '父任务主键ID',
-  `retry_count` int unsigned NOT NULL DEFAULT 0 COMMENT '已重试次数',
-  `error` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '错误信息',
-  `payload` json NULL COMMENT '任务输入与上下文(JSON)',
-  `progress` json NULL COMMENT '任务进度(JSON)',
-  `result` json NULL COMMENT '任务结果(JSON)',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `started_at` timestamp NULL DEFAULT NULL COMMENT '开始处理时间',
-  `finished_at` timestamp NULL DEFAULT NULL COMMENT '完成时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_task_ref_override`(`task_ref_override` ASC) USING BTREE,
-  INDEX `idx_type_status_created`(`task_type` ASC, `status` ASC, `created_at` ASC) USING BTREE,
-  INDEX `idx_parent_created`(`parent_task_id` ASC, `created_at` ASC) USING BTREE,
-  INDEX `idx_status_created`(`status` ASC, `created_at` ASC) USING BTREE,
-  CONSTRAINT `fk_ops_task_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `ops_task` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '统一任务表' ROW_FORMAT = DYNAMIC;
+DROP TABLE IF EXISTS `direct_message`;
+CREATE TABLE `direct_message`  (
+  `message_id` bigint NOT NULL AUTO_INCREMENT,
+  `conversation_id` bigint NOT NULL COMMENT '所属会话ID',
+  `sender_id` bigint NOT NULL COMMENT '发送者',
+  `recipient_id` bigint NOT NULL COMMENT '接收者',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '消息内容',
+  `read_at` datetime NULL DEFAULT NULL COMMENT '已读时间',
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
+  PRIMARY KEY (`message_id`) USING BTREE,
+  INDEX `idx_dm_conversation_time`(`conversation_id` ASC, `created_at` DESC, `message_id` DESC) USING BTREE,
+  INDEX `idx_dm_recipient_unread`(`recipient_id` ASC, `read_at` ASC, `created_at` DESC) USING BTREE,
+  INDEX `idx_dm_sender`(`sender_id` ASC) USING BTREE,
+  CONSTRAINT `dm_message_ibfk_1` FOREIGN KEY (`conversation_id`) REFERENCES `direct_message_conversation` (`conversation_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `dm_message_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `dm_message_ibfk_3` FOREIGN KEY (`recipient_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信消息表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for direct_message_conversation
+-- ----------------------------
+DROP TABLE IF EXISTS `direct_message_conversation`;
+CREATE TABLE `direct_message_conversation`  (
+  `conversation_id` bigint NOT NULL AUTO_INCREMENT,
+  `user_low_id` bigint NOT NULL COMMENT '参与者中较小的用户ID',
+  `user_high_id` bigint NOT NULL COMMENT '参与者中较大的用户ID',
+  `last_message_id` bigint NULL DEFAULT NULL COMMENT '最后一条消息ID',
+  `last_sender_id` bigint NULL DEFAULT NULL COMMENT '最后发送者ID',
+  `last_message_preview` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '最后一条消息预览',
+  `last_message_at` datetime NULL DEFAULT NULL COMMENT '最后消息时间',
+  `user_low_unread_count` int NOT NULL DEFAULT 0 COMMENT '较小ID用户未读数',
+  `user_high_unread_count` int NOT NULL DEFAULT 0 COMMENT '较大ID用户未读数',
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`conversation_id`) USING BTREE,
+  UNIQUE INDEX `uk_dm_conversation_users`(`user_low_id` ASC, `user_high_id` ASC) USING BTREE,
+  INDEX `idx_dm_conversation_time`(`last_message_at` DESC, `conversation_id` DESC) USING BTREE,
+  INDEX `idx_dm_conversation_low`(`user_low_id` ASC) USING BTREE,
+  INDEX `idx_dm_conversation_high`(`user_high_id` ASC) USING BTREE,
+  INDEX `dm_conversation_ibfk_3`(`last_sender_id` ASC) USING BTREE,
+  CONSTRAINT `dm_conversation_ibfk_1` FOREIGN KEY (`user_low_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `dm_conversation_ibfk_2` FOREIGN KEY (`user_high_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `dm_conversation_ibfk_3` FOREIGN KEY (`last_sender_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信会话表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie
@@ -118,8 +139,11 @@ CREATE TABLE `movie`  (
   INDEX `idx_year`(`year` ASC) USING BTREE,
   INDEX `idx_rating_avg`(`rating_sum` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
+  INDEX `idx_movie_search_release`(`status` ASC, `deleted_at` ASC, `release_date` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_movie_search_duration`(`status` ASC, `deleted_at` ASC, `duration_min` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `rating_count`(`rating_count` DESC) USING BTREE,
   FULLTEXT INDEX `ft_title_summary`(`title`, `summary`)
-) ENGINE = InnoDB AUTO_INCREMENT = 34782623 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视主表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 34782624 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视主表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie_comment
@@ -146,9 +170,26 @@ CREATE TABLE `movie_comment`  (
   INDEX `idx_movie_created`(`movie_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_root_id`(`root_id` ASC) USING BTREE,
   INDEX `deleted_at`(`deleted_at` ASC, `created_at` DESC) USING BTREE,
+  INDEX `idx_deleted_created_movie`(`deleted_at` ASC, `created_at` DESC, `movie_id` ASC) USING BTREE,
+  INDEX `movie_id`(`movie_id` ASC, `deleted_at` DESC) USING BTREE,
   CONSTRAINT `movie_comment_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_comment_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1942011793 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1942011796 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for movie_embeddings
+-- ----------------------------
+DROP TABLE IF EXISTS `movie_embeddings`;
+CREATE TABLE `movie_embeddings`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `movie_id` bigint UNSIGNED NOT NULL COMMENT '关联的主业务电影ID',
+  `chunk_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用于生成向量的原始完整文本',
+  `embedding_vector` blob NOT NULL COMMENT '向量数据（二进制格式序列化存储）',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_movie_id`(`movie_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 146966 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '电影向量库冷存储表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for movie_language
@@ -210,7 +251,9 @@ CREATE TABLE `movie_tag`  (
   PRIMARY KEY (`movie_id`, `tag_id`) USING BTREE,
   INDEX `idx_movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `idx_tag_id`(`tag_id` ASC) USING BTREE,
+  INDEX `idx_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
   INDEX `idx_weight`(`weight` ASC) USING BTREE,
+  INDEX `movie_id`(`movie_id` ASC, `tag_id` ASC) USING BTREE,
   CONSTRAINT `movie_tag_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_tag_ibfk_4` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视动态标签关联表' ROW_FORMAT = DYNAMIC;
@@ -237,11 +280,41 @@ CREATE TABLE `notification`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2587 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for ops_task
+-- ----------------------------
+DROP TABLE IF EXISTS `ops_task`;
+CREATE TABLE `ops_task`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '任务主键ID',
+  `task_ref_override` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '迁移旧任务时保留的稳定任务ID',
+  `task_type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务类型',
+  `status` enum('pending','processing','completed','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '任务状态',
+  `parent_task_id` bigint UNSIGNED NULL DEFAULT NULL COMMENT '父任务主键ID',
+  `retry_count` int UNSIGNED NOT NULL DEFAULT 0 COMMENT '已重试次数',
+  `error` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '错误信息',
+  `payload` json NULL COMMENT '任务输入与上下文(JSON)',
+  `progress` json NULL COMMENT '任务进度(JSON)',
+  `result` json NULL COMMENT '任务结果(JSON)',
+  `legacy_kind` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '迁移来源表名',
+  `legacy_id` bigint NULL DEFAULT NULL COMMENT '迁移来源主键',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `started_at` timestamp NULL DEFAULT NULL,
+  `finished_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_task_ref_override`(`task_ref_override` ASC) USING BTREE,
+  UNIQUE INDEX `uk_legacy_kind_id`(`legacy_kind` ASC, `legacy_id` ASC) USING BTREE,
+  INDEX `idx_type_status_created`(`task_type` ASC, `status` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_parent_created`(`parent_task_id` ASC, `created_at` ASC) USING BTREE,
+  INDEX `idx_status_created`(`status` ASC, `created_at` ASC) USING BTREE,
+  CONSTRAINT `fk_ops_task_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `ops_task` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 281077 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '统一任务表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for person
 -- ----------------------------
 DROP TABLE IF EXISTS `person`;
 CREATE TABLE `person`  (
-  `person_id` bigint NOT NULL,
+  `person_id` bigint NOT NULL AUTO_INCREMENT,
   `person_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '姓名',
   `photo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '照片链接',
   `gender` enum('male','female','unknown') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'unknown' COMMENT '性别',
@@ -249,7 +322,7 @@ CREATE TABLE `person`  (
   `bio` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '简介',
   PRIMARY KEY (`person_id`) USING BTREE,
   INDEX `idx_person_id`(`person_id` ASC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '工作人员' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1422482 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '工作人员' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for rating
@@ -258,13 +331,12 @@ DROP TABLE IF EXISTS `rating`;
 CREATE TABLE `rating`  (
   `user_id` bigint NOT NULL COMMENT '评分用户',
   `movie_id` bigint NOT NULL COMMENT '评分对象',
-  `rating` tinyint NOT NULL COMMENT '评分1-10',
+  `rating` tinyint NULL DEFAULT NULL COMMENT '评分1-10',
   `updated_at` datetime NULL DEFAULT NULL COMMENT '评分时间',
   PRIMARY KEY (`user_id`, `movie_id`) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `user_id`(`user_id` ASC) USING BTREE,
   INDEX `updated_at`(`updated_at` DESC) USING BTREE,
-  CONSTRAINT `chk_rating_range` CHECK ((`rating` >= 1) and (`rating` <= 10)),
   CONSTRAINT `rating_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `rating_ibfk_2` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户评分' ROW_FORMAT = DYNAMIC;
@@ -346,7 +418,7 @@ CREATE TABLE `user`  (
   UNIQUE INDEX `email`(`email` ASC) USING BTREE,
   INDEX `idx_email`(`email` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 649125 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户账号表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 649127 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户账号表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_click
@@ -358,9 +430,10 @@ CREATE TABLE `user_click`  (
   `movie_id` bigint NOT NULL COMMENT '电影ID',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点击时间',
   PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_created_movie`(`created_at` DESC, `movie_id` ASC) USING BTREE,
   INDEX `idx_user_time`(`user_id` ASC, `created_at` DESC) USING BTREE,
   INDEX `idx_movie_time`(`movie_id` ASC, `created_at` DESC) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic COMMENT = '用户点击流水表';
+) ENGINE = InnoDB AUTO_INCREMENT = 13068115 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户点击流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_collect_movie
@@ -410,6 +483,20 @@ CREATE TABLE `user_follow`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户关注' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for user_settings
+-- ----------------------------
+DROP TABLE IF EXISTS `user_settings`;
+CREATE TABLE `user_settings`  (
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `allow_follow` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许被其他用户关注',
+  `allow_message_from_non_mutuals` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许非互关用户私信',
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`) USING BTREE,
+  CONSTRAINT `user_settings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户设置表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for user_token
 -- ----------------------------
 DROP TABLE IF EXISTS `user_token`;
@@ -423,21 +510,6 @@ CREATE TABLE `user_token`  (
   UNIQUE INDEX `idx_token`(`token` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `user_token_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 126 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户Token表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 129 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户Token表' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
-
--- ----------------------------
--- Table structure for movie_embeddings
--- ----------------------------
-DROP TABLE IF EXISTS `movie_embeddings`;
-CREATE TABLE `movie_embeddings` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'primary id',
-  `movie_id` BIGINT UNSIGNED NOT NULL COMMENT 'business movie id',
-  `chunk_text` TEXT NOT NULL COMMENT 'source text for embedding',
-  `embedding_vector` BLOB NOT NULL COMMENT 'serialized float32 vector',
-  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_movie_id` (`movie_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='movie embedding cold storage';

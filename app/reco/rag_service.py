@@ -14,10 +14,14 @@ from sqlalchemy import Engine, bindparam, create_engine, text
 from app.common.redis_cache import get_redis_client
 from app.common.runtime_health import mark_component_error, mark_component_success
 from app.common.settings import Settings
-from app.reco.rag_clients import OpenAICompatConfig, create_embedding, stream_chat_completion
+from app.reco.rag_clients import OpenAICompatConfig, OpenAICompatError, create_embedding, stream_chat_completion
 
 
 logger = logging.getLogger(__name__)
+
+
+_RAG_STRUCTURED_OUTPUT_BEGIN = "\n<<<RAG_STRUCTURED_OUTPUT_BEGIN>>>\n"
+_RAG_STRUCTURED_OUTPUT_END = "\n<<<RAG_STRUCTURED_OUTPUT_END>>>"
 
 
 def _preview_text(text: str, *, limit: int = 64) -> str:
@@ -33,9 +37,11 @@ class RagEvidence:
     movie_id: int
     title: str
     year: int | None
+    rating_avg: float | None
+    rating_count: int
     summary: str
     chunk_text: str
-    score: float
+    similarity_score: float
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -43,9 +49,142 @@ class RagEvidence:
             "movie_id": int(self.movie_id),
             "title": self.title,
             "year": self.year,
+            "rating_avg": float(self.rating_avg) if self.rating_avg is not None else None,
+            "rating_count": int(self.rating_count),
             "summary": self.summary,
-            "score": float(self.score),
+            "similarity_score": float(self.similarity_score),
         }
+
+
+@dataclass(frozen=True)
+class RagAnswerDelta:
+    text: str
+
+
+@dataclass(frozen=True)
+class RagAnswerDone:
+    cited_movie_ids: list[int]
+
+
+@dataclass(frozen=True)
+class RagAnswerStream:
+    evidence_movie_ids: list[int]
+    events: Iterator[RagAnswerDelta | RagAnswerDone]
+
+
+@dataclass(frozen=True)
+class SimilarMovieSearchResult:
+    source: str
+    items: list[tuple[int, float]]
+
+
+def _coerce_movie_id(value: object) -> int:
+    if isinstance(value, bool):
+        raise OpenAICompatError(f"rag_output_movie_id_invalid: {value!r}")
+    if isinstance(value, int):
+        return int(value)
+    if isinstance(value, float):
+        if not value.is_integer():
+            raise OpenAICompatError(f"rag_output_movie_id_invalid: {value!r}")
+        return int(value)
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            raise OpenAICompatError("rag_output_movie_id_invalid: empty_string")
+        try:
+            return int(raw)
+        except ValueError as exc:
+            raise OpenAICompatError(f"rag_output_movie_id_invalid: {value!r}") from exc
+    raise OpenAICompatError(f"rag_output_movie_id_invalid: {type(value).__name__}")
+
+
+def _parse_structured_cited_movie_ids(payload: str, *, allowed_movie_ids: Sequence[int]) -> list[int]:
+    text = str(payload or "").strip()
+    if not text:
+        raise OpenAICompatError("rag_output_payload_missing")
+
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise OpenAICompatError(f"rag_output_json_invalid: {exc.msg}") from exc
+
+    if not isinstance(data, dict):
+        raise OpenAICompatError("rag_output_json_invalid: root_not_object")
+
+    raw_ids = data.get("cited_movie_ids")
+    if not isinstance(raw_ids, list):
+        raise OpenAICompatError("rag_output_cited_movie_ids_invalid")
+
+    allowed = {int(movie_id) for movie_id in allowed_movie_ids}
+    out: list[int] = []
+    seen: set[int] = set()
+    for item in raw_ids:
+        movie_id = _coerce_movie_id(item)
+        if movie_id not in allowed:
+            raise OpenAICompatError(f"rag_output_movie_id_out_of_evidence: {movie_id}")
+        if movie_id in seen:
+            continue
+        seen.add(movie_id)
+        out.append(movie_id)
+    return out
+
+
+def _iter_structured_answer_events(
+    *,
+    chunks: Iterator[str],
+    allowed_movie_ids: Sequence[int],
+) -> Iterator[RagAnswerDelta | RagAnswerDone]:
+    tail = ""
+    structured_started = False
+    structured_buffer = ""
+    begin_marker = _RAG_STRUCTURED_OUTPUT_BEGIN
+    end_marker = _RAG_STRUCTURED_OUTPUT_END
+    keep_tail = max(len(begin_marker) - 1, 0)
+
+    for piece in chunks:
+        if not piece:
+            continue
+
+        if structured_started:
+            structured_buffer += piece
+        else:
+            combined = tail + piece
+            begin_idx = combined.find(begin_marker)
+            if begin_idx >= 0:
+                visible = combined[:begin_idx]
+                if visible:
+                    yield RagAnswerDelta(text=visible)
+                structured_started = True
+                structured_buffer = combined[begin_idx + len(begin_marker) :]
+            else:
+                safe_len = max(0, len(combined) - keep_tail)
+                if safe_len > 0:
+                    visible = combined[:safe_len]
+                    if visible:
+                        yield RagAnswerDelta(text=visible)
+                tail = combined[safe_len:]
+                continue
+
+        end_idx = structured_buffer.find(end_marker)
+        if end_idx < 0:
+            continue
+
+        trailing = structured_buffer[end_idx + len(end_marker) :].strip()
+        if trailing:
+            raise OpenAICompatError("rag_output_trailing_text_unexpected")
+        cited_movie_ids = _parse_structured_cited_movie_ids(
+            structured_buffer[:end_idx],
+            allowed_movie_ids=allowed_movie_ids,
+        )
+        yield RagAnswerDone(cited_movie_ids=cited_movie_ids)
+        return
+
+    if structured_started:
+        raise OpenAICompatError("rag_output_end_marker_missing")
+
+    if tail:
+        yield RagAnswerDelta(text=tail)
+    raise OpenAICompatError("rag_output_begin_marker_missing")
 
 
 class MovieRagService:
@@ -272,6 +411,8 @@ class MovieRagService:
                 m.title,
                 m.year,
                 m.duration_min,
+                m.rating_sum / NULLIF(m.rating_count, 0) AS rating_avg,
+                COALESCE(m.rating_count, 0) AS rating_count,
                 COALESCE(m.summary, '') AS summary,
                 COALESCE(
                     (
@@ -368,6 +509,8 @@ class MovieRagService:
             "title": str(row.get("title") or "").strip(),
             "year": int(row["year"]) if row.get("year") is not None else None,
             "duration_min": int(row["duration_min"]) if row.get("duration_min") is not None else None,
+            "rating_avg": float(row["rating_avg"]) if row.get("rating_avg") is not None else None,
+            "rating_count": max(int(row.get("rating_count") or 0), 0),
             "directors": str(row.get("directors") or "").strip(),
             "actors": str(row.get("actors") or "").strip(),
             "regions": str(row.get("regions") or "").strip(),
@@ -375,6 +518,20 @@ class MovieRagService:
             "top_tags": str(row.get("top_tags") or "").strip(),
             "summary": str(row.get("summary") or "").strip(),
         }
+
+    def _movie_exists(self, movie_id: int) -> bool:
+        sql = text(
+            """
+            SELECT 1
+            FROM movie
+            WHERE movie_id = :movie_id
+              AND status = 'published'
+              AND deleted_at IS NULL
+            LIMIT 1
+            """
+        )
+        with self._ensure_engine().connect() as conn:
+            return conn.execute(sql, {"movie_id": int(movie_id)}).first() is not None
 
     def list_active_movie_ids(self) -> list[int]:
         sql = text(
@@ -418,11 +575,19 @@ class MovieRagService:
             return text[:max_chars].strip()
         return text
 
+    @staticmethod
+    def _format_rating_avg(value: Any) -> str:
+        if value is None:
+            return ""
+        return f"{float(value):.1f}"
+
     def _build_chunk_text(self, movie: dict[str, Any]) -> str:
         title = self._format_scalar(movie.get("title"))
         year = self._format_scalar(movie.get("year"))
         directors = self._format_scalar(movie.get("directors"))
         duration_min = self._format_scalar(movie.get("duration_min"))
+        rating_avg = self._format_rating_avg(movie.get("rating_avg"))
+        rating_count = self._format_scalar(movie.get("rating_count"))
         regions = self._format_scalar(movie.get("regions"))
         languages = self._format_scalar(movie.get("languages"))
         top_tags = self._format_scalar(movie.get("top_tags"))
@@ -433,6 +598,8 @@ class MovieRagService:
             f"release_year: {year}\n"
             f"director: {directors}\n"
             f"duration_minutes: {duration_min}\n"
+            f"average_rating: {rating_avg}\n"
+            f"rating_count: {rating_count}\n"
             f"country_or_region: {regions}\n"
             f"language: {languages}\n"
             f"top_vote_tags: {top_tags}\n"
@@ -505,6 +672,9 @@ class MovieRagService:
         digest = hashlib.sha1(f"{query}|{k}".encode("utf-8")).hexdigest()
         return self._redis_key("query", digest)
 
+    def _similar_movie_cache_key(self, *, movie_id: int, k: int, source: str) -> str:
+        return self._redis_key("item", str(source), int(movie_id), int(k))
+
     def _cache_faiss_mapping(self, *, emb_id: int, movie_id: int) -> None:
         client = get_redis_client(self._settings)
         if client is None:
@@ -527,80 +697,227 @@ class MovieRagService:
             self._cache_faiss_mapping(emb_id=int(faiss_id), movie_id=int(movie_id))
         return movie_id
 
-    def _search_faiss_ids(self, *, query: str, k: int) -> list[tuple[int, float]]:
-        if self._index is None or self._dim is None:
-            raise RuntimeError("rag_index_not_initialized")
+    def _fetch_embedding_vector_by_movie_id(self, movie_id: int) -> np.ndarray | None:
+        sql = text(
+            """
+            SELECT embedding_vector
+            FROM movie_embeddings
+            WHERE movie_id = :movie_id
+            LIMIT 1
+            """
+        )
+        with self._ensure_engine().connect() as conn:
+            row = conn.execute(sql, {"movie_id": int(movie_id)}).mappings().first()
+        if row is None:
+            return None
+        vec = self._blob_to_vector(row.get("embedding_vector"))
+        if vec is None:
+            return None
+        return self._normalize(vec)
 
-        started = perf_counter()
-        query_preview = _preview_text(query)
-        client = get_redis_client(self._settings)
-        cache_lookup_ms = 0.0
-        if client is not None:
-            cache_lookup_started = perf_counter()
-            cached = client.get(self._query_cache_key(query, k))
-            cache_lookup_ms = (perf_counter() - cache_lookup_started) * 1000.0
-            if cached:
+    def _query_vector_by_movie_id(self, movie_id: int) -> np.ndarray | None:
+        faiss_id = self._faiss_by_movie.get(int(movie_id))
+        if faiss_id is not None:
+            with self._lock:
+                index = self._index
+                dim = self._dim
+            if index is not None and dim is not None:
                 try:
-                    arr = json.loads(cached)
-                    if isinstance(arr, list):
-                        out: list[tuple[int, float]] = []
-                        for item in arr:
-                            if isinstance(item, list) and len(item) == 2:
-                                out.append((int(item[0]), float(item[1])))
-                        if out:
-                            logger.info(
-                                "RAG FAISS search completed, query_len=%s, query_preview=%s, k=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, embedding_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
-                                len(query),
-                                query_preview,
-                                int(k),
-                                True,
-                                len(out),
-                                cache_lookup_ms,
-                                0.0,
-                                0.0,
-                                (perf_counter() - started) * 1000.0,
-                            )
-                            return out
+                    vec = np.asarray(index.reconstruct(int(faiss_id)), dtype=np.float32).reshape(-1)
+                    if int(vec.size) == int(dim):
+                        return self._normalize(vec)
                 except Exception:
-                    logger.warning("RAG query cache parse failed", exc_info=True)
+                    logger.debug(
+                        "RAG query vector reconstruct failed, movie_id=%s, faiss_id=%s",
+                        int(movie_id),
+                        int(faiss_id),
+                        exc_info=True,
+                    )
+        return self._fetch_embedding_vector_by_movie_id(int(movie_id))
 
-        embedding_started = perf_counter()
-        vec = np.asarray(create_embedding(cfg=self._embedding_cfg(), text=query), dtype=np.float32).reshape(-1)
-        vec = self._normalize(vec)
-        embedding_ms = (perf_counter() - embedding_started) * 1000.0
+    @staticmethod
+    def _deserialize_similar_movie_pairs(payload: str | bytes | None) -> list[tuple[int, float]] | None:
+        if not payload:
+            return None
+        try:
+            arr = json.loads(payload)
+        except Exception:
+            return None
+        if not isinstance(arr, list):
+            return None
 
+        out: list[tuple[int, float]] = []
+        for item in arr:
+            if not isinstance(item, list) or len(item) != 2:
+                continue
+            out.append((int(item[0]), float(item[1])))
+        return out or None
+
+    def _store_similar_movie_pairs(self, *, cache_key: str, items: list[tuple[int, float]]) -> None:
+        if not items:
+            return
+        client = get_redis_client(self._settings)
+        if client is None:
+            return
+        ttl = max(60, int(self._settings.rag.redis_result_ttl_seconds))
+        client.set(cache_key, json.dumps(items, ensure_ascii=False), ex=ttl)
+
+    def _search_similar_movies_with_rag_vector(
+        self,
+        *,
+        movie_id: int,
+        requested_k: int,
+        query_vec: np.ndarray,
+    ) -> tuple[list[tuple[int, float]], float]:
         ann_started = perf_counter()
+        search_k = max(requested_k + 1, requested_k)
         with self._lock:
             if self._index is None or self._dim is None:
-                return []
-            if int(vec.size) != int(self._dim):
-                raise RuntimeError(f"query_embedding_dim_mismatch: expected={self._dim}, got={vec.size}")
-            scores, ids = self._index.search(vec.reshape(1, -1), int(k))
+                raise RuntimeError("rag_index_not_initialized")
+            if int(query_vec.size) != int(self._dim):
+                raise RuntimeError(f"query_embedding_dim_mismatch: expected={self._dim}, got={query_vec.size}")
+            scores, ids = self._index.search(query_vec.reshape(1, -1), int(search_k))
         ann_ms = (perf_counter() - ann_started) * 1000.0
 
         out: list[tuple[int, float]] = []
+        seen_movie_ids: set[int] = {int(movie_id)}
         for faiss_id, score in zip(ids[0], scores[0]):
             fid = int(faiss_id)
             if fid < 0:
                 continue
-            out.append((fid, float(score)))
+            resolved_movie_id = self._resolve_movie_id(fid)
+            if resolved_movie_id is None:
+                continue
+            resolved_movie_id = int(resolved_movie_id)
+            if resolved_movie_id in seen_movie_ids:
+                continue
+            seen_movie_ids.add(resolved_movie_id)
+            out.append((resolved_movie_id, float(score)))
+            if len(out) >= requested_k:
+                break
+        return out, ann_ms
 
-        if client is not None and out:
-            ttl = max(60, int(self._settings.rag.redis_result_ttl_seconds))
-            client.set(self._query_cache_key(query, k), json.dumps(out, ensure_ascii=False), ex=ttl)
+    def _search_similar_movies_with_two_tower(
+        self,
+        *,
+        movie_id: int,
+        requested_k: int,
+    ) -> tuple[list[tuple[int, float]], float, float]:
+        from app.reco.recall.two_tower.indexing import ann_search
+        from app.reco.recall.two_tower.online import build_item_vector
+        from app.reco.recall.two_tower.runtime import initialize_two_tower_runtime
+
+        vector_started = perf_counter()
+        if not self._movie_exists(int(movie_id)):
+            raise RuntimeError(f"item_embedding_not_found_for_movie: {int(movie_id)}")
+
+        try:
+            item_vec = build_item_vector(int(movie_id), mysql_dsn=self._settings.core.mysql_dsn)
+        except RuntimeError as exc:
+            if str(exc) != "two_tower_runtime_not_initialized":
+                raise
+            initialize_two_tower_runtime(self._settings.two_tower)
+            item_vec = build_item_vector(int(movie_id), mysql_dsn=self._settings.core.mysql_dsn)
+
+        vector_lookup_ms = (perf_counter() - vector_started) * 1000.0
+        if item_vec is None or int(item_vec.size) <= 0:
+            raise RuntimeError(f"item_embedding_not_found_for_movie: {int(movie_id)}")
+
+        ann_started = perf_counter()
+        pairs = ann_search(item_vec, k=max(requested_k + 1, requested_k))
+        ann_ms = (perf_counter() - ann_started) * 1000.0
+
+        out: list[tuple[int, float]] = []
+        seen_movie_ids: set[int] = {int(movie_id)}
+        for item_id, score in pairs:
+            resolved_movie_id = int(item_id)
+            if resolved_movie_id in seen_movie_ids:
+                continue
+            seen_movie_ids.add(resolved_movie_id)
+            out.append((resolved_movie_id, float(score)))
+            if len(out) >= requested_k:
+                break
+        return out, vector_lookup_ms, ann_ms
+
+    def search_similar_movies(self, *, movie_id: int, k: int) -> SimilarMovieSearchResult:
+        with self._lock:
+            if self._index is None or self._dim is None:
+                raise RuntimeError("rag_index_not_initialized")
+
+        requested_k = max(int(k), 1)
+        started = perf_counter()
+        client = get_redis_client(self._settings)
+
+        rag_vector_lookup_started = perf_counter()
+        query_vec = self._query_vector_by_movie_id(int(movie_id))
+        rag_vector_lookup_ms = (perf_counter() - rag_vector_lookup_started) * 1000.0
+        source = "rag" if query_vec is not None else "two_tower"
+
+        cache_lookup_ms = 0.0
+        cache_key = self._similar_movie_cache_key(movie_id=int(movie_id), k=requested_k, source=source)
+        if client is not None:
+            cache_lookup_started = perf_counter()
+            cached = self._deserialize_similar_movie_pairs(client.get(cache_key))
+            cache_lookup_ms = (perf_counter() - cache_lookup_started) * 1000.0
+            if cached is not None:
+                logger.info(
+                    "Similar movie search completed, movie_id=%s, requested_k=%s, source=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, vector_lookup_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
+                    int(movie_id),
+                    requested_k,
+                    source,
+                    True,
+                    len(cached),
+                    cache_lookup_ms,
+                    rag_vector_lookup_ms,
+                    0.0,
+                    (perf_counter() - started) * 1000.0,
+                )
+                return SimilarMovieSearchResult(source=source, items=cached)
+
+        if query_vec is not None and query_vec.size > 0:
+            items, ann_ms = self._search_similar_movies_with_rag_vector(
+                movie_id=int(movie_id),
+                requested_k=requested_k,
+                query_vec=query_vec,
+            )
+            self._store_similar_movie_pairs(cache_key=cache_key, items=items)
+            logger.info(
+                "Similar movie search completed, movie_id=%s, requested_k=%s, source=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, vector_lookup_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
+                int(movie_id),
+                requested_k,
+                "rag",
+                False,
+                len(items),
+                cache_lookup_ms,
+                rag_vector_lookup_ms,
+                ann_ms,
+                (perf_counter() - started) * 1000.0,
+            )
+            return SimilarMovieSearchResult(source="rag", items=items)
+
+        logger.warning(
+            "Similar movie search fallback to two_tower, movie_id=%s, requested_k=%s, reason=rag_embedding_missing",
+            int(movie_id),
+            requested_k,
+        )
+        items, vector_lookup_ms, ann_ms = self._search_similar_movies_with_two_tower(
+            movie_id=int(movie_id),
+            requested_k=requested_k,
+        )
+        self._store_similar_movie_pairs(cache_key=cache_key, items=items)
         logger.info(
-            "RAG FAISS search completed, query_len=%s, query_preview=%s, k=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, embedding_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
-            len(query),
-            query_preview,
-            int(k),
+            "Similar movie search completed, movie_id=%s, requested_k=%s, source=%s, cache_hit=%s, result_count=%s, cache_lookup_ms=%.2f, vector_lookup_ms=%.2f, ann_ms=%.2f, elapsed_ms=%.2f",
+            int(movie_id),
+            requested_k,
+            "two_tower",
             False,
-            len(out),
+            len(items),
             cache_lookup_ms,
-            embedding_ms,
+            vector_lookup_ms,
             ann_ms,
             (perf_counter() - started) * 1000.0,
         )
-        return out
+        return SimilarMovieSearchResult(source="two_tower", items=items)
 
     def _fetch_movies_by_ids(self, movie_ids: Iterable[int]) -> dict[int, dict[str, Any]]:
         ids = [int(x) for x in movie_ids if int(x) > 0]
@@ -608,7 +925,13 @@ class MovieRagService:
             return {}
         sql = text(
             """
-            SELECT movie_id, title, year, COALESCE(summary, '') AS summary
+            SELECT
+                movie_id,
+                title,
+                year,
+                rating_sum / NULLIF(rating_count, 0) AS rating_avg,
+                COALESCE(rating_count, 0) AS rating_count,
+                COALESCE(summary, '') AS summary
             FROM movie
             WHERE movie_id IN :movie_ids
               AND deleted_at IS NULL
@@ -623,21 +946,22 @@ class MovieRagService:
                 "movie_id": mid,
                 "title": str(row.get("title") or ""),
                 "year": int(row["year"]) if row.get("year") is not None else None,
+                "rating_avg": float(row["rating_avg"]) if row.get("rating_avg") is not None else None,
+                "rating_count": max(int(row.get("rating_count") or 0), 0),
                 "summary": str(row.get("summary") or ""),
             }
         return out
 
-    def retrieve_evidence(self, *, query: str, n: int) -> list[RagEvidence]:
+    def retrieve_evidence(self, *, query: str) -> list[RagEvidence]:
         started = perf_counter()
         query_preview = _preview_text(query)
-        ann_topk = max(int(n), int(self._settings.rag.ann_topk_default))
+        ann_topk = max(int(self._settings.rag.ann_topk_default), 1)
         pairs = self._search_faiss_ids(query=query, k=ann_topk)
         if not pairs:
             logger.info(
-                "RAG evidence retrieval completed, query_len=%s, query_preview=%s, requested_n=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
+                "RAG evidence retrieval completed, query_len=%s, query_preview=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
                 len(query),
                 query_preview,
-                int(n),
                 ann_topk,
                 0,
                 0,
@@ -678,19 +1002,20 @@ class MovieRagService:
                     movie_id=movie_id,
                     title=str(meta.get("title") or ""),
                     year=meta.get("year"),
+                    rating_avg=meta.get("rating_avg"),
+                    rating_count=max(int(meta.get("rating_count") or 0), 0),
                     summary=str(meta.get("summary") or ""),
                     chunk_text=self._chunk_by_faiss.get(faiss_id, ""),
-                    score=score,
+                    similarity_score=score,
                 )
             )
-            if len(out) >= int(n):
+            if len(out) >= ann_topk:
                 break
         cited_preview = [int(item.movie_id) for item in out[:5]]
         logger.info(
-            "RAG evidence retrieval completed, query_len=%s, query_preview=%s, requested_n=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, cited_preview=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
+            "RAG evidence retrieval completed, query_len=%s, query_preview=%s, ann_topk=%s, ann_pairs=%s, resolved_pairs=%s, movie_rows=%s, evidence_count=%s, cited_preview=%s, resolve_ms=%.2f, movie_fetch_ms=%.2f, elapsed_ms=%.2f",
             len(query),
             query_preview,
-            int(n),
             ann_topk,
             len(pairs),
             len(resolved),
@@ -703,17 +1028,18 @@ class MovieRagService:
         )
         return out
 
-    def stream_answer(self, *, query: str, thinking: bool = False) -> tuple[list[int], Iterator[str]]:
+    def stream_answer(self, *, query: str, thinking: bool = False) -> RagAnswerStream:
         started = perf_counter()
         query_preview = _preview_text(query)
-        evidence = self.retrieve_evidence(query=query, n=self._settings.rag.ann_topk_default)
+        evidence = self.retrieve_evidence(query=query)
         retrieve_ms = (perf_counter() - started) * 1000.0
-        cited_ids = [int(e.movie_id) for e in evidence]
+        evidence_movie_ids = [int(e.movie_id) for e in evidence]
 
         context_rows: list[str] = []
         for idx, item in enumerate(evidence, start=1):
+            rating_avg_text = f"{item.rating_avg:.1f}/10" if item.rating_avg is not None else "unknown"
             context_rows.append(
-                f"[{idx}] movie_id={item.movie_id}, title={item.title}, year={item.year}, score={item.score:.4f}\n"
+                f"[{idx}] movie_id={item.movie_id}, title={item.title}, year={item.year}, rating_avg={rating_avg_text}, rating_count={item.rating_count}\n"
                 f"summary: {item.summary}\n"
                 f"retrieved_chunk: {item.chunk_text}"
             )
@@ -722,23 +1048,74 @@ class MovieRagService:
         system_prompt = (
             "You are a movie recommendation assistant. "
             "Answer in Chinese. "
-            "Ground your answer on retrieval evidence and state uncertainty when evidence is weak."
+            "Ground your answer on retrieval evidence and state uncertainty when evidence is weak. "
+            "Use rating_avg and rating_count as supporting quality signals when they are available. "
+            "Only select movie_id values from the provided evidence candidates. "
+            "After the user-facing answer, you must append one machine-readable JSON block exactly following the required markers."
         )
-        user_prompt = f"user_query: {query}\n\nretrieval_evidence:\n{context}"
+        user_prompt = (
+            f"user_query: {query}\n\n"
+            f"retrieval_evidence:\n{context}\n\n"
+            "Output requirements:\n"
+            "1. First, write the normal Chinese answer for the end user.\n"
+            "2. After the answer, append the following marker block exactly once, with no Markdown code fence:\n"
+            "<<<RAG_STRUCTURED_OUTPUT_BEGIN>>>\n"
+            '{"cited_movie_ids":[movie_id1,movie_id2]}\n'
+            "<<<RAG_STRUCTURED_OUTPUT_END>>>\n"
+            "3. cited_movie_ids must only contain movie_id values from retrieval_evidence.\n"
+            "4. If none of the candidates are suitable, return an empty array.\n"
+            "5. Do not mention the markers or the JSON contract in the user-facing answer."
+        )
         logger.info(
-            "RAG answer stream prepared, query_len=%s, query_preview=%s, evidence_count=%s, cited_count=%s, context_chars=%s, prompt_chars=%s, llm_model=%s, retrieve_ms=%.2f, elapsed_ms=%.2f",
+            "RAG answer stream prepared, query_len=%s, query_preview=%s, evidence_count=%s, evidence_preview=%s, context_chars=%s, prompt_chars=%s, llm_model=%s, retrieve_ms=%.2f, elapsed_ms=%.2f",
             len(query),
             query_preview,
             len(evidence),
-            len(cited_ids),
+            evidence_movie_ids[:5],
             len(context),
             len(user_prompt),
             self._settings.rag.llm_model_name,
             retrieve_ms,
             (perf_counter() - started) * 1000.0,
         )
-        stream = stream_chat_completion(cfg=self._llm_cfg(), system_prompt=system_prompt, user_prompt=user_prompt, thinking=thinking)
-        return cited_ids, stream
+        logger.info("User prompt:\n%s", user_prompt)
+        llm_chunks = stream_chat_completion(
+            cfg=self._llm_cfg(),
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            thinking=thinking,
+        )
+
+        def _events() -> Iterator[RagAnswerDelta | RagAnswerDone]:
+            try:
+                for event in _iter_structured_answer_events(
+                    chunks=llm_chunks,
+                    allowed_movie_ids=evidence_movie_ids,
+                ):
+                    if isinstance(event, RagAnswerDone):
+                        logger.info(
+                            "RAG structured output parsed, query_len=%s, query_preview=%s, evidence_count=%s, output_count=%s, output_preview=%s",
+                            len(query),
+                            query_preview,
+                            len(evidence_movie_ids),
+                            len(event.cited_movie_ids),
+                            event.cited_movie_ids[:5],
+                        )
+                    yield event
+            except Exception:
+                logger.exception(
+                    "RAG structured output parsing failed, query_len=%s, query_preview=%s, evidence_count=%s, evidence_preview=%s",
+                    len(query),
+                    query_preview,
+                    len(evidence_movie_ids),
+                    evidence_movie_ids[:5],
+                )
+                raise
+
+        return RagAnswerStream(
+            evidence_movie_ids=evidence_movie_ids,
+            events=_events(),
+        )
 
 
 _service: MovieRagService | None = None
