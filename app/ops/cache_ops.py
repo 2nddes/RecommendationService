@@ -20,6 +20,130 @@ from app.reco.recall.two_tower.db import get_engine
 logger = logging.getLogger(__name__)
 
 
+def _execute_statement(settings: Settings, sql: str, params: dict | None = None) -> None:
+    engine = get_engine(settings.core.mysql_dsn)
+    if engine is None:
+        return
+    with engine.begin() as conn:
+        conn.execute(text(sql), params or {})
+
+
+def _index_exists(settings: Settings, *, table_name: str, index_name: str) -> bool:
+    rows = _query_rows(
+        settings,
+        """
+        SELECT COUNT(1) AS cnt
+        FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+          AND table_name = :table_name
+          AND index_name = :index_name
+        """,
+        {
+            "table_name": str(table_name),
+            "index_name": str(index_name),
+        },
+    )
+    return bool(rows and int(rows[0].get("cnt") or 0) > 0)
+
+
+def _column_exists(settings: Settings, *, table_name: str, column_name: str) -> bool:
+    rows = _query_rows(
+        settings,
+        """
+        SELECT COUNT(1) AS cnt
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = :table_name
+          AND column_name = :column_name
+        """,
+        {
+            "table_name": str(table_name),
+            "column_name": str(column_name),
+        },
+    )
+    return bool(rows and int(rows[0].get("cnt") or 0) > 0)
+
+
+def _ensure_column(settings: Settings, *, table_name: str, column_name: str, ddl: str) -> bool:
+    if _column_exists(settings, table_name=table_name, column_name=column_name):
+        return False
+    _execute_statement(settings, ddl)
+    logger.info("Search column created, table=%s, column=%s", table_name, column_name)
+    return True
+
+
+def _ensure_index(settings: Settings, *, table_name: str, index_name: str, columns_sql: str) -> bool:
+    if _index_exists(settings, table_name=table_name, index_name=index_name):
+        return False
+    _execute_statement(
+        settings,
+        f"CREATE INDEX {index_name} ON {table_name} ({columns_sql})",
+    )
+    logger.info("Search index created, table=%s, index=%s, columns=%s", table_name, index_name, columns_sql)
+    return True
+
+
+def ensure_search_schema(settings: Settings) -> dict[str, int]:
+    engine = get_engine(settings.core.mysql_dsn)
+    if engine is None:
+        return {"columns_created": 0, "indexes_created": 0, "skipped": 1}
+
+    columns_created = 0
+    if _ensure_column(
+        settings,
+        table_name="movie",
+        column_name="collect_count",
+        ddl="ALTER TABLE movie ADD COLUMN collect_count int NOT NULL DEFAULT 0 COMMENT '收藏数统计' AFTER rating_count",
+    ):
+        columns_created += 1
+    if _ensure_column(
+        settings,
+        table_name="movie",
+        column_name="bayesian_rating",
+        ddl="ALTER TABLE movie ADD COLUMN bayesian_rating double NOT NULL DEFAULT 0 COMMENT '贝叶斯评分' AFTER collect_count",
+    ):
+        columns_created += 1
+
+    indexes_created = 0
+    if _ensure_index(
+        settings,
+        table_name="movie",
+        index_name="idx_search_release_page",
+        columns_sql="status, deleted_at, release_date, movie_id",
+    ):
+        indexes_created += 1
+    if _ensure_index(
+        settings,
+        table_name="movie",
+        index_name="idx_search_duration_page",
+        columns_sql="status, deleted_at, duration_min, movie_id",
+    ):
+        indexes_created += 1
+    if _ensure_index(
+        settings,
+        table_name="movie_tag",
+        index_name="idx_search_tag_movie",
+        columns_sql="tag_id, movie_id",
+    ):
+        indexes_created += 1
+    if _ensure_index(
+        settings,
+        table_name="movie",
+        index_name="idx_search_collect_page",
+        columns_sql="status, deleted_at, collect_count, movie_id",
+    ):
+        indexes_created += 1
+    if _ensure_index(
+        settings,
+        table_name="movie",
+        index_name="idx_search_bayesian_page",
+        columns_sql="status, deleted_at, bayesian_rating, movie_id",
+    ):
+        indexes_created += 1
+
+    return {"columns_created": int(columns_created), "indexes_created": int(indexes_created), "skipped": 0}
+
+
 def _window_start(window: str) -> datetime | None:
     now = datetime.utcnow()
     if window == "all_time":
@@ -192,6 +316,79 @@ def refresh_trending_cache(settings: Settings) -> dict[str, int]:
     return out
 
 
+def refresh_search_stats(settings: Settings) -> dict[str, int]:
+    schema_summary = ensure_search_schema(settings)
+    engine = get_engine(settings.core.mysql_dsn)
+    if engine is None:
+        return {
+            "skipped": 1,
+            "rows_written": 0,
+            "columns_created": int(schema_summary.get("columns_created") or 0),
+            "indexes_created": int(schema_summary.get("indexes_created") or 0),
+        }
+
+    c_rows = _query_rows(
+        settings,
+        """
+        SELECT AVG(COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)) AS global_avg
+        FROM movie m
+        WHERE m.status = 'published'
+          AND m.deleted_at IS NULL
+          AND m.rating_count > 0
+        """,
+        {},
+    )
+    global_avg = float(c_rows[0].get("global_avg") or 0.0) if c_rows else 0.0
+    min_votes = max(int(settings.tag_recall.min_rating_count_m), 0)
+
+    update_sql = text(
+        """
+        UPDATE movie m
+        LEFT JOIN (
+            SELECT ucm.movie_id, COUNT(*) AS collect_count
+            FROM user_collect_movie ucm
+            GROUP BY ucm.movie_id
+        ) cs ON cs.movie_id = m.movie_id
+        SET
+            m.collect_count = COALESCE(cs.collect_count, 0),
+            m.bayesian_rating = CASE
+                WHEN COALESCE(m.rating_count, 0) <= 0 THEN 0
+                ELSE (
+                    ((m.rating_count / NULLIF(m.rating_count + :min_votes, 0)) * (m.rating_sum / NULLIF(m.rating_count, 0)))
+                    + ((:min_votes / NULLIF(m.rating_count + :min_votes, 0)) * :global_avg)
+                )
+            END
+        WHERE m.deleted_at IS NULL
+        """
+    )
+
+    started = datetime.utcnow()
+    with engine.begin() as conn:
+        result = conn.execute(
+            update_sql,
+            {
+                "min_votes": int(min_votes),
+                "global_avg": float(global_avg),
+            },
+        )
+
+    elapsed_ms = int((datetime.utcnow() - started).total_seconds() * 1000.0)
+    rows_written = max(int(result.rowcount or 0), 0)
+    logger.info(
+        "Search stats refresh completed, rows_written=%s, global_avg=%.4f, min_votes=%s, elapsed_ms=%s",
+        rows_written,
+        global_avg,
+        min_votes,
+        elapsed_ms,
+    )
+    return {
+        "skipped": 0,
+        "rows_written": rows_written,
+        "columns_created": int(schema_summary.get("columns_created") or 0),
+        "indexes_created": int(schema_summary.get("indexes_created") or 0),
+    }
+
+
 def refresh_tag_inverted_recall_cache(settings: Settings) -> dict[str, int]:
     if not settings.tag_recall.enabled:
         return {
@@ -237,7 +434,7 @@ def refresh_tag_inverted_recall_cache(settings: Settings) -> dict[str, int]:
     FROM movie_tag mt
     JOIN movie m ON m.movie_id = mt.movie_id
     JOIN tag_dict td ON td.tag_id = mt.tag_id
-    WHERE m.status = 'published' AND td.status = 'show'
+    WHERE m.status = 'published'
     """
 
     director_sql = """
@@ -329,6 +526,7 @@ def refresh_tag_inverted_recall_cache(settings: Settings) -> dict[str, int]:
 
 def run_all_cache_precompute(settings: Settings) -> dict[str, dict[str, int]]:
     return {
+        "search_stats": refresh_search_stats(settings),
         "features": refresh_feature_cache(settings),
         "trending": refresh_trending_cache(settings),
         "tag_recall": refresh_tag_inverted_recall_cache(settings),

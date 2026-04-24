@@ -85,6 +85,10 @@ def user_recommendation_lock_key(settings: Settings, user_id: int) -> str:
     return _build_key(settings, "recommend", "user", int(user_id), "build_lock")
 
 
+def search_result_key(settings: Settings, signature: str) -> str:
+    return _build_key(settings, "search", str(signature))
+
+
 def load_trending_items(settings: Settings, *, window: str, n: int) -> list[int]:
     client = get_redis_client(settings)
     if client is None:
@@ -216,6 +220,33 @@ def store_trending_items(settings: Settings, *, window: str, pairs: Sequence[tup
     pipe.expire(key, max(int(settings.cache.trending_refresh_interval_seconds) * 3, 300))
     pipe.execute()
     return len(payload)
+
+
+def load_search_result(settings: Settings, *, signature: str) -> dict | None:
+    client = get_redis_client(settings)
+    if client is None:
+        return None
+
+    key = search_result_key(settings, signature)
+    raw = client.get(key)
+    if not raw:
+        return None
+
+    loaded = json.loads(raw)
+    if isinstance(loaded, dict):
+        return loaded
+    return None
+
+
+def store_search_result(settings: Settings, *, signature: str, payload: Mapping[str, object]) -> bool:
+    client = get_redis_client(settings)
+    if client is None:
+        return False
+
+    ttl = max(int(settings.cache.search_cache_ttl_seconds), 1)
+    key = search_result_key(settings, signature)
+    client.set(key, json.dumps(dict(payload), ensure_ascii=False), ex=ttl)
+    return True
 
 
 def store_tag_recall_items(

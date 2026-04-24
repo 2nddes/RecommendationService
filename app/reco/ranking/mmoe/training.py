@@ -308,7 +308,6 @@ def _fetch_mmoe_aux_training_features(*, settings: Settings, user_ids: Sequence[
         JOIN tag_dict td ON td.tag_id = mt.tag_id
         WHERE mt.movie_id IN :mids
           AND td.type = 'static'
-          AND td.status = 'show'
         ORDER BY mt.movie_id ASC, mt.weight DESC, mt.hot_score DESC, mt.tag_id DESC
         """
     ).bindparams(bindparam("mids", expanding=True))

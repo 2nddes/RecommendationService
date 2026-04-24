@@ -11,7 +11,7 @@
  Target Server Version : 80407 (8.4.7)
  File Encoding         : 65001
 
- Date: 21/04/2026 15:20:52
+ Date: 22/04/2026 18:32:22
 */
 
 SET NAMES utf8mb4;
@@ -76,7 +76,7 @@ CREATE TABLE `direct_message`  (
   CONSTRAINT `dm_message_ibfk_1` FOREIGN KEY (`conversation_id`) REFERENCES `direct_message_conversation` (`conversation_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_message_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_message_ibfk_3` FOREIGN KEY (`recipient_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信消息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信消息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for direct_message_conversation
@@ -103,7 +103,7 @@ CREATE TABLE `direct_message_conversation`  (
   CONSTRAINT `dm_conversation_ibfk_1` FOREIGN KEY (`user_low_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_conversation_ibfk_2` FOREIGN KEY (`user_high_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_conversation_ibfk_3` FOREIGN KEY (`last_sender_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信会话表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信会话表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for movie
@@ -120,6 +120,8 @@ CREATE TABLE `movie`  (
   `ai_summary` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT 'ai生成的简介',
   `rating_sum` bigint NOT NULL DEFAULT 0 COMMENT '评分总和',
   `rating_count` int NOT NULL DEFAULT 0 COMMENT '评分人数',
+  `collect_count` int NOT NULL DEFAULT 0 COMMENT '收藏数统计',
+  `bayesian_rating` double NOT NULL DEFAULT 0 COMMENT '贝叶斯评分',
   `rating_1_count` int NOT NULL DEFAULT 0 COMMENT '评分1的人数',
   `rating_2_count` int NOT NULL DEFAULT 0,
   `rating_3_count` int NOT NULL DEFAULT 0,
@@ -139,9 +141,13 @@ CREATE TABLE `movie`  (
   INDEX `idx_year`(`year` ASC) USING BTREE,
   INDEX `idx_rating_avg`(`rating_sum` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
+  INDEX `rating_count`(`rating_count` DESC) USING BTREE,
   INDEX `idx_movie_search_release`(`status` ASC, `deleted_at` ASC, `release_date` ASC, `movie_id` ASC) USING BTREE,
   INDEX `idx_movie_search_duration`(`status` ASC, `deleted_at` ASC, `duration_min` ASC, `movie_id` ASC) USING BTREE,
-  INDEX `rating_count`(`rating_count` DESC) USING BTREE,
+  INDEX `idx_search_release_page`(`status` ASC, `deleted_at` ASC, `release_date` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_search_duration_page`(`status` ASC, `deleted_at` ASC, `duration_min` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_search_collect_page`(`status` ASC, `deleted_at` ASC, `collect_count` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_search_bayesian_page`(`status` ASC, `deleted_at` ASC, `bayesian_rating` ASC, `movie_id` ASC) USING BTREE,
   FULLTEXT INDEX `ft_title_summary`(`title`, `summary`)
 ) ENGINE = InnoDB AUTO_INCREMENT = 34782624 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视主表' ROW_FORMAT = DYNAMIC;
 
@@ -170,8 +176,8 @@ CREATE TABLE `movie_comment`  (
   INDEX `idx_movie_created`(`movie_id` ASC, `created_at` ASC) USING BTREE,
   INDEX `idx_root_id`(`root_id` ASC) USING BTREE,
   INDEX `deleted_at`(`deleted_at` ASC, `created_at` DESC) USING BTREE,
-  INDEX `idx_deleted_created_movie`(`deleted_at` ASC, `created_at` DESC, `movie_id` ASC) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC, `deleted_at` DESC) USING BTREE,
+  INDEX `idx_deleted_created_movie`(`deleted_at` ASC, `created_at` DESC, `movie_id` ASC) USING BTREE,
   CONSTRAINT `movie_comment_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_comment_ibfk_4` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1942011796 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '评论表' ROW_FORMAT = DYNAMIC;
@@ -244,6 +250,7 @@ DROP TABLE IF EXISTS `movie_tag`;
 CREATE TABLE `movie_tag`  (
   `movie_id` bigint NOT NULL,
   `tag_id` bigint NOT NULL COMMENT '标签ID',
+  `creator_user_id` bigint NULL DEFAULT NULL COMMENT '首次将该标签关联到该电影的用户ID',
   `weight` decimal(10, 4) NULL DEFAULT 1.0000 COMMENT '标签权重',
   `vote_up` int NULL DEFAULT 0 COMMENT '赞同数',
   `hot_score` decimal(10, 4) NULL DEFAULT 0.0000 COMMENT '热度分',
@@ -251,11 +258,14 @@ CREATE TABLE `movie_tag`  (
   PRIMARY KEY (`movie_id`, `tag_id`) USING BTREE,
   INDEX `idx_movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `idx_tag_id`(`tag_id` ASC) USING BTREE,
-  INDEX `idx_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_creator_user_id`(`creator_user_id` ASC) USING BTREE,
   INDEX `idx_weight`(`weight` ASC) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC, `tag_id` ASC) USING BTREE,
+  INDEX `idx_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_search_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
   CONSTRAINT `movie_tag_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `movie_tag_ibfk_4` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+  CONSTRAINT `movie_tag_ibfk_4` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `movie_tag_ibfk_5` FOREIGN KEY (`creator_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '影视动态标签关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -277,7 +287,7 @@ CREATE TABLE `notification`  (
   INDEX `idx_user_id`(`user_id` ASC, `is_readed` ASC) USING BTREE,
   CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `notification_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2587 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2591 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for ops_task
@@ -362,17 +372,16 @@ CREATE TABLE `rec_log`  (
 DROP TABLE IF EXISTS `tag_dict`;
 CREATE TABLE `tag_dict`  (
   `tag_id` bigint NOT NULL AUTO_INCREMENT,
-  `tag_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名',
+  `tag_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名',
   `user_id` bigint NULL DEFAULT NULL COMMENT '创建者ID',
-  `collect_count` int NULL DEFAULT NULL COMMENT '收藏该标签的人数',
-  `movie_count` int NULL DEFAULT NULL COMMENT '关联的电影数（多少电影有此标签）',
+  `collect_count` int NULL DEFAULT 0 COMMENT '收藏该标签的人数',
+  `movie_count` int NULL DEFAULT 0 COMMENT '关联的电影数（多少电影有此标签）',
   `type` enum('static','dynamic') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'dynamic' COMMENT '动态/静态标签',
-  `status` enum('hide','show') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'show' COMMENT '状态：是否展示',
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`tag_id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  INDEX `tag_name`(`tag_name` ASC) USING BTREE,
+  UNIQUE INDEX `uk_tag_name`(`tag_name` ASC) USING BTREE,
   CONSTRAINT `tag_dict_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 203198 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '动态标签字典表' ROW_FORMAT = DYNAMIC;
 
@@ -430,10 +439,10 @@ CREATE TABLE `user_click`  (
   `movie_id` bigint NOT NULL COMMENT '电影ID',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '点击时间',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_created_movie`(`created_at` DESC, `movie_id` ASC) USING BTREE,
   INDEX `idx_user_time`(`user_id` ASC, `created_at` DESC) USING BTREE,
-  INDEX `idx_movie_time`(`movie_id` ASC, `created_at` DESC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13068115 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户点击流水表' ROW_FORMAT = DYNAMIC;
+  INDEX `idx_movie_time`(`movie_id` ASC, `created_at` DESC) USING BTREE,
+  INDEX `idx_created_movie`(`created_at` DESC, `movie_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 13068136 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户点击流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_collect_movie
@@ -490,6 +499,9 @@ CREATE TABLE `user_settings`  (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `allow_follow` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许被其他用户关注',
   `allow_message_from_non_mutuals` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许非互关用户私信',
+  `allow_stranger_view_comment_moments` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否允许陌生人查看评论动态',
+  `public_following` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否公开关注列表',
+  `public_followers` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否公开粉丝列表',
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`) USING BTREE,

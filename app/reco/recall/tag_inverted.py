@@ -36,7 +36,7 @@ def _fetch_user_genre_preferences(
         SELECT uct.tag_id, COUNT(*) AS pref_weight
         FROM user_collect_tag uct
         JOIN tag_dict td ON td.tag_id = uct.tag_id
-        WHERE uct.user_id = :user_id AND td.status = 'show'
+        WHERE uct.user_id = :user_id
         GROUP BY uct.tag_id
 
         UNION ALL
@@ -47,7 +47,6 @@ def _fetch_user_genre_preferences(
         JOIN tag_dict td ON td.tag_id = mt.tag_id
         WHERE r.user_id = :user_id
           AND r.rating >= :high_rating_threshold
-          AND td.status = 'show'
         GROUP BY mt.tag_id
     ) x
     GROUP BY x.tag_id

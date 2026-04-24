@@ -401,7 +401,6 @@ class MMoERanker(Ranker):
             JOIN tag_dict td ON td.tag_id = mt.tag_id
             WHERE mt.movie_id IN :ids
               AND td.type = 'static'
-              AND td.status = 'show'
             ORDER BY mt.movie_id ASC, mt.weight DESC, mt.hot_score DESC, mt.tag_id DESC
             """
         ).bindparams(bindparam("ids", expanding=True))
@@ -450,7 +449,6 @@ class MMoERanker(Ranker):
                     WHERE uct.user_id = :uid
                       AND uct.is_static = 1
                       AND td.type = 'static'
-                      AND td.status = 'show'
 
                     UNION ALL
 
@@ -463,7 +461,6 @@ class MMoERanker(Ranker):
                     WHERE r.user_id = :uid
                       AND r.rating >= 8
                       AND td.type = 'static'
-                      AND td.status = 'show'
                 ) x
                 GROUP BY x.tag_id
             ) y
@@ -482,7 +479,6 @@ class MMoERanker(Ranker):
                 JOIN tag_dict td ON td.tag_id = mt.tag_id
                                 WHERE uc.user_id = :uid
                   AND td.type = 'static'
-                  AND td.status = 'show'
             ) x
             GROUP BY x.tag_id
             """

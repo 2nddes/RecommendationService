@@ -1659,3 +1659,875 @@ Traceback (most recent call last):
 ValueError: Item vector not found for movie_id: 649126
 2026-04-21 19:39:42 | INFO | pid=512 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [21/Apr/2026 19:39:42] "GET /api/v1/recommend/item?movie_id=649126&n=20 HTTP/1.1" 400 -
 2026-04-21 19:48:07 | INFO | pid=512 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=65666.66, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 13:33:54 | INFO | pid=15500 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 13:33:54 | INFO | pid=15500 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 13:33:54 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-22 13:33:54 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-22 13:34:03 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-22 13:34:04 | INFO | pid=15500 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-22 13:34:05 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-22 13:34:05 | INFO | pid=15500 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-22 13:34:06 | INFO | pid=15500 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-22 13:35:09 | INFO | pid=15500 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-22 13:35:11 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-22 13:37:12 | INFO | pid=15500 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-22 13:42:35 | INFO | pid=15500 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=280, total_before_pop=300, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 13:42:35 | INFO | pid=15500 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=3.08
+2026-04-22 13:42:35 | INFO | pid=15500 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 13:42:35] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 13:42:36 | INFO | pid=15500 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=260, total_before_pop=280, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 13:42:36 | INFO | pid=15500 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.88
+2026-04-22 13:42:36 | INFO | pid=15500 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 13:42:36] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 13:42:57 | INFO | pid=15500 | thread=Thread-3 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1432146, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=1.04, vector_lookup_ms=18.16, ann_ms=12.35, elapsed_ms=55.55
+2026-04-22 13:42:57 | INFO | pid=15500 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1432146, ann_candidates=20, source=rag
+2026-04-22 13:42:57 | INFO | pid=15500 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1432146, returned=20, source=rag
+2026-04-22 13:42:57 | INFO | pid=15500 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 13:42:57] "GET /api/v1/recommend/item?movie_id=1432146&n=20 HTTP/1.1" 200 -
+2026-04-22 13:45:30 | INFO | pid=15500 | thread=Thread-4 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1432146, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.53, vector_lookup_ms=0.18, ann_ms=0.00, elapsed_ms=0.73
+2026-04-22 13:45:30 | INFO | pid=15500 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1432146, ann_candidates=20, source=rag
+2026-04-22 13:45:30 | INFO | pid=15500 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1432146, returned=20, source=rag
+2026-04-22 13:45:30 | INFO | pid=15500 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 13:45:30] "GET /api/v1/recommend/item?movie_id=1432146&n=20 HTTP/1.1" 200 -
+2026-04-22 13:48:18 | INFO | pid=15500 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=66048.84, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 13:59:28 | INFO | pid=15500 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=70565.86, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 14:02:46 | INFO | pid=15500 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=240, total_before_pop=260, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 14:02:46 | INFO | pid=15500 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.53
+2026-04-22 14:02:46 | INFO | pid=15500 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:02:46] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 14:02:47 | INFO | pid=15500 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=220, total_before_pop=240, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 14:02:47 | INFO | pid=15500 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.94
+2026-04-22 14:02:47 | INFO | pid=15500 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:02:47] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 14:11:16 | INFO | pid=15500 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=107583.99, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 14:19:26 | INFO | pid=15500 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=200, total_before_pop=220, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 14:19:26 | INFO | pid=15500 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.48
+2026-04-22 14:19:26 | INFO | pid=15500 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:19:26] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 14:19:27 | INFO | pid=15500 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=180, total_before_pop=200, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 14:19:27 | INFO | pid=15500 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.00
+2026-04-22 14:19:27 | INFO | pid=15500 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:19:27] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 14:19:33 | INFO | pid=15500 | thread=Thread-9 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1307456, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.57, vector_lookup_ms=2.10, ann_ms=496.91, elapsed_ms=533.70
+2026-04-22 14:19:33 | INFO | pid=15500 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1307456, ann_candidates=20, source=rag
+2026-04-22 14:19:33 | INFO | pid=15500 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1307456, returned=20, source=rag
+2026-04-22 14:19:33 | INFO | pid=15500 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:19:33] "GET /api/v1/recommend/item?movie_id=1307456&n=20 HTTP/1.1" 200 -
+2026-04-22 14:20:59 | INFO | pid=15500 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-22 14:20:59 | INFO | pid=15500 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-22 14:20:59 | INFO | pid=15500 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:20:59] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-22 14:21:06 | INFO | pid=15500 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=monthly, returned=36
+2026-04-22 14:21:06 | INFO | pid=15500 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Trending completed, window=monthly, returned=36
+2026-04-22 14:21:06 | INFO | pid=15500 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:21:06] "GET /api/v1/recommend/trending?window=monthly&n=36 HTTP/1.1" 200 -
+2026-04-22 14:21:13 | INFO | pid=15500 | thread=Thread-12 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=36
+2026-04-22 14:21:13 | INFO | pid=15500 | thread=Thread-12 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=36
+2026-04-22 14:21:13 | INFO | pid=15500 | thread=Thread-12 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:21:13] "GET /api/v1/recommend/trending?window=all_time&n=36 HTTP/1.1" 200 -
+2026-04-22 14:21:15 | INFO | pid=15500 | thread=Thread-13 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=one_year, returned=36
+2026-04-22 14:21:15 | INFO | pid=15500 | thread=Thread-13 (process_request_thread) | app.services.recommendation_service | Trending completed, window=one_year, returned=36
+2026-04-22 14:21:15 | INFO | pid=15500 | thread=Thread-13 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:21:15] "GET /api/v1/recommend/trending?window=one_year&n=36 HTTP/1.1" 200 -
+2026-04-22 14:21:17 | INFO | pid=15500 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=daily, returned=36
+2026-04-22 14:21:17 | INFO | pid=15500 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Trending completed, window=daily, returned=36
+2026-04-22 14:21:17 | INFO | pid=15500 | thread=Thread-14 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:21:17] "GET /api/v1/recommend/trending?window=daily&n=36 HTTP/1.1" 200 -
+2026-04-22 14:21:31 | INFO | pid=15500 | thread=Thread-15 (process_request_thread) | app.api.v1_rag | RAG stream request started, query_len=5, query_preview=想看动画片, thinking=False
+2026-04-22 14:21:31 | INFO | pid=15500 | thread=Thread-15 (process_request_thread) | app.api.v1_rag | RAG stream start event emitted, query_len=5, query_preview=想看动画片, thinking=False
+2026-04-22 14:21:31 | INFO | pid=15500 | thread=Thread-15 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:21:31] "POST /api/v1/recommend/rag/stream HTTP/1.1" 200 -
+2026-04-22 14:21:31 | ERROR | pid=15500 | thread=Thread-15 (process_request_thread) | app.api.v1_rag | RAG stream failed, query_len=5, query_preview=想看动画片, thinking=False, chunk_count=0, chars=0, elapsed_ms=1.02
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\api\v1_rag.py", line 64, in _generate
+    stream_result = rag_service.stream_answer(query=query, thinking=thinking)
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 1034, in stream_answer
+    evidence = self.retrieve_evidence(query=query)
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 959, in retrieve_evidence
+    pairs = self._search_faiss_ids(query=query, k=ann_topk)
+            ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MovieRagService' object has no attribute '_search_faiss_ids'
+2026-04-22 14:22:29 | INFO | pid=15500 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=72770.16, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 14:27:55 | INFO | pid=1320 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 14:27:55 | INFO | pid=1320 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 14:27:55 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-22 14:27:55 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-22 14:28:04 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-22 14:28:05 | INFO | pid=1320 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-22 14:28:06 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-22 14:28:06 | INFO | pid=1320 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-22 14:28:06 | INFO | pid=1320 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-22 14:29:06 | INFO | pid=1320 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-22 14:29:06 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-22 14:31:05 | INFO | pid=1320 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-22 14:33:48 | INFO | pid=1320 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:33:48] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-22 14:33:48 | INFO | pid=1320 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:33:48] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-22 14:37:27 | INFO | pid=1320 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:37:27] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-22 14:37:27 | INFO | pid=1320 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 14:37:27] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-22 14:42:47 | INFO | pid=1320 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=101563.83, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 14:54:32 | INFO | pid=1320 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=104933.25, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 15:06:05 | INFO | pid=1320 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=93126.41, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 15:17:48 | INFO | pid=1320 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=103294.39, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 16:21:48 | INFO | pid=10096 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 16:21:48 | INFO | pid=10096 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 16:21:48 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-22 16:21:48 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-22 16:21:55 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-22 16:21:56 | INFO | pid=10096 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-22 16:21:56 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-22 16:21:56 | INFO | pid=10096 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-22 16:21:57 | INFO | pid=10096 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-22 16:22:51 | INFO | pid=10096 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-22 16:22:51 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-22 16:24:35 | INFO | pid=10096 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-22 16:36:13 | INFO | pid=10096 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=98257.11, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 16:47:52 | INFO | pid=10096 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=98435.97, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 16:49:22 | INFO | pid=10096 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=160, total_before_pop=180, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 16:49:22 | INFO | pid=10096 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.51
+2026-04-22 16:49:22 | INFO | pid=10096 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:49:22] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 16:49:23 | INFO | pid=10096 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=140, total_before_pop=160, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 16:49:23 | INFO | pid=10096 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.88
+2026-04-22 16:49:23 | INFO | pid=10096 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:49:23] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-22 16:49:34 | INFO | pid=10096 | thread=Thread-3 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1294381, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.59, vector_lookup_ms=0.66, ann_ms=14.82, elapsed_ms=35.42
+2026-04-22 16:49:34 | INFO | pid=10096 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1294381, ann_candidates=20, source=rag
+2026-04-22 16:49:34 | INFO | pid=10096 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1294381, returned=20, source=rag
+2026-04-22 16:49:34 | INFO | pid=10096 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:49:34] "GET /api/v1/recommend/item?movie_id=1294381&n=20 HTTP/1.1" 200 -
+2026-04-22 16:52:35 | INFO | pid=10096 | thread=Thread-4 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1329562, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.56, vector_lookup_ms=0.14, ann_ms=7.09, elapsed_ms=24.28
+2026-04-22 16:52:35 | INFO | pid=10096 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1329562, ann_candidates=20, source=rag
+2026-04-22 16:52:35 | INFO | pid=10096 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1329562, returned=20, source=rag
+2026-04-22 16:52:35 | INFO | pid=10096 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:52:35] "GET /api/v1/recommend/item?movie_id=1329562&n=20 HTTP/1.1" 200 -
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=340, total_before_pop=360, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.61
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:53:07] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=320, total_before_pop=340, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=0.94
+2026-04-22 16:53:07 | INFO | pid=10096 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 16:53:07] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 16:59:25 | INFO | pid=10096 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=93003.42, summary={'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 17:03:41 | INFO | pid=10096 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-22 17:03:41 | INFO | pid=10096 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-22 17:03:41 | INFO | pid=10096 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 17:03:41] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-22 17:03:46 | INFO | pid=10096 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=300, total_before_pop=320, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 17:03:46 | INFO | pid=10096 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.03
+2026-04-22 17:03:46 | INFO | pid=10096 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 17:03:46] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 17:03:48 | INFO | pid=10096 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=280, total_before_pop=300, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 17:03:48 | INFO | pid=10096 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.09
+2026-04-22 17:03:48 | INFO | pid=10096 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 17:03:48] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 17:04:30 | INFO | pid=10096 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-22 17:04:30 | INFO | pid=10096 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-22 17:04:30 | INFO | pid=10096 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 17:04:30] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-22 17:04:49 | INFO | pid=10096 | thread=Thread-11 (process_request_thread) | app.api.v1_search | search started, mode=query_only, query_len=2, tag_count=0, sort_by=relevance, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-22 17:04:51 | ERROR | pid=10096 | thread=Thread-11 (process_request_thread) | app | unhandled exception: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM filtered_movies fm\n        )\n        SELECT ranked_movies.movie_id\n        ' at line 22")
+[SQL: 
+        WITH
+filtered_movies AS (
+            SELECT
+              m.movie_id,
+              COALESCE(m.rating_sum, 0) AS rating_sum,
+              COALESCE(m.rating_count, 0) AS rating_count,
+              m.release_date,
+              m.duration_min,
+              (CASE WHEN m.title LIKE %(query_like)s THEN 6 ELSE 0 END + CASE WHEN m.summary LIKE %(query_like)s THEN 3 ELSE 0 END + COALESCE((COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)), 0) / 10.0 + LEAST(COALESCE(m.rating_count, 0), 10000) / 10000.0 + CASE WHEN m.title LIKE %(kw_0)s THEN 2 WHEN m.summary LIKE %(kw_0)s THEN 1 ELSE 0 END) AS relevance_score
+            FROM movie m
+            WHERE m.status = 'published' AND m.deleted_at IS NULL AND ((m.title LIKE %(query_like)s OR m.summary LIKE %(query_like)s) OR ((m.title LIKE %(kw_0)s OR m.summary LIKE %(kw_0)s)))
+        ),
+ranked_movies AS (
+            SELECT
+              fm.movie_id,
+              fm.rating_count,
+              fm.release_date,
+              fm.duration_min,
+              fm.relevance_score,
+              0 AS bayesian_rating,
+              0 AS collect_count,
+            FROM filtered_movies fm
+        )
+        SELECT ranked_movies.movie_id
+        FROM ranked_movies
+        ORDER BY ranked_movies.relevance_score desc, ranked_movies.rating_count DESC, ranked_movies.movie_id DESC
+        LIMIT %(n)s OFFSET %(offset)s
+        ]
+[parameters: {'query_like': '%中国%', 'kw_0': '%中国%', 'n': 12, 'offset': 0}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+Traceback (most recent call last):
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.ProgrammingError: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM filtered_movies fm\n        )\n        SELECT ranked_movies.movie_id\n        ' at line 22")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\api\v1_search.py", line 609, in search
+    candidate_rows = conn.execute(candidate_sql, candidate_params).mappings().all()
+                     ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 2353, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'FROM filtered_movies fm\n        )\n        SELECT ranked_movies.movie_id\n        ' at line 22")
+[SQL: 
+        WITH
+filtered_movies AS (
+            SELECT
+              m.movie_id,
+              COALESCE(m.rating_sum, 0) AS rating_sum,
+              COALESCE(m.rating_count, 0) AS rating_count,
+              m.release_date,
+              m.duration_min,
+              (CASE WHEN m.title LIKE %(query_like)s THEN 6 ELSE 0 END + CASE WHEN m.summary LIKE %(query_like)s THEN 3 ELSE 0 END + COALESCE((COALESCE(m.rating_sum, 0) / NULLIF(m.rating_count, 0)), 0) / 10.0 + LEAST(COALESCE(m.rating_count, 0), 10000) / 10000.0 + CASE WHEN m.title LIKE %(kw_0)s THEN 2 WHEN m.summary LIKE %(kw_0)s THEN 1 ELSE 0 END) AS relevance_score
+            FROM movie m
+            WHERE m.status = 'published' AND m.deleted_at IS NULL AND ((m.title LIKE %(query_like)s OR m.summary LIKE %(query_like)s) OR ((m.title LIKE %(kw_0)s OR m.summary LIKE %(kw_0)s)))
+        ),
+ranked_movies AS (
+            SELECT
+              fm.movie_id,
+              fm.rating_count,
+              fm.release_date,
+              fm.duration_min,
+              fm.relevance_score,
+              0 AS bayesian_rating,
+              0 AS collect_count,
+            FROM filtered_movies fm
+        )
+        SELECT ranked_movies.movie_id
+        FROM ranked_movies
+        ORDER BY ranked_movies.relevance_score desc, ranked_movies.rating_count DESC, ranked_movies.movie_id DESC
+        LIMIT %(n)s OFFSET %(offset)s
+        ]
+[parameters: {'query_like': '%中国%', 'kw_0': '%中国%', 'n': 12, 'offset': 0}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-04-22 17:04:52 | INFO | pid=10096 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 17:04:52] "GET /api/v1/search?query=中国&n=12&offset=0&sort_by=relevance&sort_order=desc HTTP/1.1" 500 -
+2026-04-22 20:31:47 | INFO | pid=23932 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 20:31:47 | INFO | pid=23932 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-22 20:31:47 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-22 20:31:47 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-22 20:31:50 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-22 20:31:51 | INFO | pid=23932 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-22 20:31:51 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-22 20:31:51 | INFO | pid=23932 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-22 20:31:51 | INFO | pid=23932 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-22 20:32:31 | INFO | pid=23932 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-22 20:32:31 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-22 20:32:47 | INFO | pid=23932 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=13664
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-22 20:33:56 | INFO | pid=23932 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-22 20:41:33 | WARNING | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | Pop cache miss, acquire lock to build cache, user_id=649126, n=20, build_target=500, action=acquire_build_lock
+2026-04-22 20:41:33 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock acquire, user_id=649126, key=reco:recommend:user:649126:build_lock, ttl=10, acquired=True, token_tail=4917242b, elapsed_ms=0.48
+2026-04-22 20:41:33 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649126, n=20
+2026-04-22 20:41:33 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop cache build required, user_id=649126, n=20, build_target=500, reason=double_check_empty
+2026-04-22 20:41:33 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build started, user_id=649126, build_target=500
+2026-04-22 20:41:34 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 返回候选=999, 新增候选=999, 累计候选=999, elapsed_ms=334.21
+2026-04-22 20:41:34 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.recall.tag_inverted | tag倒排召回完成，user_id=649126, requested_n=500, requested_tags=15, genre_tags=13, director_tags=2, redis_hit_tags=15, redis_rows=1752, excluded_count=8, filtered_excluded=8, merged_candidates=1124, returned_count=1124, out_limit=2000, preference_fetch_ms=14.13, redis_fetch_ms=8.28, excluded_fetch_ms=1.10, elapsed_ms=23.93
+2026-04-22 20:41:34 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 返回候选=1124, 新增候选=1084, 累计候选=2083, elapsed_ms=26.21
+2026-04-22 20:41:37 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649126 | candidate_movie_count=2083 | movie_stats_rows=2083 | item_static_tag_rows=12696 | user_profile_found=True | short_hist_len=7 | long_interest_len=8 | movie_stats_ms=2817.14 | item_static_tags_ms=663.60 | user_profile_ms=7.98 | short_hist_ms=5.34 | long_interest_ms=5.47 | user_click_tag_ms=2.84 | user_click_total_ms=1.05 | elapsed_ms=3514.90
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649126 | candidate_count=2083 | model_version=mmoe_latest.pt | tensor_build_ms=3618.14 | infer_ms=153.09 | sort_ms=0.71 | elapsed_ms=3775.47
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 推荐流水线完成，user_id=649126, movie_id=None, recaller_count=2, ranker=mmoe, reranker=random_shuffle, candidate_count=2083, ranked_count=2083, returned_count=500, recall_ms=360.97, rank_ms=3776.19, rerank_ms=2.43, elapsed_ms=4139.62
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649126, build_target=500, built_count=500, item_preview=[1296161, 1298480, 3441120, 1420088, 1293050]
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation store, user_id=649126, key=reco:recommend:user:649126, stored_count=500, ttl=86400, item_preview=[1296161, 1298480, 3441120, 1420088, 1293050], elapsed_ms=6.73
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache stored, user_id=649126, build_target=500, stored_count=500
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build completed, user_id=649126, build_target=500, built_count=500, stored_count=500, elapsed_ms=4148.18
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock release, user_id=649126, key=reco:recommend:user:649126:build_lock, released=True, token_tail=4917242b, elapsed_ms=31.52
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True, cache_state=build_under_lock, build_reason=double_check_empty, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=False, elapsed_ms=4184.20
+2026-04-22 20:41:38 | INFO | pid=23932 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 20:41:38] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 20:41:46 | INFO | pid=23932 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-22 20:41:46 | INFO | pid=23932 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-22 20:41:46 | INFO | pid=23932 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 20:41:46] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-22 20:44:04 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6748
+2026-04-22 20:45:57 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=121042.77, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 20:56:06 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7708
+2026-04-22 20:57:53 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=115813.46, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 21:08:01 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7319
+2026-04-22 21:09:03 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=69704.05, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 21:19:11 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7281
+2026-04-22 21:20:51 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=108505.97, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 21:26:49 | INFO | pid=23932 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-22 21:26:49 | INFO | pid=23932 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-22 21:26:49 | INFO | pid=23932 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:26:49] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.68
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:26:50] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=0.70
+2026-04-22 21:26:50 | INFO | pid=23932 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:26:50] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 21:26:55 | INFO | pid=23932 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 21:26:55 | INFO | pid=23932 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.27
+2026-04-22 21:26:55 | INFO | pid=23932 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:26:55] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 21:26:59 | INFO | pid=23932 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=400, total_before_pop=420, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-22 21:26:59 | INFO | pid=23932 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.12
+2026-04-22 21:26:59 | INFO | pid=23932 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:26:59] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-22 21:27:04 | INFO | pid=23932 | thread=Thread-8 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=1.16, vector_lookup_ms=22.38, ann_ms=796.20, elapsed_ms=843.45
+2026-04-22 21:27:04 | INFO | pid=23932 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-22 21:27:04 | INFO | pid=23932 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-22 21:27:04 | INFO | pid=23932 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:27:04] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-22 21:27:38 | INFO | pid=23932 | thread=Thread-9 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-22 21:27:38 | INFO | pid=23932 | thread=Thread-9 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=22442, returned=12, elapsed_ms=365.83
+2026-04-22 21:27:38 | INFO | pid=23932 | thread=Thread-9 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=22442, returned=12, elapsed_ms=370.52
+2026-04-22 21:27:38 | INFO | pid=23932 | thread=Thread-9 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=22442, returned=12, strategy=browse, cache_hit=False
+2026-04-22 21:27:38 | INFO | pid=23932 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:27:38] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=1620 HTTP/1.1" 200 -
+2026-04-22 21:27:46 | INFO | pid=23932 | thread=Thread-10 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-22 21:27:46 | INFO | pid=23932 | thread=Thread-10 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=22442, returned=12, elapsed_ms=335.37
+2026-04-22 21:27:46 | INFO | pid=23932 | thread=Thread-10 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=22442, returned=12, elapsed_ms=337.70
+2026-04-22 21:27:46 | INFO | pid=23932 | thread=Thread-10 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=22442, returned=12, strategy=browse, cache_hit=False
+2026-04-22 21:27:46 | INFO | pid=23932 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:27:46] "GET /api/v1/search?n=12&offset=12&sort_by=relevance&sort_order=desc&tag_id=1620 HTTP/1.1" 200 -
+2026-04-22 21:28:00 | INFO | pid=23932 | thread=Thread-11 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=34776804, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=1.25, vector_lookup_ms=4.17, ann_ms=1018.25, elapsed_ms=1053.51
+2026-04-22 21:28:00 | INFO | pid=23932 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=34776804, ann_candidates=20, source=rag
+2026-04-22 21:28:00 | INFO | pid=23932 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=34776804, returned=20, source=rag
+2026-04-22 21:28:00 | INFO | pid=23932 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:28:00] "GET /api/v1/recommend/item?movie_id=34776804&n=20 HTTP/1.1" 200 -
+2026-04-22 21:28:27 | INFO | pid=23932 | thread=Thread-12 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.49, vector_lookup_ms=0.10, ann_ms=0.00, elapsed_ms=0.61
+2026-04-22 21:28:27 | INFO | pid=23932 | thread=Thread-12 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-22 21:28:27 | INFO | pid=23932 | thread=Thread-12 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-22 21:28:27 | INFO | pid=23932 | thread=Thread-12 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:28:27] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-22 21:28:43 | INFO | pid=23932 | thread=Thread-13 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-22 21:28:43 | INFO | pid=23932 | thread=Thread-13 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1, returned=1, elapsed_ms=2.84
+2026-04-22 21:28:43 | INFO | pid=23932 | thread=Thread-13 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1, returned=1, elapsed_ms=4.31
+2026-04-22 21:28:43 | INFO | pid=23932 | thread=Thread-13 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=1, returned=1, strategy=browse, cache_hit=False
+2026-04-22 21:28:43 | INFO | pid=23932 | thread=Thread-13 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:28:43] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=203198 HTTP/1.1" 200 -
+2026-04-22 21:28:45 | INFO | pid=23932 | thread=Thread-14 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=1.60, vector_lookup_ms=0.13, ann_ms=0.00, elapsed_ms=1.75
+2026-04-22 21:28:45 | INFO | pid=23932 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-22 21:28:45 | INFO | pid=23932 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-22 21:28:45 | INFO | pid=23932 | thread=Thread-14 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:28:45] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-22 21:28:52 | INFO | pid=23932 | thread=Thread-15 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-22 21:28:52 | INFO | pid=23932 | thread=Thread-15 (process_request_thread) | app.services.search_service | Search cache hit, signature=d682d48f1db7, total=1, returned=1, elapsed_ms=1.19
+2026-04-22 21:28:52 | INFO | pid=23932 | thread=Thread-15 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=1, returned=1, strategy=browse, cache_hit=True
+2026-04-22 21:28:52 | INFO | pid=23932 | thread=Thread-15 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:28:52] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=203198 HTTP/1.1" 200 -
+2026-04-22 21:31:06 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=13662
+2026-04-22 21:32:27 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=96095.72, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 21:32:37 | INFO | pid=23932 | thread=Thread-16 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=1.20, vector_lookup_ms=0.19, ann_ms=0.00, elapsed_ms=1.42
+2026-04-22 21:32:37 | INFO | pid=23932 | thread=Thread-16 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-22 21:32:37 | INFO | pid=23932 | thread=Thread-16 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-22 21:32:37 | INFO | pid=23932 | thread=Thread-16 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:32:37] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-22 21:33:54 | INFO | pid=23932 | thread=Thread-17 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=1.36, vector_lookup_ms=0.29, ann_ms=0.00, elapsed_ms=1.67
+2026-04-22 21:33:54 | INFO | pid=23932 | thread=Thread-17 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-22 21:33:54 | INFO | pid=23932 | thread=Thread-17 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-22 21:33:54 | INFO | pid=23932 | thread=Thread-17 (process_request_thread) | werkzeug | 127.0.0.1 - - [22/Apr/2026 21:33:54] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-22 21:42:36 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=8031
+2026-04-22 21:44:00 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=92647.66, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 21:54:08 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7264
+2026-04-22 21:55:14 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=73892.54, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 22:05:22 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7444
+2026-04-22 22:07:05 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=110745.28, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 22:17:13 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7818
+2026-04-22 22:19:10 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=124973.22, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 22:29:19 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=8105
+2026-04-22 22:31:14 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=124113.21, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 22:41:22 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7459
+2026-04-22 22:43:10 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=116156.47, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 22:53:18 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7180
+2026-04-22 22:55:04 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=113551.46, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 23:05:12 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7250
+2026-04-22 23:07:06 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=122762.98, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 23:17:15 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7649
+2026-04-22 23:18:28 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=81242.24, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-22 23:28:35 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7178
+2026-04-22 23:29:54 | INFO | pid=23932 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=86926.27, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-23 21:38:38 | INFO | pid=29576 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-23 21:38:38 | INFO | pid=29576 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-23 21:38:38 | INFO | pid=29576 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-23 21:38:38 | INFO | pid=29576 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-23 21:38:46 | INFO | pid=29576 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-23 21:38:46 | INFO | pid=29576 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-23 21:38:47 | INFO | pid=29576 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-23 21:38:47 | INFO | pid=29576 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-23 21:38:48 | INFO | pid=29576 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-23 21:39:36 | INFO | pid=29576 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-23 21:39:36 | INFO | pid=29576 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-23 21:39:44 | INFO | pid=29576 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7205
+2026-04-23 21:40:57 | ERROR | pid=29576 | thread=MainThread | app.reco.startup | Startup warmup failed
+Traceback (most recent call last):
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'td.status' in 'where clause'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 87, in run_startup_warmup
+    summary = run_all_cache_precompute(settings)
+  File "d:\project\Python\RecommendationService\app\ops\cache_ops.py", line 532, in run_all_cache_precompute
+    "tag_recall": refresh_tag_inverted_recall_cache(settings),
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\cache_ops.py", line 451, in refresh_tag_inverted_recall_cache
+    genre_rows = _query_rows(settings, genre_sql, {})
+  File "d:\project\Python\RecommendationService\app\ops\cache_ops.py", line 169, in _query_rows
+    rs = conn.execute(text(sql), params)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1418, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\sql\elements.py", line 515, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1640, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 2353, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\sqlalchemy\engine\default.py", line 924, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 153, in execute
+    result = self._query(query)
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\cursors.py", line 322, in _query
+    conn.query(q)
+    ~~~~~~~~~~^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+                          ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 826, in _read_query_result
+    result.read()
+    ~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\REO\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'td.status' in 'where clause'")
+[SQL: 
+    SELECT
+      mt.tag_id AS tag_id,
+      mt.movie_id AS movie_id,
+      COALESCE(mt.vote_up, 0) AS endorsement_cnt,
+      COALESCE(m.rating_sum, 0) AS rating_sum,
+      COALESCE(m.rating_count, 0) AS rating_count
+    FROM movie_tag mt
+    JOIN movie m ON m.movie_id = mt.movie_id
+    JOIN tag_dict td ON td.tag_id = mt.tag_id
+    WHERE m.status = 'published' AND td.status = 'show'
+    ]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-04-23 22:43:38 | INFO | pid=9208 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-23 22:43:38 | INFO | pid=9208 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-23 22:43:38 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-23 22:43:38 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-23 22:43:41 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-23 22:43:41 | INFO | pid=9208 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-23 22:43:42 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-23 22:43:42 | INFO | pid=9208 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-23 22:43:42 | INFO | pid=9208 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-23 22:44:35 | INFO | pid=9208 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-23 22:44:35 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-23 22:44:44 | INFO | pid=9208 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7611
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-23 22:46:23 | WARNING | pid=9208 | thread=Thread-1 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:23 | INFO | pid=9208 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:23] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-2 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-3 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-4 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-5 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-6 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-7 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:24 | WARNING | pid=9208 | thread=Thread-8 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:24 | INFO | pid=9208 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:24] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-9 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-10 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-11 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-12 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-12 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-13 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-13 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-14 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-14 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-15 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-15 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:25 | WARNING | pid=9208 | thread=Thread-16 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:25 | INFO | pid=9208 | thread=Thread-16 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:25] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-17 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-17 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-18 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-18 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-19 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-19 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-20 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-20 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-21 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-21 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-22 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:26 | INFO | pid=9208 | thread=Thread-22 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:26] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:26 | WARNING | pid=9208 | thread=Thread-23 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-23 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-24 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-24 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-25 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-25 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-26 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-26 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-27 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-27 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-28 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-28 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-29 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-29 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-30 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-30 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:27 | WARNING | pid=9208 | thread=Thread-31 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:27 | INFO | pid=9208 | thread=Thread-31 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:27] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-32 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-32 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-33 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-33 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-34 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-34 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-35 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-35 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-36 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-36 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-37 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-37 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-38 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-38 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:28 | WARNING | pid=9208 | thread=Thread-39 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:28 | INFO | pid=9208 | thread=Thread-39 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:28] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-40 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-40 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-41 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-41 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-42 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-42 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-43 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-43 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-44 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-44 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-45 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-45 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-46 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-46 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-47 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-47 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:29 | WARNING | pid=9208 | thread=Thread-48 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:29 | INFO | pid=9208 | thread=Thread-48 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:29] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-49 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-49 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-50 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-50 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-51 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-51 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-52 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-52 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-53 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-53 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-54 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-54 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-55 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-55 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-56 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-56 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:30 | WARNING | pid=9208 | thread=Thread-57 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:30 | INFO | pid=9208 | thread=Thread-57 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:30] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-58 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-58 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-59 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-59 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-60 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-60 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-61 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-61 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-62 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-62 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-63 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-63 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:31 | WARNING | pid=9208 | thread=Thread-64 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:31 | INFO | pid=9208 | thread=Thread-64 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:31] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-65 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-65 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-66 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-66 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-67 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-67 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-68 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-68 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-69 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-69 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-70 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-70 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-71 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-71 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-72 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-72 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:32 | WARNING | pid=9208 | thread=Thread-73 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:32 | INFO | pid=9208 | thread=Thread-73 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:32] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:33 | WARNING | pid=9208 | thread=Thread-74 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:33 | INFO | pid=9208 | thread=Thread-74 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:33] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:33 | WARNING | pid=9208 | thread=Thread-75 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:33 | INFO | pid=9208 | thread=Thread-75 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:33] "POST / HTTP/1.1" 404 -
+2026-04-23 22:46:33 | WARNING | pid=9208 | thread=Thread-76 (process_request_thread) | app | http exception: code=404, name=Not Found, description=The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-04-23 22:46:33 | INFO | pid=9208 | thread=Thread-76 (process_request_thread) | werkzeug | 127.0.0.1 - - [23/Apr/2026 22:46:33] "POST / HTTP/1.1" 404 -
+2026-04-24 10:52:01 | INFO | pid=18248 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 10:52:01 | INFO | pid=18248 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 10:52:01 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-24 10:52:01 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-24 10:52:08 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-24 10:52:08 | INFO | pid=18248 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-24 10:52:09 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-24 10:52:09 | INFO | pid=18248 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-24 10:52:10 | INFO | pid=18248 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-24 10:53:03 | INFO | pid=18248 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-24 10:53:03 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-24 10:53:11 | INFO | pid=18248 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=5808
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-24 10:54:49 | INFO | pid=18248 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-24 11:14:00 | INFO | pid=21876 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 11:14:00 | INFO | pid=21876 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 11:14:00 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-24 11:14:00 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-24 11:14:07 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-24 11:14:08 | INFO | pid=21876 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-24 11:14:08 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-24 11:14:08 | INFO | pid=21876 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-24 11:14:08 | INFO | pid=21876 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-24 11:15:02 | INFO | pid=21876 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-24 11:15:02 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-24 11:15:10 | INFO | pid=21876 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7151
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-24 11:16:49 | INFO | pid=21876 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-24 11:26:57 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6736
+2026-04-24 11:28:35 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=105893.45, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 11:38:42 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6819
+2026-04-24 11:40:21 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=105874.58, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 11:50:28 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6440
+2026-04-24 11:52:00 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=99466.31, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 12:02:07 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=5882
+2026-04-24 12:03:38 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=97348.98, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 12:13:45 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7162
+2026-04-24 12:15:17 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=99700.87, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}

@@ -45,6 +45,9 @@ class CacheSettings:
     recall_ttl_seconds: int = 1800
     trending_refresh_interval_seconds: int = 600
     static_recall_refresh_interval_seconds: int = 600
+    search_cache_ttl_seconds: int = 60
+    search_cache_max_offset: int = 200
+    search_cache_max_n: int = 50
     trending_topk: int = 200
     static_recall_topk: int = 200
     user_reco_cache_size: int = 500

@@ -246,7 +246,7 @@ Query 参数：
 
 ### 6.1 GET `/api/v1/search`
 
-基于 MySQL 的标题/简介检索，同时支持排序与结构化筛选。
+基于 MySQL 的标题/简介检索，同时支持排序、结构化筛选与热点缓存。实现上优先走全文检索；若全文检索无结果，则退回标题/简介模糊匹配。评分与收藏排序不再在请求内实时聚合，而是读取 movie 表中的预计算冗余列。
 
 Query 参数：
 
@@ -254,20 +254,21 @@ Query 参数：
 | --- | --- | --- | --- | --- |
 | `query` | string | 否 | 空字符串 | 标题与摘要检索词 |
 | `tag_id` | integer[] | 否 | 空数组 | 可重复传参，例如 `tag_id=1&tag_id=2` |
-| `sort_by` | string | 否 | `relevance` | 排序字段，见下方允许值 |
+| `tag_ids` | integer[] 或 comma-separated string | 否 | 空数组 | 兼容别名，例如 `tag_ids=1,2` 或多次传参 |
+| `sort_by` | string | 否 | `default` | 排序字段，见下方允许值 |
 | `sort_order` | string | 否 | `desc` | 排序方向：`asc` 或 `desc` |
 | `time_window` | string | 否 | 无 | 基于 `movie.release_date` 的相对时间筛选 |
 | `start_date` | date | 否 | 无 | 基于 `movie.release_date` 的起始日期，格式 `YYYY-MM-DD` |
 | `end_date` | date | 否 | 无 | 基于 `movie.release_date` 的结束日期，格式 `YYYY-MM-DD` |
 | `duration_min` | integer | 否 | 无 | 最小时长（分钟） |
 | `duration_max` | integer | 否 | 无 | 最大时长（分钟） |
-| `n` | integer | 否 | `20` | 必须大于 0，当前没有上限保护 |
+| `n` | integer | 否 | `20` | 必须大于 0 |
 | `offset` | integer | 否 | `0` | 必须大于等于 0 |
 | 其他任意 query 参数 | string 或 string[] | 否 | 无 | 不参与 SQL 条件，仅回显到 `passthrough` |
 
 `sort_by` 允许值：
 
-- `relevance`：默认相关性排序，兼顾标题/摘要匹配和评分人数
+- `default` / `composite` / `relevance`：默认综合排序。有 `query` 时按相关性优先；无 `query` 时只保证稳定分页
 - `rating`：按贝叶斯平均评分排序
 - `collect`：按收藏数排序
 - `duration`：按时长排序
@@ -281,10 +282,10 @@ Query 参数：
 
 约束：
 
-- 至少需要满足以下任一条件：提供 `query`、提供 `tag_id`、提供任一筛选参数、或使用非默认排序。
 - `time_window` 与 `start_date` / `end_date` 不能同时使用。
 - `start_date <= end_date`、`duration_min <= duration_max`。
-- 重复的 `tag_id` 会去重后再查询。
+- 重复的 `tag_id` / `tag_ids` 会去重后再查询。
+- 同时传多个标签时，按“命中任一标签”筛选。
 - `time_window`、`start_date`、`end_date` 均作用于 `movie.release_date`。
 - 历史遗留的 `rating_min/rating_max/collect_min/collect_max/hot_min/hot_max` 现已静默忽略，不再参与过滤，也不会回显到响应中。
 
@@ -298,7 +299,7 @@ Query 参数：
   "offset": 0,
   "sort": {
     "by": "rating",
-    "order": "desc",
+    "order": "desc"
   },
   "filters": {
     "release_date": {
@@ -335,10 +336,10 @@ Query 参数：
 说明：
 
 - `summary` 会在服务端截断到最多 300 个字符，超长时追加 `...`。
-- `score` 始终表示默认相关性分，不会因为 `sort_by` 切换为收藏或时长排序而改变语义。
-- `bayesian_rating` 仍然会返回，但已不再支持评分范围过滤。
--- 历史遗留的热度指标（如 `hot_score`）已从搜索接口的排序中移除；相关内部表字段可能仍在部分子系统中使用，但不会出现在搜索响应中。
-- 当前搜索始终基于分段查询与实时聚合，不依赖额外统计表。
+- `score` 始终表示相关性分；无 `query` 的纯筛选/浏览请求会返回 `0`。
+- `bayesian_rating` 和 `collect_count` 来自 movie 表中的预计算冗余列，存在秒级到分钟级刷新延迟。
+- 历史遗留的热度指标（如 `hot_score`）已从搜索接口的排序中移除；相关内部表字段可能仍在部分子系统中使用，但不会出现在搜索响应中。
+- 热点请求会进入短 TTL Redis 缓存；深翻页请求默认直接走数据库。
 - 当前实现需要可用的 `settings.core.mysql_dsn`，否则会返回 `500 service execution failed`。
 - `passthrough` 是“回显字段”，不是“实际过滤条件”。
 

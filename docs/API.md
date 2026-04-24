@@ -240,13 +240,14 @@ Query 参数：
 
 ### 6.1 `GET /search`
 
-基于 MySQL 的标题/简介检索，并支持排序与结构化筛选。
+基于 MySQL 的标题/简介检索，并支持排序、结构化筛选与短 TTL 热点缓存。评分与收藏排序读取 movie 表中的预计算冗余列，不再在请求里实时聚合收藏表。
 
 Query 参数：
 
 - `query`：可选，字符串
 - `tag_id`：可选，可多值
-- `sort_by`：可选，默认 `relevance`，支持 `relevance|rating|collect|duration|time`
+- `tag_ids`：可选，兼容别名，支持逗号分隔或多值
+- `sort_by`：可选，默认 `default`，支持 `default|composite|relevance|rating|collect|duration|time`
 - `sort_order`：可选，默认 `desc`
 - `time_window`：可选，支持 `weekly|monthly|half_year`
 - `start_date` / `end_date`：可选，格式 `YYYY-MM-DD`，作用于 `release_date`
@@ -257,10 +258,10 @@ Query 参数：
 
 约束：
 
-- 至少需要提供 `query`、`tag_id`、任一筛选参数，或使用非默认排序
 - `time_window` 不能和 `start_date` / `end_date` 并用
 - `n` 必须为正整数
 - `offset` 必须为非负整数
+- 多个标签按“命中任一标签”筛选
 
 响应 `data` 结构：
 
@@ -272,7 +273,7 @@ Query 参数：
   "offset": 0,
   "sort": {
     "by": "rating",
-    "order": "desc",
+    "order": "desc"
   },
   "filters": {
     "release_date": {
@@ -308,9 +309,12 @@ Query 参数：
 
 说明：
 
-- `score` 始终表示默认相关性分。
+- 有 `query` 时默认按相关性；无 `query` 时默认只保证稳定分页。
+- `score` 表示相关性分；纯筛选/浏览请求返回 `0`。
+- `bayesian_rating` 与 `collect_count` 来自 movie 表中的预计算冗余列，存在短暂刷新延迟。
+- 热点搜索请求会进入 Redis 短 TTL 缓存。
 - `bayesian_rating` 仍然返回，但不再支持评分范围过滤。
-- 当前搜索始终基于分段查询与实时聚合，不依赖额外统计表。
+- 当前搜索始终基于分段查询与预计算冗余列，不依赖额外统计表。
 
 ## 7. RAG 接口
 

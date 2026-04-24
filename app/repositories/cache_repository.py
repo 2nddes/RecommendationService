@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from app.common.redis_cache import (
     load_trending_items,
+    load_search_result,
     pop_user_recommendation_items,
     load_user_recommendation_page,
     load_user_recommendation_total,
     release_user_recommendation_lock,
+    store_search_result,
     store_trending_items,
     store_user_recommendation_items,
     try_acquire_user_recommendation_lock,
@@ -16,6 +18,12 @@ from app.common.settings import Settings
 class CacheRepository:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
+
+    def load_search_result(self, *, signature: str) -> dict | None:
+        return load_search_result(self._settings, signature=signature)
+
+    def store_search_result(self, *, signature: str, payload: dict) -> bool:
+        return bool(store_search_result(self._settings, signature=signature, payload=payload))
 
     def load_trending(self, *, window: str, n: int) -> list[int]:
         return load_trending_items(self._settings, window=window, n=n)

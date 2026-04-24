@@ -762,6 +762,46 @@ class MovieRagService:
         ttl = max(60, int(self._settings.rag.redis_result_ttl_seconds))
         client.set(cache_key, json.dumps(items, ensure_ascii=False), ex=ttl)
 
+    def _search_faiss_ids(self, *, query: str, k: int) -> list[tuple[int, float]]:
+        requested_k = max(int(k), 1)
+        normalized_query = str(query or "").strip()
+        if not normalized_query:
+            return []
+
+        cache_key = self._query_cache_key(normalized_query, requested_k)
+        client = get_redis_client(self._settings)
+        if client is not None:
+            cached = self._deserialize_similar_movie_pairs(client.get(cache_key))
+            if cached is not None:
+                return cached[:requested_k]
+
+        query_vec = np.asarray(
+            create_embedding(cfg=self._embedding_cfg(), text=normalized_query),
+            dtype=np.float32,
+        ).reshape(-1)
+        if int(query_vec.size) <= 0:
+            raise RuntimeError("query_embedding_empty")
+        query_vec = self._normalize(query_vec)
+
+        with self._lock:
+            if self._index is None or self._dim is None:
+                raise RuntimeError("rag_index_not_initialized")
+            if int(query_vec.size) != int(self._dim):
+                raise RuntimeError(f"query_embedding_dim_mismatch: expected={self._dim}, got={query_vec.size}")
+            scores, ids = self._index.search(query_vec.reshape(1, -1), int(requested_k))
+
+        out: list[tuple[int, float]] = []
+        for faiss_id, score in zip(ids[0], scores[0]):
+            fid = int(faiss_id)
+            if fid < 0:
+                continue
+            out.append((fid, float(score)))
+            if len(out) >= requested_k:
+                break
+
+        self._store_similar_movie_pairs(cache_key=cache_key, items=out)
+        return out
+
     def _search_similar_movies_with_rag_vector(
         self,
         *,
