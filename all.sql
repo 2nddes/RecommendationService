@@ -11,7 +11,7 @@
  Target Server Version : 80407 (8.4.7)
  File Encoding         : 65001
 
- Date: 22/04/2026 18:32:22
+ Date: 25/04/2026 18:14:55
 */
 
 SET NAMES utf8mb4;
@@ -76,7 +76,7 @@ CREATE TABLE `direct_message`  (
   CONSTRAINT `dm_message_ibfk_1` FOREIGN KEY (`conversation_id`) REFERENCES `direct_message_conversation` (`conversation_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_message_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `dm_message_ibfk_3` FOREIGN KEY (`recipient_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信消息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '私信消息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for direct_message_conversation
@@ -258,11 +258,11 @@ CREATE TABLE `movie_tag`  (
   PRIMARY KEY (`movie_id`, `tag_id`) USING BTREE,
   INDEX `idx_movie_id`(`movie_id` ASC) USING BTREE,
   INDEX `idx_tag_id`(`tag_id` ASC) USING BTREE,
-  INDEX `idx_creator_user_id`(`creator_user_id` ASC) USING BTREE,
   INDEX `idx_weight`(`weight` ASC) USING BTREE,
   INDEX `movie_id`(`movie_id` ASC, `tag_id` ASC) USING BTREE,
   INDEX `idx_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
   INDEX `idx_search_tag_movie`(`tag_id` ASC, `movie_id` ASC) USING BTREE,
+  INDEX `idx_creator_user_id`(`creator_user_id` ASC) USING BTREE,
   CONSTRAINT `movie_tag_ibfk_3` FOREIGN KEY (`movie_id`) REFERENCES `movie` (`movie_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_tag_ibfk_4` FOREIGN KEY (`tag_id`) REFERENCES `tag_dict` (`tag_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `movie_tag_ibfk_5` FOREIGN KEY (`creator_user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
@@ -287,7 +287,7 @@ CREATE TABLE `notification`  (
   INDEX `idx_user_id`(`user_id` ASC, `is_readed` ASC) USING BTREE,
   CONSTRAINT `notification_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `notification_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 2591 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2593 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '通知' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for ops_task
@@ -372,7 +372,7 @@ CREATE TABLE `rec_log`  (
 DROP TABLE IF EXISTS `tag_dict`;
 CREATE TABLE `tag_dict`  (
   `tag_id` bigint NOT NULL AUTO_INCREMENT,
-  `tag_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名',
+  `tag_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标签名',
   `user_id` bigint NULL DEFAULT NULL COMMENT '创建者ID',
   `collect_count` int NULL DEFAULT 0 COMMENT '收藏该标签的人数',
   `movie_count` int NULL DEFAULT 0 COMMENT '关联的电影数（多少电影有此标签）',
@@ -381,9 +381,10 @@ CREATE TABLE `tag_dict`  (
   `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`tag_id`) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-  UNIQUE INDEX `uk_tag_name`(`tag_name` ASC) USING BTREE,
+  INDEX `tag_name`(`tag_name` ASC) USING BTREE,
+  INDEX `uk_tag_name`(`tag_name` ASC) USING BTREE,
   CONSTRAINT `tag_dict_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 203198 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '动态标签字典表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 203203 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '动态标签字典表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for tag_vote
@@ -442,7 +443,7 @@ CREATE TABLE `user_click`  (
   INDEX `idx_user_time`(`user_id` ASC, `created_at` DESC) USING BTREE,
   INDEX `idx_movie_time`(`movie_id` ASC, `created_at` DESC) USING BTREE,
   INDEX `idx_created_movie`(`created_at` DESC, `movie_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13068136 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户点击流水表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 13068170 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户点击流水表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_collect_movie

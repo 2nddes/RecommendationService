@@ -2769,3 +2769,400 @@ Traceback (most recent call last):
   File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 76, in _post_json
     raise OpenAICompatError(f"http_error: status={getattr(exc, 'code', 'unknown')}, detail={detail[:300]}") from exc
 app.reco.rag_clients.OpenAICompatError: http_error: status=403, detail={"code":30001,"message":"Sorry, your account balance is insufficient","data":null}
+2026-04-25 14:52:56 | INFO | pid=32800 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-25 14:52:56 | INFO | pid=32800 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-25 14:52:56 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-25 14:52:56 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-25 14:53:04 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-25 14:53:05 | INFO | pid=32800 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-25 14:53:06 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-25 14:53:06 | INFO | pid=32800 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-25 14:53:06 | INFO | pid=32800 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-25 14:53:59 | INFO | pid=32800 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-25 14:53:59 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-25 14:54:07 | INFO | pid=32800 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7006
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-25 14:55:45 | INFO | pid=32800 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-25 15:05:53 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7043
+2026-04-25 15:06:24 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.api.v1_rag | RAG stream request started, query_len=6, query_preview=想看漫威电影, thinking=False
+2026-04-25 15:06:24 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.api.v1_rag | RAG stream start event emitted, query_len=6, query_preview=想看漫威电影, thinking=False
+2026-04-25 15:06:24 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:06:24] "POST /api/v1/recommend/rag/stream HTTP/1.1" 200 -
+2026-04-25 15:06:26 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_service | RAG evidence retrieval completed, query_len=6, query_preview=想看漫威电影, ann_topk=10, ann_pairs=10, resolved_pairs=10, movie_rows=10, evidence_count=10, cited_preview=[30330059, 27030638, 27013027, 26687539, 30394797], resolve_ms=484.29, movie_fetch_ms=187.70, elapsed_ms=1447.50
+2026-04-25 15:06:26 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_service | RAG answer stream prepared, query_len=6, query_preview=想看漫威电影, evidence_count=10, evidence_preview=[30330059, 27030638, 27013027, 26687539, 30394797], context_chars=4838, prompt_chars=5388, llm_model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, retrieve_ms=1463.20, elapsed_ms=1463.30
+2026-04-25 15:06:26 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_service | User prompt:
+user_query: 想看漫威电影
+
+retrieval_evidence:
+[1] movie_id=30330059, title=未定名漫威电影 - 电影, year=2022, rating_avg=unknown, rating_count=0
+summary: 
+retrieved_chunk: movie_title: 未定名漫威电影 - 电影
+release_year: 2022
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动作, 电影, Marvel
+actors: 
+summary: 
+
+[2] movie_id=27030638, title=Untitled Marvel Project, year=2023, rating_avg=unknown, rating_count=0
+summary: 
+retrieved_chunk: movie_title: Untitled Marvel Project
+release_year: 2023
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动作, 电影, Marvel, 超级英雄
+actors: 
+summary: 
+
+[3] movie_id=27013027, title=万夫莫敌, year=2018, rating_avg=unknown, rating_count=0
+summary: 电影根据同名漫画改编们讲述一个普通高中生，他的父亲是最强大的超级英雄，而他将继承父亲的超能力。
+retrieved_chunk: movie_title: 万夫莫敌
+release_year: 2018
+director: 塞斯·罗根
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 剧情, 科幻, 2018, 待看
+actors: 
+summary: 电影根据同名漫画改编们讲述一个普通高中生，他的父亲是最强大的超级英雄，而他将继承父亲的超能力。
+
+[4] movie_id=26687539, title=漫威超级英雄大冒险之冰霜大作战, year=2015, rating_avg=6.2/10, rating_count=17
+summary: 漫威的超级英雄们这次要大战冰霜王，邪恶的洛基和冰霜巨人，伊米尔，是一个追求偷圣诞老人的力量的家伙。在这个激动人心的假期里寻找冒险！
+retrieved_chunk: movie_title: 漫威超级英雄大冒险之冰霜大作战
+release_year: 2015
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 
+top_vote_tags: 科幻, 动画, 美国, 电影
+actors: 米克·温格特, 马修·默瑟
+summary: 漫威的超级英雄们这次要大战冰霜王，邪恶的洛基和冰霜巨人，伊米尔，是一个追求偷圣诞老人的力量的家伙。在这个激动人心的假期里寻找冒险！
+
+[5] movie_id=30394797, title=尚气, year=2021, rating_avg=unknown, rating_count=0
+summary: Marvel Studios宣布拍摄以华人为目标的超级英雄电影《尚气与十戒传奇 Shang-Shi and the Legend of the Ten Rings》，这部电影定位类似《黑豹 Black Panther》般（它幕前幕后找的很多都是黑人），美藉华人Dave Callaham负责剧本，Destin Daniel Cretton负责执导。刘思慕饰演尚气丶梁朝伟饰演满大人，奥卡菲娜亦会参与演出。
+retrieved_chunk: movie_title: 尚气
+release_year: 2021
+director: 德斯汀·克里顿
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动作, 科幻, 美国, 冒险
+actors: 刘思慕, 梁朝伟, 奥卡菲娜
+summary: Marvel Studios宣布拍摄以华人为目标的超级英雄电影《尚气与十戒传奇 Shang-Shi and the Legend of the Ten Rings》，这部电影定位类似《黑豹 Black Panther》般（它幕前幕后找的很多都是黑人），美藉华人Dave Callaham负责剧本，Destin Daniel Cretton负责执导。刘思慕饰演尚气丶梁朝伟饰演满大人，奥卡菲娜亦会参与演出。
+
+[6] movie_id=26957900, title=死侍3, year=2020, rating_avg=unknown, rating_count=0
+summary: 随着迪士尼对20世纪福克斯的收购，《神奇四侠》《死侍》《X战警》等IP重回漫威宇宙。
+retrieved_chunk: movie_title: 死侍3
+release_year: 2020
+director: 大卫·雷奇
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动作, 科幻, 美国, 喜剧
+actors: 瑞恩·雷诺兹
+summary: 随着迪士尼对20世纪福克斯的收购，《神奇四侠》《死侍》《X战警》等IP重回漫威宇宙。
+
+[7] movie_id=26700684, title=乐高漫威复仇者联盟：重新集结 - 电影, year=2015, rating_avg=7.8/10, rating_count=81
+summary: 《乐高漫威复仇者联盟：重新集结》是漫威和乐高合作推出的乐高复仇者联盟动画，动画中钢铁侠被奥创控制要偷走钢铁侠的技术统治世界，美国队长绿巨人等复仇者联盟成员需要救回钢铁侠并且组织奥创！
+retrieved_chunk: movie_title: 乐高漫威复仇者联盟：重新集结 - 电影
+release_year: 2015
+director: 
+duration_minutes: 22
+country_or_region: 美国
+language: 英语
+top_vote_tags: 科幻, 动画, 美国, 喜剧
+actors: 
+summary: 《乐高漫威复仇者联盟：重新集结》是漫威和乐高合作推出的乐高复仇者联盟动画，动画中钢铁侠被奥创控制要偷走钢铁侠的技术统治世界，美国队长绿巨人等复仇者联盟成员需要救回钢铁侠并且组织奥创！
+
+[8] movie_id=30391186, title=蜘蛛侠：平行宇宙2 - 电影, year=2020, rating_avg=unknown, rating_count=0
+summary: 索尼影业近日确认会制作《蜘蛛侠：平行宇宙》的续集电影，此举显然是对《蜘蛛侠：平行宇宙》的票房前景充满信心。
+retrieved_chunk: movie_title: 蜘蛛侠：平行宇宙2 - 电影
+release_year: 2020
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动画, 美国, 电影, Marvel
+actors: 
+summary: 索尼影业近日确认会制作《蜘蛛侠：平行宇宙》的续集电影，此举显然是对《蜘蛛侠：平行宇宙》的票房前景充满信心。
+
+[9] movie_id=26361257, title=正义联盟：神魔之战 - 电影, year=2015, rating_avg=7.5/10, rating_count=189
+summary: 本片是完全原创故事，超级英雄们不再是熟悉的样子，超人成为了佐德的儿子，蝙蝠侠成为吸血鬼，神奇女侠是“新神”，正义联盟为了摆脱被诽谤的罪名对科学家遇害事件展开调查。
+retrieved_chunk: movie_title: 正义联盟：神魔之战 - 电影
+release_year: 2015
+director: 
+duration_minutes: 76
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动作, 科幻, 动画, 美国
+actors: 
+summary: 本片是完全原创故事，超级英雄们不再是熟悉的样子，超人成为了佐德的儿子，蝙蝠侠成为吸血鬼，神奇女侠是“新神”，正义联盟为了摆脱被诽谤的罪名对科学家遇害事件展开调查。
+
+[10] movie_id=1866479, title=复仇者联盟 - 电影, year=2012, rating_avg=7.7/10, rating_count=115
+summary: 一股突如其来的强大邪恶势力对地球造成致命威胁，没有任何一个超级英雄能够单独抵挡。长期致力于保护全球安危的神盾局（SHIELD）感到措手不及，其指挥官“独眼侠”尼克·弗瑞（塞缪尔·杰克逊 Samuel L. Jackson 饰）意识到他必须创建一个“史上最强”的联盟组织， 云集各方超级英雄一起发威，才能拯救世界于水深火热，抵御黑暗势力的侵袭。于是由六大超级英雄——“钢铁侠”（小罗伯特·唐尼 Robert Downey Jr. 饰）、“雷神” （克里斯·海姆斯沃斯 Chris Hemsworth 饰）、“美国队长”（克里斯·埃文斯 Chris Evans 饰）、“绿巨人” （马克·鲁弗洛 Mark Ruffalo 饰）、“黑寡妇”（斯嘉丽·约翰逊 Scarlett Johansson 饰）和“鹰眼”（杰瑞米·雷纳 Jeremy Renner 饰）组成的 “复仇者联盟”应运而生。他们各显神通，团结一心，终于战胜了邪恶势力，保证了地球的安全。
+retrieved_chunk: movie_title: 复仇者联盟 - 电影
+release_year: 2012
+director: 
+duration_minutes: 142
+country_or_region: 美国
+language: 英语, 俄语
+top_vote_tags: 动作, 科幻, 美国, 冒险
+actors: 
+summary: 一股突如其来的强大邪恶势力对地球造成致命威胁，没有任何一个超级英雄能够单独抵挡。长期致力于保护全球安危的神盾局（SHIELD）感到措手不及，其指挥官“独眼侠”尼克·弗瑞（塞缪尔·杰克逊 Samuel L. Jackson 饰）意识到他必须创建一个“史上最强”的联盟组织， 云集各方超级英雄一起发威，才能拯救世界于水深火热，抵御黑暗势力的侵袭。于是由六大超级英雄——“钢铁侠”（小罗伯特·唐尼 Robert Downey Jr. 饰）、“雷神” （克里斯·海姆斯沃斯 Chris Hemsworth 饰）、“美国队长”（克里斯·埃文斯 Chris Evans 饰）、“绿巨人” （马克·鲁弗洛 Mark Ruffalo 饰）、“黑寡妇”（斯嘉丽·约翰逊 Scarlett Johansson 饰）和“鹰眼”（杰瑞米·雷纳 Jeremy Renner 饰）组成的 “复仇者联盟”应运而生。他们各显神通，团结一心，终于战胜了邪恶势力，保证了地球的安全。
+
+Output requirements:
+1. First, write the normal Chinese answer for the end user.
+2. After the answer, append the following marker block exactly once, with no Markdown code fence:
+<<<RAG_STRUCTURED_OUTPUT_BEGIN>>>
+{"cited_movie_ids":[movie_id1,movie_id2]}
+<<<RAG_STRUCTURED_OUTPUT_END>>>
+3. cited_movie_ids must only contain movie_id values from retrieval_evidence.
+4. If none of the candidates are suitable, return an empty array.
+5. Do not mention the markers or the JSON contract in the user-facing answer.
+2026-04-25 15:06:26 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.api.v1_rag | RAG stream evidence ready, query_len=6, query_preview=想看漫威电影, thinking=False, evidence_count=10, evidence_preview=[30330059, 27030638, 27013027, 26687539, 30394797]
+2026-04-25 15:06:27 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_clients | RAG provider request opened, model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, url=https://api.siliconflow.cn/v1/chat/completions, content_type=text/event-stream
+2026-04-25 15:06:53 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_clients | RAG provider first stream chunk, model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, content_type=text/event-stream, first_chunk_ms=27040.14
+2026-04-25 15:06:53 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.api.v1_rag | RAG stream first answer chunk, query_len=6, query_preview=想看漫威电影, thinking=False, first_chunk_ms=29154.89, evidence_count=10
+2026-04-25 15:07:01 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.reco.rag_service | RAG structured output parsed, query_len=6, query_preview=想看漫威电影, evidence_count=10, output_count=3, output_preview=[1866479, 26700684, 26687539]
+2026-04-25 15:07:01 | INFO | pid=32800 | thread=Thread-1 (process_request_thread) | app.api.v1_rag | RAG stream completed, query_len=6, query_preview=想看漫威电影, thinking=False, evidence_count=10, output_count=3, output_preview=[1866479, 26700684, 26687539], chunk_count=185, chars=309, first_chunk_ms=29154.89, elapsed_ms=36387.58
+2026-04-25 15:07:23 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=97329.38, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 15:07:23 | INFO | pid=32800 | thread=Thread-2 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1866479, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.65, vector_lookup_ms=0.11, ann_ms=9.19, elapsed_ms=23.73
+2026-04-25 15:07:23 | INFO | pid=32800 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1866479, ann_candidates=20, source=rag
+2026-04-25 15:07:23 | INFO | pid=32800 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1866479, returned=20, source=rag
+2026-04-25 15:07:23 | INFO | pid=32800 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:07:23] "GET /api/v1/recommend/item?movie_id=1866479&n=20 HTTP/1.1" 200 -
+2026-04-25 15:17:31 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7926
+2026-04-25 15:19:29 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=125999.91, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 15:29:37 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=8052
+2026-04-25 15:31:35 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=126002.95, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 15:36:59 | INFO | pid=32800 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-25 15:36:59 | INFO | pid=32800 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-25 15:36:59 | INFO | pid=32800 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:36:59] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-25 15:37:12 | INFO | pid=32800 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:37:12 | INFO | pid=32800 | thread=Thread-4 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=6961, returned=12, elapsed_ms=57.10
+2026-04-25 15:37:12 | INFO | pid=32800 | thread=Thread-4 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=6961, returned=12, elapsed_ms=60.36
+2026-04-25 15:37:12 | INFO | pid=32800 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=6961, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:37:12 | INFO | pid=32800 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:37:12] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:37:32 | INFO | pid=32800 | thread=Thread-5 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:37:32 | INFO | pid=32800 | thread=Thread-5 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=44.32
+2026-04-25 15:37:32 | INFO | pid=32800 | thread=Thread-5 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=45.69
+2026-04-25 15:37:32 | INFO | pid=32800 | thread=Thread-5 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:37:32 | INFO | pid=32800 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:37:32] "GET /api/v1/search?n=12&offset=0&sort_by=rating&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:37:42 | INFO | pid=32800 | thread=Thread-6 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=collect, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:37:42 | INFO | pid=32800 | thread=Thread-6 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=57.95
+2026-04-25 15:37:42 | INFO | pid=32800 | thread=Thread-6 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=60.06
+2026-04-25 15:37:42 | INFO | pid=32800 | thread=Thread-6 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=collect, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:37:42 | INFO | pid=32800 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:37:42] "GET /api/v1/search?n=12&offset=0&sort_by=collect&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:37:45 | INFO | pid=32800 | thread=Thread-7 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1431714, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.47, vector_lookup_ms=0.10, ann_ms=7.36, elapsed_ms=22.41
+2026-04-25 15:37:45 | INFO | pid=32800 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1431714, ann_candidates=20, source=rag
+2026-04-25 15:37:45 | INFO | pid=32800 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1431714, returned=20, source=rag
+2026-04-25 15:37:45 | INFO | pid=32800 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:37:45] "GET /api/v1/recommend/item?movie_id=1431714&n=20 HTTP/1.1" 200 -
+2026-04-25 15:38:08 | INFO | pid=32800 | thread=Thread-8 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=duration, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:38:08 | INFO | pid=32800 | thread=Thread-8 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=42.61
+2026-04-25 15:38:08 | INFO | pid=32800 | thread=Thread-8 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=44.70
+2026-04-25 15:38:08 | INFO | pid=32800 | thread=Thread-8 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=duration, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:38:08 | INFO | pid=32800 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:08] "GET /api/v1/search?n=12&offset=0&sort_by=duration&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:38:10 | INFO | pid=32800 | thread=Thread-9 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1431714, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.71, vector_lookup_ms=0.22, ann_ms=0.00, elapsed_ms=0.95
+2026-04-25 15:38:10 | INFO | pid=32800 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1431714, ann_candidates=20, source=rag
+2026-04-25 15:38:10 | INFO | pid=32800 | thread=Thread-9 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1431714, returned=20, source=rag
+2026-04-25 15:38:10 | INFO | pid=32800 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:10] "GET /api/v1/recommend/item?movie_id=1431714&n=20 HTTP/1.1" 200 -
+2026-04-25 15:38:14 | INFO | pid=32800 | thread=Thread-10 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=duration, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-25 15:38:14 | INFO | pid=32800 | thread=Thread-10 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=51.10
+2026-04-25 15:38:14 | INFO | pid=32800 | thread=Thread-10 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=52.89
+2026-04-25 15:38:14 | INFO | pid=32800 | thread=Thread-10 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=duration, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:38:14 | INFO | pid=32800 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:14] "GET /api/v1/search?n=12&offset=12&sort_by=duration&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:38:16 | INFO | pid=32800 | thread=Thread-11 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=2052182, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.55, vector_lookup_ms=0.08, ann_ms=6.70, elapsed_ms=22.35
+2026-04-25 15:38:16 | INFO | pid=32800 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=2052182, ann_candidates=20, source=rag
+2026-04-25 15:38:16 | INFO | pid=32800 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=2052182, returned=20, source=rag
+2026-04-25 15:38:16 | INFO | pid=32800 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:16] "GET /api/v1/recommend/item?movie_id=2052182&n=20 HTTP/1.1" 200 -
+2026-04-25 15:38:21 | INFO | pid=32800 | thread=Thread-12 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:38:21 | INFO | pid=32800 | thread=Thread-12 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=48.87
+2026-04-25 15:38:21 | INFO | pid=32800 | thread=Thread-12 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=50.39
+2026-04-25 15:38:21 | INFO | pid=32800 | thread=Thread-12 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:38:21 | INFO | pid=32800 | thread=Thread-12 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:21] "GET /api/v1/search?n=12&offset=0&sort_by=time&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:38:36 | INFO | pid=32800 | thread=Thread-13 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:38:36 | INFO | pid=32800 | thread=Thread-13 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=145, returned=12, elapsed_ms=66.91
+2026-04-25 15:38:36 | INFO | pid=32800 | thread=Thread-13 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=145, returned=12, elapsed_ms=68.57
+2026-04-25 15:38:36 | INFO | pid=32800 | thread=Thread-13 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, total=145, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:38:36 | INFO | pid=32800 | thread=Thread-13 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:36] "GET /api/v1/search?n=12&offset=0&sort_by=time&sort_order=desc&start_date=2016-04-01&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-25 15:38:40 | INFO | pid=32800 | thread=Thread-14 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=26986136, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.44, vector_lookup_ms=0.13, ann_ms=6.27, elapsed_ms=17.16
+2026-04-25 15:38:40 | INFO | pid=32800 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=26986136, ann_candidates=20, source=rag
+2026-04-25 15:38:40 | INFO | pid=32800 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=26986136, returned=20, source=rag
+2026-04-25 15:38:40 | INFO | pid=32800 | thread=Thread-14 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:40] "GET /api/v1/recommend/item?movie_id=26986136&n=20 HTTP/1.1" 200 -
+2026-04-25 15:38:43 | INFO | pid=32800 | thread=Thread-15 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=32659890, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.45, vector_lookup_ms=0.10, ann_ms=6.04, elapsed_ms=16.67
+2026-04-25 15:38:43 | INFO | pid=32800 | thread=Thread-15 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=32659890, ann_candidates=20, source=rag
+2026-04-25 15:38:43 | INFO | pid=32800 | thread=Thread-15 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=32659890, returned=20, source=rag
+2026-04-25 15:38:43 | INFO | pid=32800 | thread=Thread-15 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:43] "GET /api/v1/recommend/item?movie_id=32659890&n=20 HTTP/1.1" 200 -
+2026-04-25 15:38:49 | INFO | pid=32800 | thread=Thread-16 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:38:50 | INFO | pid=32800 | thread=Thread-16 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=309, returned=12, elapsed_ms=1636.66
+2026-04-25 15:38:50 | INFO | pid=32800 | thread=Thread-16 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=309, returned=12, elapsed_ms=1639.96
+2026-04-25 15:38:50 | INFO | pid=32800 | thread=Thread-16 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=time, sort_order=desc, total=309, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:38:50 | INFO | pid=32800 | thread=Thread-16 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:38:50] "GET /api/v1/search?n=12&offset=0&sort_by=time&sort_order=desc&start_date=2016-04-01&duration_min=0&duration_max=0&tag_id=1651 HTTP/1.1" 200 -
+2026-04-25 15:41:33 | INFO | pid=32800 | thread=Thread-17 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-25 15:41:33 | INFO | pid=32800 | thread=Thread-17 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-25 15:41:33 | INFO | pid=32800 | thread=Thread-17 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:41:33] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-25 15:41:35 | INFO | pid=32800 | thread=Thread-18 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=monthly, returned=36
+2026-04-25 15:41:35 | INFO | pid=32800 | thread=Thread-18 (process_request_thread) | app.services.recommendation_service | Trending completed, window=monthly, returned=36
+2026-04-25 15:41:35 | INFO | pid=32800 | thread=Thread-18 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:41:35] "GET /api/v1/recommend/trending?window=monthly&n=36 HTTP/1.1" 200 -
+2026-04-25 15:41:36 | INFO | pid=32800 | thread=Thread-19 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=one_year, returned=36
+2026-04-25 15:41:36 | INFO | pid=32800 | thread=Thread-19 (process_request_thread) | app.services.recommendation_service | Trending completed, window=one_year, returned=36
+2026-04-25 15:41:36 | INFO | pid=32800 | thread=Thread-19 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:41:36] "GET /api/v1/recommend/trending?window=one_year&n=36 HTTP/1.1" 200 -
+2026-04-25 15:41:40 | INFO | pid=32800 | thread=Thread-20 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3444049, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.98, vector_lookup_ms=0.27, ann_ms=6.56, elapsed_ms=20.94
+2026-04-25 15:41:40 | INFO | pid=32800 | thread=Thread-20 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3444049, ann_candidates=20, source=rag
+2026-04-25 15:41:40 | INFO | pid=32800 | thread=Thread-20 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3444049, returned=20, source=rag
+2026-04-25 15:41:40 | INFO | pid=32800 | thread=Thread-20 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:41:40] "GET /api/v1/recommend/item?movie_id=3444049&n=20 HTTP/1.1" 200 -
+2026-04-25 15:41:42 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6777
+2026-04-25 15:42:32 | INFO | pid=32800 | thread=Thread-21 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:42:32 | INFO | pid=32800 | thread=Thread-21 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=0, returned=0, elapsed_ms=80.20
+2026-04-25 15:42:32 | INFO | pid=32800 | thread=Thread-21 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=0, returned=0, elapsed_ms=176.61
+2026-04-25 15:42:32 | INFO | pid=32800 | thread=Thread-21 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=0, returned=0, strategy=browse, cache_hit=False
+2026-04-25 15:42:32 | INFO | pid=32800 | thread=Thread-21 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:42:32] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=203201 HTTP/1.1" 200 -
+2026-04-25 15:42:38 | INFO | pid=32800 | thread=Thread-22 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:42:38 | INFO | pid=32800 | thread=Thread-22 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1, returned=1, elapsed_ms=6.05
+2026-04-25 15:42:38 | INFO | pid=32800 | thread=Thread-22 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1, returned=1, elapsed_ms=11.77
+2026-04-25 15:42:38 | INFO | pid=32800 | thread=Thread-22 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=1, returned=1, strategy=browse, cache_hit=False
+2026-04-25 15:42:38 | INFO | pid=32800 | thread=Thread-22 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:42:38] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=203202 HTTP/1.1" 200 -
+2026-04-25 15:43:25 | INFO | pid=32800 | thread=Thread-23 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=30433456, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=11.03, vector_lookup_ms=0.54, ann_ms=19.05, elapsed_ms=936.50
+2026-04-25 15:43:25 | INFO | pid=32800 | thread=Thread-23 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=30433456, ann_candidates=20, source=rag
+2026-04-25 15:43:25 | INFO | pid=32800 | thread=Thread-23 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=30433456, returned=20, source=rag
+2026-04-25 15:43:25 | INFO | pid=32800 | thread=Thread-23 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:43:25] "GET /api/v1/recommend/item?movie_id=30433456&n=20 HTTP/1.1" 200 -
+2026-04-25 15:43:29 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=114023.12, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 15:44:38 | WARNING | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | Pop cache miss, acquire lock to build cache, user_id=649125, n=20, build_target=500, action=acquire_build_lock
+2026-04-25 15:44:38 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.common.redis_cache | User recommendation lock acquire, user_id=649125, key=reco:recommend:user:649125:build_lock, ttl=10, acquired=True, token_tail=5747284a, elapsed_ms=0.41
+2026-04-25 15:44:38 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649125, n=20
+2026-04-25 15:44:38 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation pop cache build required, user_id=649125, n=20, build_target=500, reason=double_check_empty
+2026-04-25 15:44:38 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation cache build started, user_id=649125, build_target=500
+2026-04-25 15:44:39 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 返回候选=996, 新增候选=996, 累计候选=996, elapsed_ms=466.65
+2026-04-25 15:44:39 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.recall.tag_inverted | tag倒排召回完成，user_id=649125, requested_n=500, requested_tags=13, genre_tags=5, director_tags=8, redis_hit_tags=13, redis_rows=925, excluded_count=14, filtered_excluded=18, merged_candidates=772, returned_count=772, out_limit=2000, preference_fetch_ms=10.12, redis_fetch_ms=4.03, excluded_fetch_ms=1.67, elapsed_ms=16.38
+2026-04-25 15:44:39 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 返回候选=772, 新增候选=754, 累计候选=1750, elapsed_ms=17.80
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649125 | candidate_movie_count=1750 | movie_stats_rows=1750 | item_static_tag_rows=9647 | user_profile_found=True | short_hist_len=10 | long_interest_len=4 | movie_stats_ms=2395.65 | item_static_tags_ms=417.18 | user_profile_ms=0.70 | short_hist_ms=3.03 | long_interest_ms=2.20 | user_click_tag_ms=2.01 | user_click_total_ms=0.41 | elapsed_ms=2825.14
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649125 | candidate_count=1750 | model_version=mmoe_latest.pt | tensor_build_ms=2860.38 | infer_ms=47.18 | sort_ms=0.23 | elapsed_ms=2908.96
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.reco.pipeline | 推荐流水线完成，user_id=649125, movie_id=None, recaller_count=2, ranker=mmoe, reranker=random_shuffle, candidate_count=1750, ranked_count=1750, returned_count=500, recall_ms=484.86, rank_ms=2909.13, rerank_ms=0.32, elapsed_ms=3394.33
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649125, build_target=500, built_count=500, item_preview=[3103186, 3821067, 1291832, 26914824, 26709258]
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.common.redis_cache | User recommendation store, user_id=649125, key=reco:recommend:user:649125, stored_count=500, ttl=86400, item_preview=[3103186, 3821067, 1291832, 26914824, 26709258], elapsed_ms=2.50
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation cache stored, user_id=649125, build_target=500, stored_count=500
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation cache build completed, user_id=649125, build_target=500, built_count=500, stored_count=500, elapsed_ms=3397.22
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.common.redis_cache | User recommendation lock release, user_id=649125, key=reco:recommend:user:649125:build_lock, released=True, token_tail=5747284a, elapsed_ms=2.98
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True, cache_state=build_under_lock, build_reason=double_check_empty, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=False, elapsed_ms=3403.79
+2026-04-25 15:44:42 | INFO | pid=32800 | thread=Thread-24 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:44:42] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-25 15:47:54 | INFO | pid=32800 | thread=Thread-25 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:47:54 | INFO | pid=32800 | thread=Thread-25 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=301, returned=12, elapsed_ms=38.18
+2026-04-25 15:47:54 | INFO | pid=32800 | thread=Thread-25 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=301, returned=12, elapsed_ms=41.10
+2026-04-25 15:47:54 | INFO | pid=32800 | thread=Thread-25 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=301, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:47:54 | INFO | pid=32800 | thread=Thread-25 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:47:54] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=2185 HTTP/1.1" 200 -
+2026-04-25 15:47:57 | INFO | pid=32800 | thread=Thread-26 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=30415909, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.48, vector_lookup_ms=2.00, ann_ms=5.60, elapsed_ms=24.96
+2026-04-25 15:47:57 | INFO | pid=32800 | thread=Thread-26 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=30415909, ann_candidates=20, source=rag
+2026-04-25 15:47:57 | INFO | pid=32800 | thread=Thread-26 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=30415909, returned=20, source=rag
+2026-04-25 15:47:57 | INFO | pid=32800 | thread=Thread-26 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:47:57] "GET /api/v1/recommend/item?movie_id=30415909&n=20 HTTP/1.1" 200 -
+2026-04-25 15:48:01 | INFO | pid=32800 | thread=Thread-27 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-25 15:48:01 | INFO | pid=32800 | thread=Thread-27 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=301, returned=12, elapsed_ms=10.31
+2026-04-25 15:48:01 | INFO | pid=32800 | thread=Thread-27 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=301, returned=12, elapsed_ms=11.66
+2026-04-25 15:48:01 | INFO | pid=32800 | thread=Thread-27 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=301, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:48:01 | INFO | pid=32800 | thread=Thread-27 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:01] "GET /api/v1/search?n=12&offset=12&sort_by=relevance&sort_order=desc&tag_id=2185 HTTP/1.1" 200 -
+2026-04-25 15:48:03 | INFO | pid=32800 | thread=Thread-28 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=33417088, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.50, vector_lookup_ms=3.02, ann_ms=6.02, elapsed_ms=23.01
+2026-04-25 15:48:03 | INFO | pid=32800 | thread=Thread-28 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=33417088, ann_candidates=20, source=rag
+2026-04-25 15:48:03 | INFO | pid=32800 | thread=Thread-28 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=33417088, returned=20, source=rag
+2026-04-25 15:48:03 | INFO | pid=32800 | thread=Thread-28 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:03] "GET /api/v1/recommend/item?movie_id=33417088&n=20 HTTP/1.1" 200 -
+2026-04-25 15:48:05 | INFO | pid=32800 | thread=Thread-29 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-25 15:48:06 | INFO | pid=32800 | thread=Thread-29 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=35466, returned=12, elapsed_ms=744.51
+2026-04-25 15:48:06 | INFO | pid=32800 | thread=Thread-29 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=35466, returned=12, elapsed_ms=746.38
+2026-04-25 15:48:06 | INFO | pid=32800 | thread=Thread-29 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=35466, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:48:06 | INFO | pid=32800 | thread=Thread-29 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:06] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=1652 HTTP/1.1" 200 -
+2026-04-25 15:48:10 | INFO | pid=32800 | thread=Thread-30 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-25 15:48:11 | INFO | pid=32800 | thread=Thread-30 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=35466, returned=12, elapsed_ms=581.70
+2026-04-25 15:48:11 | INFO | pid=32800 | thread=Thread-30 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=35466, returned=12, elapsed_ms=639.59
+2026-04-25 15:48:11 | INFO | pid=32800 | thread=Thread-30 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=35466, returned=12, strategy=browse, cache_hit=False
+2026-04-25 15:48:11 | INFO | pid=32800 | thread=Thread-30 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:11] "GET /api/v1/search?n=12&offset=12&sort_by=relevance&sort_order=desc&tag_id=1652 HTTP/1.1" 200 -
+2026-04-25 15:48:18 | INFO | pid=32800 | thread=Thread-31 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:18] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 15:48:18 | INFO | pid=32800 | thread=Thread-32 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:48:18] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-25 15:49:29 | INFO | pid=32800 | thread=Thread-33 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:49:29] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 15:49:29 | INFO | pid=32800 | thread=Thread-34 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:49:29] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-25 15:53:37 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7506
+2026-04-25 15:54:37 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=68493.14, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 15:58:48 | INFO | pid=32800 | thread=Thread-35 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:58:48] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 15:58:48 | INFO | pid=32800 | thread=Thread-36 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 15:58:48] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-25 16:02:06 | INFO | pid=32800 | thread=Thread-38 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:06] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:02:06 | INFO | pid=32800 | thread=Thread-37 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:06] "GET /api/v1/admin/tasks?source=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-25 16:02:16 | INFO | pid=32800 | thread=Thread-39 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:16] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:02:26 | INFO | pid=32800 | thread=Thread-40 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:26] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:02:36 | INFO | pid=32800 | thread=Thread-41 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:36] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:02:46 | INFO | pid=32800 | thread=Thread-42 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:02:46] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:04:14 | INFO | pid=32800 | thread=Thread-43 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:04:14] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:04:44 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6459
+2026-04-25 16:05:15 | INFO | pid=32800 | thread=Thread-44 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:05:15] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:05:25 | INFO | pid=32800 | thread=Thread-45 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:05:25] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:05:35 | INFO | pid=32800 | thread=Thread-46 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:05:35] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:05:45 | INFO | pid=32800 | thread=Thread-47 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:05:45] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:05:54 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=76458.91, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 16:05:55 | INFO | pid=32800 | thread=Thread-48 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:05:55] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:06:05 | INFO | pid=32800 | thread=Thread-49 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:06:05] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:06:15 | INFO | pid=32800 | thread=Thread-50 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:06:15] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:06:25 | INFO | pid=32800 | thread=Thread-51 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:06:25] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:06:35 | INFO | pid=32800 | thread=Thread-52 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:06:35] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:07:21 | INFO | pid=32800 | thread=Thread-53 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:07:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:08:21 | INFO | pid=32800 | thread=Thread-54 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:08:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:09:21 | INFO | pid=32800 | thread=Thread-55 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:09:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:10:21 | INFO | pid=32800 | thread=Thread-56 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:10:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:11:21 | INFO | pid=32800 | thread=Thread-57 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:11:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:12:21 | INFO | pid=32800 | thread=Thread-58 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:12:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:13:21 | INFO | pid=32800 | thread=Thread-59 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:13:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:14:21 | INFO | pid=32800 | thread=Thread-60 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:14:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:15:21 | INFO | pid=32800 | thread=Thread-61 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:15:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:16:02 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7613
+2026-04-25 16:16:21 | INFO | pid=32800 | thread=Thread-62 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:16:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:17:21 | INFO | pid=32800 | thread=Thread-63 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:17:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:17:25 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=91587.22, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 16:18:21 | INFO | pid=32800 | thread=Thread-64 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:18:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:19:21 | INFO | pid=32800 | thread=Thread-65 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:19:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:20:21 | INFO | pid=32800 | thread=Thread-66 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:20:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:21:21 | INFO | pid=32800 | thread=Thread-67 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:21:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:22:21 | INFO | pid=32800 | thread=Thread-68 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:22:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:23:21 | INFO | pid=32800 | thread=Thread-69 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:23:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:24:21 | INFO | pid=32800 | thread=Thread-70 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:24:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:25:21 | INFO | pid=32800 | thread=Thread-71 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:25:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:26:21 | INFO | pid=32800 | thread=Thread-72 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:26:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:27:21 | INFO | pid=32800 | thread=Thread-73 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:27:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:27:34 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=8236
+2026-04-25 16:28:21 | INFO | pid=32800 | thread=Thread-74 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:28:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:29:21 | INFO | pid=32800 | thread=Thread-75 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:29:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:29:25 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=119468.25, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 16:30:21 | INFO | pid=32800 | thread=Thread-76 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:30:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:31:21 | INFO | pid=32800 | thread=Thread-77 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:31:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:32:21 | INFO | pid=32800 | thread=Thread-78 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:32:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:33:21 | INFO | pid=32800 | thread=Thread-79 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:33:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:34:21 | INFO | pid=32800 | thread=Thread-80 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:34:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:35:21 | INFO | pid=32800 | thread=Thread-81 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:35:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:36:21 | INFO | pid=32800 | thread=Thread-82 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:36:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:37:21 | INFO | pid=32800 | thread=Thread-83 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:37:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:38:21 | INFO | pid=32800 | thread=Thread-84 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:38:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:39:21 | INFO | pid=32800 | thread=Thread-85 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:39:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:39:33 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7591
+2026-04-25 16:40:21 | INFO | pid=32800 | thread=Thread-86 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:40:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:41:21 | INFO | pid=32800 | thread=Thread-87 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:41:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:41:22 | INFO | pid=32800 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=117345.61, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 16:42:21 | INFO | pid=32800 | thread=Thread-88 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:42:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:43:21 | INFO | pid=32800 | thread=Thread-89 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:43:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:44:21 | INFO | pid=32800 | thread=Thread-90 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:44:21] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:45:00 | INFO | pid=32800 | thread=Thread-91 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:00] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-92 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-92 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=2.65
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-92 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:13] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-93 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-93 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.96
+2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-93 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:13] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-25 16:45:16 | INFO | pid=32800 | thread=Thread-94 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:16] "GET /api/v1/admin/status HTTP/1.1" 200 -

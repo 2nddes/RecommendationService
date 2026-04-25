@@ -20,32 +20,6 @@ from app.reco.online.runtime import get_settings
 admin_bp = Blueprint("admin", __name__)
 logger = logging.getLogger(__name__)
 
-
-def _parse_task_kind(raw: str | None) -> str | None:
-    if raw is None:
-        return None
-    value = str(raw).strip().lower()
-    mapping = {
-        "all": "all",
-        "train": "train_job",
-        "train_job": "train_job",
-        "rag_rebuild": "rag_rebuild_job",
-        "rag_rebuild_job": "rag_rebuild_job",
-    }
-    normalized = mapping.get(value)
-    if normalized is None:
-        raise ParamError("invalid 'kind'")
-    return normalized
-
-
-def _task_type_query_value() -> str | None:
-    task_type = _parse_task_kind(request.args.get("task_type"))
-    kind = _parse_task_kind(request.args.get("kind"))
-    if task_type is not None and kind is not None and task_type != kind:
-        raise ParamError("task_type/kind conflict")
-    return task_type or kind
-
-
 def _parent_task_query_value() -> str | None:
     parent_task_id = request.args.get("parent_task_id")
     rebuild_job_id = request.args.get("rebuild_job_id")
@@ -131,7 +105,7 @@ def admin_task(task_id: str):
     """
 
     settings = get_settings()
-    task_type = _task_type_query_value()
+    task_type = request.args.get("task_type", "all")
     t = get_task(settings, task_id, kind=task_type)
     if t is None:
         abort(404)
@@ -146,7 +120,7 @@ def admin_tasks():
     query params:
       - source: all|memory|db (optional, default all)
     - status: pending|processing|completed|failed (optional)
-        - task_type|kind: all|train|rag_rebuild (optional, default all)
+        - task_type: all|train|rag_rebuild (optional, default all)
     - parent_task_id|rebuild_job_id: optional parent task filter
       - limit: int (optional, default 20)
       - offset: int (optional, default 0)
@@ -162,7 +136,7 @@ def admin_tasks():
         if status not in {"pending", "processing", "completed", "failed"}:
             raise ParamError("invalid status")
 
-    task_type = _task_type_query_value()
+    task_type = request.args.get("task_type", "all")
     parent_task_id = _parent_task_query_value()
 
     limit = as_int(request.args.get("limit", 20), name="limit")
