@@ -2531,3 +2531,241 @@ sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown 
 2026-04-24 12:03:38 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=97348.98, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
 2026-04-24 12:13:45 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7162
 2026-04-24 12:15:17 | INFO | pid=21876 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=99700.87, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 18:34:57 | INFO | pid=4600 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 18:34:57 | INFO | pid=4600 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 18:34:57 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-24 18:34:57 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-24 18:35:07 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-24 18:35:08 | INFO | pid=4600 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-24 18:35:08 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-24 18:35:08 | INFO | pid=4600 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-24 18:35:09 | INFO | pid=4600 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-24 18:36:12 | INFO | pid=4600 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-24 18:36:13 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-24 18:36:21 | INFO | pid=4600 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6484
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29082, 'director_keys': 10427, 'keys_written': 39509, 'members_written': 353856}}
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-24 18:37:57 | INFO | pid=4600 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-24 18:39:41 | WARNING | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | Pop cache miss, acquire lock to build cache, user_id=649126, n=20, build_target=500, action=acquire_build_lock
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock acquire, user_id=649126, key=reco:recommend:user:649126:build_lock, ttl=10, acquired=True, token_tail=2ad18de6, elapsed_ms=1.06
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649126, n=20
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop cache build required, user_id=649126, n=20, build_target=500, reason=double_check_empty
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build started, user_id=649126, build_target=500
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 返回候选=1000, 新增候选=1000, 累计候选=1000, elapsed_ms=253.23
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.recall.tag_inverted | tag倒排召回完成，user_id=649126, requested_n=500, requested_tags=16, genre_tags=14, director_tags=2, redis_hit_tags=15, redis_rows=1752, excluded_count=10, filtered_excluded=10, merged_candidates=1123, returned_count=1123, out_limit=2000, preference_fetch_ms=8.67, redis_fetch_ms=19.50, excluded_fetch_ms=2.05, elapsed_ms=31.64
+2026-04-24 18:39:41 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 返回候选=1123, 新增候选=1116, 累计候选=2116, elapsed_ms=34.41
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649126 | candidate_movie_count=2116 | movie_stats_rows=2116 | item_static_tag_rows=11963 | user_profile_found=True | short_hist_len=10 | long_interest_len=8 | movie_stats_ms=2951.92 | item_static_tags_ms=455.82 | user_profile_ms=6.58 | short_hist_ms=4.58 | long_interest_ms=3.44 | user_click_tag_ms=2.64 | user_click_total_ms=0.79 | elapsed_ms=3442.44
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649126 | candidate_count=2116 | model_version=mmoe_latest.pt | tensor_build_ms=3542.12 | infer_ms=80.37 | sort_ms=0.25 | elapsed_ms=3624.24
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 推荐流水线完成，user_id=649126, movie_id=None, recaller_count=2, ranker=mmoe, reranker=random_shuffle, candidate_count=2116, ranked_count=2116, returned_count=500, recall_ms=288.20, rank_ms=3624.40, rerank_ms=0.39, elapsed_ms=3913.01
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649126, build_target=500, built_count=500, item_preview=[1418270, 1293377, 5067619, 26709258, 1779254]
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation store, user_id=649126, key=reco:recommend:user:649126, stored_count=500, ttl=86400, item_preview=[1418270, 1293377, 5067619, 26709258, 1779254], elapsed_ms=5.72
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache stored, user_id=649126, build_target=500, stored_count=500
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build completed, user_id=649126, build_target=500, built_count=500, stored_count=500, elapsed_ms=3919.61
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock release, user_id=649126, key=reco:recommend:user:649126:build_lock, released=True, token_tail=2ad18de6, elapsed_ms=0.91
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True, cache_state=build_under_lock, build_reason=double_check_empty, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=False, elapsed_ms=3925.55
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:39:45] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.20
+2026-04-24 18:39:45 | INFO | pid=4600 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:39:45] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-24 18:41:35 | INFO | pid=4600 | thread=Thread-3 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1779254, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.66, vector_lookup_ms=0.79, ann_ms=12.69, elapsed_ms=31.35
+2026-04-24 18:41:35 | INFO | pid=4600 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1779254, ann_candidates=20, source=rag
+2026-04-24 18:41:35 | INFO | pid=4600 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1779254, returned=20, source=rag
+2026-04-24 18:41:35 | INFO | pid=4600 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:41:35] "GET /api/v1/recommend/item?movie_id=1779254&n=20 HTTP/1.1" 200 -
+2026-04-24 18:43:23 | INFO | pid=4600 | thread=Thread-4 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1779254, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.59, vector_lookup_ms=0.17, ann_ms=0.00, elapsed_ms=0.78
+2026-04-24 18:43:23 | INFO | pid=4600 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1779254, ann_candidates=20, source=rag
+2026-04-24 18:43:23 | INFO | pid=4600 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1779254, returned=20, source=rag
+2026-04-24 18:43:23 | INFO | pid=4600 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:43:23] "GET /api/v1/recommend/item?movie_id=1779254&n=20 HTTP/1.1" 200 -
+2026-04-24 18:44:59 | INFO | pid=4600 | thread=Thread-5 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1423028, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.72, vector_lookup_ms=0.32, ann_ms=21.42, elapsed_ms=37.42
+2026-04-24 18:44:59 | INFO | pid=4600 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1423028, ann_candidates=20, source=rag
+2026-04-24 18:44:59 | INFO | pid=4600 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1423028, returned=20, source=rag
+2026-04-24 18:44:59 | INFO | pid=4600 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:44:59] "GET /api/v1/recommend/item?movie_id=1423028&n=20 HTTP/1.1" 200 -
+2026-04-24 18:45:08 | INFO | pid=4600 | thread=Thread-6 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1779254, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.50, vector_lookup_ms=0.10, ann_ms=0.00, elapsed_ms=0.61
+2026-04-24 18:45:08 | INFO | pid=4600 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1779254, ann_candidates=20, source=rag
+2026-04-24 18:45:08 | INFO | pid=4600 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1779254, returned=20, source=rag
+2026-04-24 18:45:08 | INFO | pid=4600 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 18:45:08] "GET /api/v1/recommend/item?movie_id=1779254&n=20 HTTP/1.1" 200 -
+2026-04-24 18:48:04 | INFO | pid=4600 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6750
+2026-04-24 18:49:46 | INFO | pid=4600 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=109173.81, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-24 18:59:54 | INFO | pid=4600 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7433
+2026-04-24 23:06:54 | INFO | pid=13636 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 23:06:54 | INFO | pid=13636 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-24 23:06:54 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-24 23:06:54 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-24 23:07:02 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-24 23:07:03 | INFO | pid=13636 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-24 23:07:03 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-24 23:07:03 | INFO | pid=13636 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-24 23:07:04 | INFO | pid=13636 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-24 23:07:58 | INFO | pid=13636 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-24 23:07:59 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-24 23:08:08 | INFO | pid=13636 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7371
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-24 23:09:32 | INFO | pid=13636 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-24 23:19:40 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7791
+2026-04-24 23:21:35 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=123009.20, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-24 23:31:43 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7807
+2026-04-24 23:33:31 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=116152.85, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-24 23:42:43 | INFO | pid=13636 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-24 23:42:43 | INFO | pid=13636 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=4.12
+2026-04-24 23:42:43 | INFO | pid=13636 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:42:43] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-24 23:43:38 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6901
+2026-04-24 23:44:57 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=86749.95, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=1.39
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:49:07] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=400, total_before_pop=420, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=0.70
+2026-04-24 23:49:07 | INFO | pid=13636 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:49:07] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-24 23:49:19 | INFO | pid=13636 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-24 23:49:19 | INFO | pid=13636 | thread=Thread-4 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1, returned=1, elapsed_ms=5.86
+2026-04-24 23:49:19 | INFO | pid=13636 | thread=Thread-4 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1, returned=1, elapsed_ms=8.77
+2026-04-24 23:49:19 | INFO | pid=13636 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=1, returned=1, strategy=browse, cache_hit=False
+2026-04-24 23:49:19 | INFO | pid=13636 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:49:19] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=203198 HTTP/1.1" 200 -
+2026-04-24 23:49:21 | INFO | pid=13636 | thread=Thread-5 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.47, vector_lookup_ms=1.40, ann_ms=138.37, elapsed_ms=156.55
+2026-04-24 23:49:21 | INFO | pid=13636 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-24 23:49:21 | INFO | pid=13636 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-24 23:49:21 | INFO | pid=13636 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:49:21] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-24 23:49:43 | INFO | pid=13636 | thread=Thread-6 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.52, vector_lookup_ms=0.15, ann_ms=0.00, elapsed_ms=0.69
+2026-04-24 23:49:43 | INFO | pid=13636 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-24 23:49:43 | INFO | pid=13636 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-24 23:49:43 | INFO | pid=13636 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:49:43] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-24 23:50:49 | INFO | pid=13636 | thread=Thread-7 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=3642835, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=0.58, vector_lookup_ms=0.11, ann_ms=0.00, elapsed_ms=0.71
+2026-04-24 23:50:49 | INFO | pid=13636 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=3642835, ann_candidates=20, source=rag
+2026-04-24 23:50:49 | INFO | pid=13636 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=3642835, returned=20, source=rag
+2026-04-24 23:50:49 | INFO | pid=13636 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [24/Apr/2026 23:50:49] "GET /api/v1/recommend/item?movie_id=3642835&n=20 HTTP/1.1" 200 -
+2026-04-24 23:55:05 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6743
+2026-04-24 23:56:38 | INFO | pid=13636 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=100495.92, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 14:05:31 | INFO | pid=844 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-25 14:05:31 | INFO | pid=844 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-25 14:05:31 | INFO | pid=844 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-25 14:05:31 | INFO | pid=844 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-25 14:05:34 | INFO | pid=844 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-25 14:05:34 | INFO | pid=844 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-25 14:05:34 | INFO | pid=844 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-25 14:05:34 | INFO | pid=844 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-25 14:05:35 | INFO | pid=844 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-25 14:06:05 | INFO | pid=844 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-25 14:06:05 | INFO | pid=844 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-25 14:06:14 | INFO | pid=844 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7412
+2026-04-25 14:07:22 | INFO | pid=844 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 14:07:22 | INFO | pid=844 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-25 14:07:22 | INFO | pid=844 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-25 14:07:22 | INFO | pid=844 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-25 14:07:22 | INFO | pid=844 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-25 14:07:22 | INFO | pid=844 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-25 14:17:29 | INFO | pid=844 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6347
+2026-04-25 14:19:10 | INFO | pid=844 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=107482.23, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 14:29:16 | INFO | pid=844 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=5970
+2026-04-25 14:30:22 | INFO | pid=844 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649126, n=20, returned=20, remaining=380, total_before_pop=400, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-25 14:30:22 | INFO | pid=844 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649126, mode=pop, initial_cache_hit=True, elapsed_ms=0.98
+2026-04-25 14:30:22 | INFO | pid=844 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 14:30:22] "GET /api/v1/recommend/user?user_id=649126&n=20 HTTP/1.1" 200 -
+2026-04-25 14:30:35 | INFO | pid=844 | thread=Thread-2 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=26683290, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.69, vector_lookup_ms=5.93, ann_ms=1410.19, elapsed_ms=1453.16
+2026-04-25 14:30:35 | INFO | pid=844 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=26683290, ann_candidates=20, source=rag
+2026-04-25 14:30:35 | INFO | pid=844 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=26683290, returned=20, source=rag
+2026-04-25 14:30:35 | INFO | pid=844 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 14:30:35] "GET /api/v1/recommend/item?movie_id=26683290&n=20 HTTP/1.1" 200 -
+2026-04-25 14:30:50 | INFO | pid=844 | thread=Thread-3 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=20470074, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=112.11, vector_lookup_ms=50.76, ann_ms=545.33, elapsed_ms=1012.88
+2026-04-25 14:30:50 | INFO | pid=844 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=20470074, ann_candidates=20, source=rag
+2026-04-25 14:30:50 | INFO | pid=844 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=20470074, returned=20, source=rag
+2026-04-25 14:30:50 | INFO | pid=844 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 14:30:50] "GET /api/v1/recommend/item?movie_id=20470074&n=20 HTTP/1.1" 200 -
+2026-04-25 14:30:54 | INFO | pid=844 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=104488.18, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-25 14:30:58 | INFO | pid=844 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-25 14:30:58 | INFO | pid=844 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-25 14:30:58 | INFO | pid=844 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 14:30:58] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-25 14:31:17 | INFO | pid=844 | thread=Thread-5 (process_request_thread) | app.api.v1_rag | RAG stream request started, query_len=6, query_preview=想看漫威电影, thinking=False
+2026-04-25 14:31:17 | INFO | pid=844 | thread=Thread-5 (process_request_thread) | app.api.v1_rag | RAG stream start event emitted, query_len=6, query_preview=想看漫威电影, thinking=False
+2026-04-25 14:31:17 | INFO | pid=844 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 14:31:17] "POST /api/v1/recommend/rag/stream HTTP/1.1" 200 -
+2026-04-25 14:31:18 | ERROR | pid=844 | thread=Thread-5 (process_request_thread) | app.reco.rag_clients | OpenAI-compatible HTTP error, url=https://api.siliconflow.cn/v1/embeddings, status=403
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 71, in _post_json
+    with urlopen(req, timeout=timeout_seconds) as resp:
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 495, in open
+    response = meth(req, response)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 604, in http_response
+    response = self.parent.error(
+        'http', request, response, code, msg, hdrs)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 533, in error
+    return self._call_chain(*args)
+           ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 466, in _call_chain
+    result = func(*args)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 613, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 403: Forbidden
+2026-04-25 14:31:18 | ERROR | pid=844 | thread=Thread-5 (process_request_thread) | app.api.v1_rag | RAG LLM request failed, query_len=6, query_preview=想看漫威电影, thinking=False, chunk_count=0, chars=0, elapsed_ms=636.17
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 71, in _post_json
+    with urlopen(req, timeout=timeout_seconds) as resp:
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 495, in open
+    response = meth(req, response)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 604, in http_response
+    response = self.parent.error(
+        'http', request, response, code, msg, hdrs)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 533, in error
+    return self._call_chain(*args)
+           ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 466, in _call_chain
+    result = func(*args)
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0\Lib\urllib\request.py", line 613, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 403: Forbidden
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\api\v1_rag.py", line 64, in _generate
+    stream_result = rag_service.stream_answer(query=query, thinking=thinking)
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 1074, in stream_answer
+    evidence = self.retrieve_evidence(query=query)
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 999, in retrieve_evidence
+    pairs = self._search_faiss_ids(query=query, k=ann_topk)
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 779, in _search_faiss_ids
+    create_embedding(cfg=self._embedding_cfg(), text=normalized_query),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 93, in create_embedding
+    data = _post_json(
+        url=_build_url(cfg.base_url, cfg.path),
+    ...<2 lines>...
+        timeout_seconds=float(cfg.timeout_seconds),
+    )
+  File "d:\project\Python\RecommendationService\app\reco\rag_clients.py", line 76, in _post_json
+    raise OpenAICompatError(f"http_error: status={getattr(exc, 'code', 'unknown')}, detail={detail[:300]}") from exc
+app.reco.rag_clients.OpenAICompatError: http_error: status=403, detail={"code":30001,"message":"Sorry, your account balance is insufficient","data":null}
