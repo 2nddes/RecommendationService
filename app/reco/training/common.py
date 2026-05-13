@@ -7,7 +7,9 @@ import logging
 import random
 from typing import Any, Dict, List, Sequence
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine
+
+from app.common.mysql_engine import get_shared_mysql_engine
 
 
 _RANDOM_SPLIT_SEED = 20260404
@@ -75,7 +77,12 @@ def get_mysql_engine(mysql_dsn: str | None, *, logger: logging.Logger, event_pre
         err = RuntimeError("mysql_dsn_missing")
         log_exception(logger, f"{event_prefix}.dsn_missing", err)
         raise err
-    return create_engine(dsn, pool_pre_ping=True)
+    engine = get_shared_mysql_engine(dsn)
+    if engine is None:
+        err = RuntimeError("mysql_dsn_invalid")
+        log_exception(logger, f"{event_prefix}.dsn_invalid", err)
+        raise err
+    return engine
 
 
 def binary_auc(y_true: Sequence[float], y_score: Sequence[float]) -> float:

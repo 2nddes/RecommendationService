@@ -5,8 +5,8 @@ from typing import Any, List
 import time
 
 import numpy as np
-from sqlalchemy import create_engine
 
+from app.common.mysql_engine import get_shared_mysql_engine
 from app.reco.ranking.base import Ranker
 from app.reco.types import Candidate, RankedItem, RequestContext
 
@@ -85,7 +85,9 @@ class CollaborativeFilteringRanker(Ranker):
         import pandas as pd
         from scipy.sparse import csr_matrix
 
-        engine = create_engine(dsn, pool_pre_ping=True)
+        engine = get_shared_mysql_engine(dsn)
+        if engine is None:
+            return None
 
         action_sql = """
         SELECT uc.user_id, uc.movie_id, uc.created_at

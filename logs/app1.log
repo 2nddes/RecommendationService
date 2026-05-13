@@ -3166,3 +3166,1517 @@ Output requirements:
 2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-93 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.96
 2026-04-25 16:45:13 | INFO | pid=32800 | thread=Thread-93 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:13] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
 2026-04-25 16:45:16 | INFO | pid=32800 | thread=Thread-94 (process_request_thread) | werkzeug | 127.0.0.1 - - [25/Apr/2026 16:45:16] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-29 15:45:57 | INFO | pid=11924 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-29 15:45:57 | INFO | pid=11924 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-04-29 15:45:57 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-04-29 15:45:57 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-04-29 15:46:01 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-04-29 15:46:02 | INFO | pid=11924 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-04-29 15:46:03 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-04-29 15:46:03 | INFO | pid=11924 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-04-29 15:46:03 | INFO | pid=11924 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-04-29 15:47:05 | INFO | pid=11924 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-04-29 15:47:06 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-04-29 15:47:16 | INFO | pid=11924 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=8140
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-04-29 15:49:03 | INFO | pid=11924 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-04-29 15:59:12 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7685
+2026-04-29 16:00:53 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=109817.17, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 16:11:01 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7704
+2026-04-29 16:12:40 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=107077.06, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 16:22:48 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6961
+2026-04-29 16:24:19 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=99366.21, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 16:34:30 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=9760
+2026-04-29 16:36:10 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=110945.68, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 16:46:18 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7280
+2026-04-29 16:47:59 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=108574.36, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 16:58:07 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7197
+2026-04-29 16:59:50 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=110624.95, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 17:09:58 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7146
+2026-04-29 17:11:40 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=110065.50, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29083, 'director_keys': 10427, 'keys_written': 39510, 'members_written': 353857}}
+2026-04-29 17:14:15 | WARNING | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | Pop cache miss, acquire lock to build cache, user_id=649125, n=20, build_target=500, action=acquire_build_lock
+2026-04-29 17:14:15 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock acquire, user_id=649125, key=reco:recommend:user:649125:build_lock, ttl=10, acquired=True, token_tail=02b68233, elapsed_ms=1.02
+2026-04-29 17:14:15 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649125, n=20
+2026-04-29 17:14:15 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop cache build required, user_id=649125, n=20, build_target=500, reason=double_check_empty
+2026-04-29 17:14:15 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build started, user_id=649125, build_target=500
+2026-04-29 17:14:16 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 返回候选=996, 新增候选=996, 累计候选=996, elapsed_ms=1061.31
+2026-04-29 17:14:16 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.recall.tag_inverted | tag倒排召回完成，user_id=649125, requested_n=500, requested_tags=14, genre_tags=5, director_tags=9, redis_hit_tags=14, redis_rows=926, excluded_count=16, filtered_excluded=18, merged_candidates=773, returned_count=773, out_limit=2000, preference_fetch_ms=12.84, redis_fetch_ms=11.23, excluded_fetch_ms=3.05, elapsed_ms=27.77
+2026-04-29 17:14:16 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 返回候选=773, 新增候选=753, 累计候选=1749, elapsed_ms=29.69
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649125 | candidate_movie_count=1749 | movie_stats_rows=1749 | item_static_tag_rows=9664 | user_profile_found=True | short_hist_len=10 | long_interest_len=4 | movie_stats_ms=2182.45 | item_static_tags_ms=548.26 | user_profile_ms=3.80 | short_hist_ms=6.62 | long_interest_ms=5.87 | user_click_tag_ms=4.91 | user_click_total_ms=1.02 | elapsed_ms=2760.79
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649125 | candidate_count=1749 | model_version=mmoe_latest.pt | tensor_build_ms=2893.22 | infer_ms=104.95 | sort_ms=0.24 | elapsed_ms=2999.37
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.reco.pipeline | 推荐流水线完成，user_id=649125, movie_id=None, recaller_count=2, ranker=mmoe, reranker=random_shuffle, candidate_count=1749, ranked_count=1749, returned_count=500, recall_ms=1093.55, rank_ms=2999.72, rerank_ms=0.95, elapsed_ms=4094.25
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649125, build_target=500, built_count=500, item_preview=[1370276, 1297447, 24695277, 3080904, 30367804]
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation store, user_id=649125, key=reco:recommend:user:649125, stored_count=500, ttl=86400, item_preview=[1370276, 1297447, 24695277, 3080904, 30367804], elapsed_ms=5.83
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache stored, user_id=649125, build_target=500, stored_count=500
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation cache build completed, user_id=649125, build_target=500, built_count=500, stored_count=500, elapsed_ms=4100.93
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.common.redis_cache | User recommendation lock release, user_id=649125, key=reco:recommend:user:649125:build_lock, released=True, token_tail=02b68233, elapsed_ms=3.55
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True, cache_state=build_under_lock, build_reason=double_check_empty, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=False, elapsed_ms=4111.32
+2026-04-29 17:14:19 | INFO | pid=11924 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:14:19] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-29 17:14:27 | INFO | pid=11924 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-29 17:14:27 | INFO | pid=11924 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.06
+2026-04-29 17:14:27 | INFO | pid=11924 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:14:27] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-29 17:15:09 | INFO | pid=11924 | thread=Thread-3 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-29 17:15:09 | INFO | pid=11924 | thread=Thread-3 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=6961, returned=12, elapsed_ms=221.79
+2026-04-29 17:15:09 | INFO | pid=11924 | thread=Thread-3 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=6961, returned=12, elapsed_ms=225.12
+2026-04-29 17:15:09 | INFO | pid=11924 | thread=Thread-3 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=6961, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:15:09 | INFO | pid=11924 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:15:09] "GET /api/v1/search?n=12&offset=0&sort_by=relevance&sort_order=desc&tag_id=1615 HTTP/1.1" 200 -
+2026-04-29 17:15:15 | INFO | pid=11924 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-29 17:15:15 | INFO | pid=11924 | thread=Thread-4 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=6961, returned=12, elapsed_ms=52.97
+2026-04-29 17:15:15 | INFO | pid=11924 | thread=Thread-4 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=6961, returned=12, elapsed_ms=54.60
+2026-04-29 17:15:15 | INFO | pid=11924 | thread=Thread-4 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=6961, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:15:15 | INFO | pid=11924 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:15:15] "GET /api/v1/search?n=12&offset=12&sort_by=relevance&sort_order=desc&tag_id=1615 HTTP/1.1" 200 -
+2026-04-29 17:15:17 | INFO | pid=11924 | thread=Thread-5 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, n=12, offset=24, passthrough_keys=[]
+2026-04-29 17:15:17 | INFO | pid=11924 | thread=Thread-5 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=6961, returned=12, elapsed_ms=45.77
+2026-04-29 17:15:17 | INFO | pid=11924 | thread=Thread-5 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=6961, returned=12, elapsed_ms=47.33
+2026-04-29 17:15:17 | INFO | pid=11924 | thread=Thread-5 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=default, sort_order=desc, total=6961, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:15:17 | INFO | pid=11924 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:15:17] "GET /api/v1/search?n=12&offset=24&sort_by=relevance&sort_order=desc&tag_id=1615 HTTP/1.1" 200 -
+2026-04-29 17:15:27 | INFO | pid=11924 | thread=Thread-6 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-29 17:15:27 | INFO | pid=11924 | thread=Thread-6 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=59.10
+2026-04-29 17:15:27 | INFO | pid=11924 | thread=Thread-6 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=77.55
+2026-04-29 17:15:27 | INFO | pid=11924 | thread=Thread-6 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:15:27 | INFO | pid=11924 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:15:27] "GET /api/v1/search?n=12&offset=0&sort_by=rating&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-29 17:15:41 | INFO | pid=11924 | thread=Thread-7 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, n=12, offset=12, passthrough_keys=[]
+2026-04-29 17:15:41 | INFO | pid=11924 | thread=Thread-7 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=1631, returned=12, elapsed_ms=41.33
+2026-04-29 17:15:41 | INFO | pid=11924 | thread=Thread-7 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=1631, returned=12, elapsed_ms=42.79
+2026-04-29 17:15:41 | INFO | pid=11924 | thread=Thread-7 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, total=1631, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:15:41 | INFO | pid=11924 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:15:41] "GET /api/v1/search?n=12&offset=12&sort_by=rating&sort_order=desc&duration_min=0&duration_max=0&tag_id=1615 HTTP/1.1" 200 -
+2026-04-29 17:16:14 | INFO | pid=11924 | thread=Thread-8 (process_request_thread) | app.api.v1_search | search started, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-29 17:16:14 | INFO | pid=11924 | thread=Thread-8 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=browse, total=2990, returned=12, elapsed_ms=135.15
+2026-04-29 17:16:14 | INFO | pid=11924 | thread=Thread-8 (process_request_thread) | app.services.search_service | Search service completed, strategy=browse, cache_hit=False, total=2990, returned=12, elapsed_ms=138.30
+2026-04-29 17:16:14 | INFO | pid=11924 | thread=Thread-8 (process_request_thread) | app.api.v1_search | search completed, mode=tag_only, query_len=0, tag_count=1, sort_by=rating, sort_order=desc, total=2990, returned=12, strategy=browse, cache_hit=False
+2026-04-29 17:16:14 | INFO | pid=11924 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:16:14] "GET /api/v1/search?n=12&offset=0&sort_by=rating&sort_order=desc&duration_min=0&duration_max=0&tag_id=1642 HTTP/1.1" 200 -
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | app.api.v1_search | search started, mode=mixed, query_len=2, tag_count=1, sort_by=rating, sort_order=desc, n=12, offset=0, passthrough_keys=[]
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=fulltext, total=0, returned=0, elapsed_ms=26.81
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | app.repositories.search_repository | Search repository completed, strategy=like, total=93, returned=12, elapsed_ms=124.09
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | app.services.search_service | Search service completed, strategy=like, cache_hit=False, total=93, returned=12, elapsed_ms=155.77
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | app.api.v1_search | search completed, mode=mixed, query_len=2, tag_count=1, sort_by=rating, sort_order=desc, total=93, returned=12, strategy=like, cache_hit=False
+2026-04-29 17:16:18 | INFO | pid=11924 | thread=Thread-9 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:16:18] "GET /api/v1/search?query=中国&n=12&offset=0&sort_by=rating&sort_order=desc&duration_min=0&duration_max=0&tag_id=1642 HTTP/1.1" 200 -
+2026-04-29 17:16:38 | INFO | pid=11924 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=weekly, returned=36
+2026-04-29 17:16:38 | INFO | pid=11924 | thread=Thread-10 (process_request_thread) | app.services.recommendation_service | Trending completed, window=weekly, returned=36
+2026-04-29 17:16:38 | INFO | pid=11924 | thread=Thread-10 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:16:38] "GET /api/v1/recommend/trending?window=weekly&n=36 HTTP/1.1" 200 -
+2026-04-29 17:16:42 | INFO | pid=11924 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=36
+2026-04-29 17:16:42 | INFO | pid=11924 | thread=Thread-11 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=36
+2026-04-29 17:16:42 | INFO | pid=11924 | thread=Thread-11 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:16:42] "GET /api/v1/recommend/trending?window=all_time&n=36 HTTP/1.1" 200 -
+2026-04-29 17:16:57 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.api.v1_rag | RAG stream request started, query_len=5, query_preview=想看动画片, thinking=False
+2026-04-29 17:16:57 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.api.v1_rag | RAG stream start event emitted, query_len=5, query_preview=想看动画片, thinking=False
+2026-04-29 17:16:57 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:16:57] "POST /api/v1/recommend/rag/stream HTTP/1.1" 200 -
+2026-04-29 17:16:58 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_service | RAG evidence retrieval completed, query_len=5, query_preview=想看动画片, ann_topk=10, ann_pairs=10, resolved_pairs=10, movie_rows=10, evidence_count=10, cited_preview=[10774717, 10774727, 2024977, 30276037, 1456970], resolve_ms=15.91, movie_fetch_ms=8.49, elapsed_ms=1124.08
+2026-04-29 17:16:58 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_service | RAG answer stream prepared, query_len=5, query_preview=想看动画片, evidence_count=10, evidence_preview=[10774717, 10774727, 2024977, 30276037, 1456970], context_chars=5224, prompt_chars=5773, llm_model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, retrieve_ms=1124.43, elapsed_ms=1124.56
+2026-04-29 17:16:58 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_service | User prompt:
+user_query: 想看动画片
+
+retrieval_evidence:
+[1] movie_id=10774717, title=我想要做, year=2011, rating_avg=unknown, rating_count=0
+summary: 一个小女孩想做不同的动物表现儿童的天真、爱幻想，对世界充满好奇。
+retrieved_chunk: movie_title: 我想要做
+release_year: 2011
+director: 
+duration_minutes: 0
+country_or_region: 中国大陆
+language: 无对白
+top_vote_tags: 动画
+actors: 
+summary: 一个小女孩想做不同的动物表现儿童的天真、爱幻想，对世界充满好奇。
+
+[2] movie_id=10774727, title=我想要做 - 电影, year=2011, rating_avg=unknown, rating_count=0
+summary: 一个小女孩想做不同的动物表现儿童的天真、爱幻想，对世界充满好奇。
+retrieved_chunk: movie_title: 我想要做 - 电影
+release_year: 2011
+director: 
+duration_minutes: 0
+country_or_region: 中国大陆
+language: 无对白
+top_vote_tags: 动画
+actors: 
+summary: 一个小女孩想做不同的动物表现儿童的天真、爱幻想，对世界充满好奇。
+
+[3] movie_id=2024977, title=The Animation Show 2007, year=2007, rating_avg=unknown, rating_count=0
+summary: 
+retrieved_chunk: movie_title: The Animation Show 2007
+release_year: 2007
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 科幻, 动画, 童年, 要看
+actors: 
+summary: 
+
+[4] movie_id=30276037, title=托托, year=2020, rating_avg=unknown, rating_count=0
+summary: 华纳筹拍动画片[托托](Toto，暂译)，该片主角是1939年经典影片[绿野仙踪]中女主角桃乐丝的好朋友小狗“托托”。新片改编自迈克尔·莫波格创作的以托托为主角的童书，编剧马克·伯顿([超级无敌掌门狗：人兔的诅咒])。故事将以托托的视角再次开启一场“OZ国历险记”。目前导演人选尚未确定。
+retrieved_chunk: movie_title: 托托
+release_year: 2020
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动画, 儿童, 待看, 2020
+actors: 
+summary: 华纳筹拍动画片[托托](Toto，暂译)，该片主角是1939年经典影片[绿野仙踪]中女主角桃乐丝的好朋友小狗“托托”。新片改编自迈克尔·莫波格创作的以托托为主角的童书，编剧马克·伯顿([超级无敌掌门狗：人兔的诅咒])。故事将以托托的视角再次开启一场“OZ国历险记”。目前导演人选尚未确定。
+
+[5] movie_id=1456970, title=动画秀, year=2003, rating_avg=7.2/10, rating_count=5
+summary: 卡通集锦（The Animation Show）是每年一度的国际最佳动画短片集锦，由迈克·詹郅（Mike Judge，作品有《瘪四与大头蛋》‘Beavis and Butt-Head’、《山丘之王》‘King of the Hill’ ）和学院奖提名导演Don Hertzfeldt创办。The Animation Show于2003年开始举办它的第一次动画节，参展的动画都是有当前掌舵的活跃动画师制作的影片。它的姐妹系列是出版高质量的The Animation Show DVD。每年The Animation Show坚持将动画短片推向剧院，数量超过了美国历史上任何一个电影节。为制作者们提供了展示更广阔的机会，在大屏幕上他们杰出动画短片著作。
+retrieved_chunk: movie_title: 动画秀
+release_year: 2003
+director: 唐·赫兹菲尔德, 山村浩二, 亚当·艾略特, 比尔·普莱姆顿, 乔治·史威兹贝尔, 托默克·巴金斯基, 卢埃里·罗宾森, 迈克·乔吉, 瑞秋·特纳, 阿维德·威贝尔, 海蒂·威特林格, Pjotr Sapegin
+duration_minutes: 102
+country_or_region: 美国
+language: 英语, 日语, 德语
+top_vote_tags: 日本, 动画, 美国, 喜剧
+actors: 
+summary: 卡通集锦（The Animation Show）是每年一度的国际最佳动画短片集锦，由迈克·詹郅（Mike Judge，作品有《瘪四与大头蛋》‘Beavis and Butt-Head’、《山丘之王》‘King of the Hill’ ）和学院奖提名导演Don Hertzfeldt创办。The Animation Show于2003年开始举办它的第一次动画节，参展的动画都是有当前掌舵的活跃动画师制作的影片。它的姐妹系列是出版高质量的The Animation Show DVD。每年The Animation Show坚持将动画短片推向剧院，数量超过了美国历史上任何一个电影节。为制作者们提供了展示更广阔的机会，在大屏幕上他们杰出动画短片著作。
+
+[6] movie_id=33433374, title=寻子遇仙记：动画冒险, year=2021, rating_avg=unknown, rating_count=0
+summary: 雅各布·特伦布莱将为查理·卓别林经典电影[寻子遇仙记]的科幻动画版配音。这部名为[寻子遇仙记:动画冒险] (The Kid: An Animated Adventure，暂译)的动画片以未来派的纽约为背景。城市被洪水淹没，垂直分裂成两个截然不同的区域。特伦布莱献声的小男孩和他母亲住在无聊的、没有艺术的、有过度安保的富人区。于是他逃走展开冒险，最终在神秘和危险的市中心遇到了有人类灵魂的机器人卓别林。在警察、母亲和一群色彩斑斓的现代马戏团演员的追捕下，两人一起踏上了探索卓别林背后秘密的冒险之旅。
+retrieved_chunk: movie_title: 寻子遇仙记：动画冒险
+release_year: 2021
+director: 克里斯蒂安·福克曼
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 科幻, 动画, 【剧本】
+actors: 雅各布·特伦布莱
+summary: 雅各布·特伦布莱将为查理·卓别林经典电影[寻子遇仙记]的科幻动画版配音。这部名为[寻子遇仙记:动画冒险] (The Kid: An Animated Adventure，暂译)的动画片以未来派的纽约为背景。城市被洪水淹没，垂直分裂成两个截然不同的区域。特伦布莱献声的小男孩和他母亲住在无聊的、没有艺术的、有过度安保的富人区。于是他逃走展开冒险，最终在神秘和危险的市中心遇到了有人类灵魂的机器人卓别林。在警察、母亲和一群色彩斑斓的现代马戏团演员的追捕下，两人一起踏上了探索卓别林背后秘密的冒险之旅。
+
+[7] movie_id=33427584, title=小白快跑 - 电影, year=2019, rating_avg=unknown, rating_count=0
+summary: 一部自然景色实拍动画片，展示一只毛绒玩具的奇幻历险，他为了寻找主人而逃离垃圾场，穿过森林，跨过河流，经过各种磨难，最终用超强的勇气和信念，战胜一切，最终成长为一只不一样的玩具。
+retrieved_chunk: movie_title: 小白快跑 - 电影
+release_year: 2019
+director: 
+duration_minutes: 100
+country_or_region: 中国大陆
+language: 汉语普通话
+top_vote_tags: 动画, 儿童
+actors: 
+summary: 一部自然景色实拍动画片，展示一只毛绒玩具的奇幻历险，他为了寻找主人而逃离垃圾场，穿过森林，跨过河流，经过各种磨难，最终用超强的勇气和信念，战胜一切，最终成长为一只不一样的玩具。
+
+[8] movie_id=30230603, title=冰龙, year=2022, rating_avg=unknown, rating_count=0
+summary: 华纳准备将乔治·马丁的奇幻小说《冰龙》拍成动画片，马丁任制片。小说于1980年出版，围绕一个小孤女与一只冰龙之间的友情展开。冰龙所到之地，大地冰封，并不惧怕冰龙的女孩则在冰龙的协助下与火龙展开了激战。
+retrieved_chunk: movie_title: 冰龙
+release_year: 2022
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 英语
+top_vote_tags: 动画, 2022, 待看
+actors: 
+summary: 华纳准备将乔治·马丁的奇幻小说《冰龙》拍成动画片，马丁任制片。小说于1980年出版，围绕一个小孤女与一只冰龙之间的友情展开。冰龙所到之地，大地冰封，并不惧怕冰龙的女孩则在冰龙的协助下与火龙展开了激战。
+
+[9] movie_id=27072219, title=松花江, year=2019, rating_avg=unknown, rating_count=0
+summary: [花木兰]导演托尼·班克罗夫特将执导新动画片[松花江](Songhua，暂译)。影片根据中国民间传说改编，故事背景设置在古代中国的神秘冰雪世界，讲述一个公主与一个落魄英雄在神灵的协助下拯救故国。新片拍摄成本约3500万美元。
+retrieved_chunk: movie_title: 松花江
+release_year: 2019
+director: 
+duration_minutes: 0
+country_or_region: 美国
+language: 
+top_vote_tags: 动画, 待看
+actors: 托尼·班克罗夫特
+summary: [花木兰]导演托尼·班克罗夫特将执导新动画片[松花江](Songhua，暂译)。影片根据中国民间传说改编，故事背景设置在古代中国的神秘冰雪世界，讲述一个公主与一个落魄英雄在神灵的协助下拯救故国。新片拍摄成本约3500万美元。
+
+[10] movie_id=27045866, title=寻子遇仙记, year=2019, rating_avg=unknown, rating_count=0
+summary: [寻子遇仙记]可谓是卓别林的经典之作。而最近这部影片也要翻拍了，而且还是动画片。导演有望请到克里斯蒂安·福克曼([复活])以及鲁伯特·瓦耶特([猩球崛起])。故事则由编剧鲍里斯·斯塔林执笔剧本，电影国度主导制作。克莱门特·卡维特、杰瑞米·法内尔([海洋之歌])担任制片人。
+retrieved_chunk: movie_title: 寻子遇仙记
+release_year: 2019
+director: 克里斯蒂安·福克曼, 鲁伯特·瓦耶特
+duration_minutes: 0
+country_or_region: 美国
+language: 
+top_vote_tags: 动画, 动漫, 待看, 经典
+actors: 
+summary: [寻子遇仙记]可谓是卓别林的经典之作。而最近这部影片也要翻拍了，而且还是动画片。导演有望请到克里斯蒂安·福克曼([复活])以及鲁伯特·瓦耶特([猩球崛起])。故事则由编剧鲍里斯·斯塔林执笔剧本，电影国度主导制作。克莱门特·卡维特、杰瑞米·法内尔([海洋之歌])担任制片人。
+
+Output requirements:
+1. First, write the normal Chinese answer for the end user.
+2. After the answer, append the following marker block exactly once, with no Markdown code fence:
+<<<RAG_STRUCTURED_OUTPUT_BEGIN>>>
+{"cited_movie_ids":[movie_id1,movie_id2]}
+<<<RAG_STRUCTURED_OUTPUT_END>>>
+3. cited_movie_ids must only contain movie_id values from retrieval_evidence.
+4. If none of the candidates are suitable, return an empty array.
+5. Do not mention the markers or the JSON contract in the user-facing answer.
+2026-04-29 17:16:58 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.api.v1_rag | RAG stream evidence ready, query_len=5, query_preview=想看动画片, thinking=False, evidence_count=10, evidence_preview=[10774717, 10774727, 2024977, 30276037, 1456970]
+2026-04-29 17:16:59 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_clients | RAG provider request opened, model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, url=https://api.siliconflow.cn/v1/chat/completions, content_type=text/event-stream
+2026-04-29 17:17:15 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_clients | RAG provider first stream chunk, model=deepseek-ai/DeepSeek-R1-0528-Qwen3-8B, content_type=text/event-stream, first_chunk_ms=17334.00
+2026-04-29 17:17:16 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.api.v1_rag | RAG stream first answer chunk, query_len=5, query_preview=想看动画片, thinking=False, first_chunk_ms=19316.96, evidence_count=10
+2026-04-29 17:17:26 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.reco.rag_service | RAG structured output parsed, query_len=5, query_preview=想看动画片, evidence_count=10, output_count=3, output_preview=[33433374, 33427584, 27045866]
+2026-04-29 17:17:26 | INFO | pid=11924 | thread=Thread-12 (process_request_thread) | app.api.v1_rag | RAG stream completed, query_len=5, query_preview=想看动画片, thinking=False, evidence_count=10, output_count=3, output_preview=[33433374, 33427584, 27045866], chunk_count=188, chars=315, first_chunk_ms=19316.96, elapsed_ms=29042.94
+2026-04-29 17:20:40 | INFO | pid=11924 | thread=Thread-13 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1329562, requested_k=20, source=rag, cache_hit=False, result_count=20, cache_lookup_ms=0.67, vector_lookup_ms=3.70, ann_ms=650.80, elapsed_ms=712.32
+2026-04-29 17:20:40 | INFO | pid=11924 | thread=Thread-13 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1329562, ann_candidates=20, source=rag
+2026-04-29 17:20:40 | INFO | pid=11924 | thread=Thread-13 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1329562, returned=20, source=rag
+2026-04-29 17:20:40 | INFO | pid=11924 | thread=Thread-13 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:20:40] "GET /api/v1/recommend/item?movie_id=1329562&n=20 HTTP/1.1" 200 -
+2026-04-29 17:21:47 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6711
+2026-04-29 17:22:25 | INFO | pid=11924 | thread=Thread-14 (process_request_thread) | app.reco.rag_service | Similar movie search completed, movie_id=1329562, requested_k=20, source=rag, cache_hit=True, result_count=20, cache_lookup_ms=36.02, vector_lookup_ms=0.20, ann_ms=0.00, elapsed_ms=36.24
+2026-04-29 17:22:25 | INFO | pid=11924 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation ANN finished, movie_id=1329562, ann_candidates=20, source=rag
+2026-04-29 17:22:25 | INFO | pid=11924 | thread=Thread-14 (process_request_thread) | app.services.recommendation_service | Item recommendation completed, movie_id=1329562, returned=20, source=rag
+2026-04-29 17:22:25 | INFO | pid=11924 | thread=Thread-14 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:22:25] "GET /api/v1/recommend/item?movie_id=1329562&n=20 HTTP/1.1" 200 -
+2026-04-29 17:23:38 | INFO | pid=11924 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=117935.99, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-04-29 17:24:47 | INFO | pid=11924 | thread=Thread-15 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:24:47] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-29 17:24:47 | INFO | pid=11924 | thread=Thread-16 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:24:47] "GET /api/v1/admin/tasks?source=all&task_type=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-29 17:25:34 | INFO | pid=11924 | thread=Thread-17 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:25:34] "GET /api/v1/admin/status HTTP/1.1" 200 -
+2026-04-29 17:25:34 | INFO | pid=11924 | thread=Thread-18 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:25:34] "GET /api/v1/admin/tasks?source=all&task_type=all&limit=20&offset=0 HTTP/1.1" 200 -
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-19 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-19 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=1.30
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-19 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:25:44] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-20 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-20 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.72
+2026-04-29 17:25:44 | INFO | pid=11924 | thread=Thread-20 (process_request_thread) | werkzeug | 127.0.0.1 - - [29/Apr/2026 17:25:44] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-05-05 20:30:09 | INFO | pid=4396 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 20:30:09 | INFO | pid=4396 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 20:30:09 | INFO | pid=4396 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-05-05 20:30:09 | INFO | pid=4396 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-05-05 20:30:16 | INFO | pid=4396 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-05-05 20:30:17 | INFO | pid=4396 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-05-05 20:30:17 | INFO | pid=4396 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-05-05 20:30:17 | INFO | pid=4396 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-05-05 20:30:18 | INFO | pid=4396 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-05-05 20:30:18 | ERROR | pid=4396 | thread=MainThread | app.reco.rag_service | RAG index load failed
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 382, in load_from_mysql
+    rows = self._fetch_embedding_rows()
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 297, in _fetch_embedding_rows
+    with self._ensure_engine().connect() as conn:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 681, in connect
+    self._request_authentication()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 980, in _request_authentication
+    auth_packet = _auth.caching_sha2_password_auth(self, auth_packet)
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\_auth.py", line 271, in caching_sha2_password_auth
+    data = sha2_rsa_encrypt(conn.password, conn.salt, conn.server_public_key)
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\_auth.py", line 144, in sha2_rsa_encrypt
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: 'cryptography' package is required for sha256_password or caching_sha2_password auth methods
+2026-05-05 20:30:18 | ERROR | pid=4396 | thread=MainThread | app.reco.startup | Startup warmup failed
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 84, in run_startup_warmup
+    initialize_movie_rag_service(settings)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 1172, in initialize_movie_rag_service
+    service.initialize()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 404, in initialize
+    return self.load_from_mysql()
+           ~~~~~~~~~~~~~~~~~~~~^^
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 382, in load_from_mysql
+    rows = self._fetch_embedding_rows()
+  File "d:\project\Python\RecommendationService\app\reco\rag_service.py", line 297, in _fetch_embedding_rows
+    with self._ensure_engine().connect() as conn:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 681, in connect
+    self._request_authentication()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 980, in _request_authentication
+    auth_packet = _auth.caching_sha2_password_auth(self, auth_packet)
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\_auth.py", line 271, in caching_sha2_password_auth
+    data = sha2_rsa_encrypt(conn.password, conn.salt, conn.server_public_key)
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\_auth.py", line 144, in sha2_rsa_encrypt
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: 'cryptography' package is required for sha256_password or caching_sha2_password auth methods
+2026-05-05 20:31:21 | INFO | pid=21836 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 20:31:21 | INFO | pid=21836 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 20:31:21 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-05-05 20:31:21 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-05-05 20:31:27 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-05-05 20:31:28 | INFO | pid=21836 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-05-05 20:31:28 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-05-05 20:31:28 | INFO | pid=21836 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-05-05 20:31:28 | INFO | pid=21836 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-05-05 20:32:10 | INFO | pid=21836 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-05-05 20:32:10 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-05-05 20:32:18 | INFO | pid=21836 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7503
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-05-05 20:33:54 | INFO | pid=21836 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-05-05 20:37:37 | ERROR | pid=21836 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 176, in _rag_rebuild_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 213, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 202, in run_once
+    job = claim_next_rag_rebuild_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_ops.py", line 149, in claim_next_rag_rebuild_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_RAG_REBUILD)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-05-05 20:37:40 | ERROR | pid=21836 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 158, in _train_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 68, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 27, in run_once
+    job = claim_next_model_train_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 176, in claim_next_model_train_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_TRAIN)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-05-05 20:44:02 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7310
+2026-05-05 20:45:41 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=107135.93, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-05 20:55:49 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7464
+2026-05-05 20:57:27 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=105872.16, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-05 21:07:34 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6800
+2026-05-05 21:09:12 | INFO | pid=21836 | thread=reco-cache-precompute-worker | app.reco.startup | Scheduled cache precompute finished, elapsed_ms=105010.48, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-05 21:29:56 | INFO | pid=5880 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 21:29:56 | INFO | pid=5880 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-05 21:29:56 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-05-05 21:29:56 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-05-05 21:30:02 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-05-05 21:30:02 | INFO | pid=5880 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-05-05 21:30:03 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-05-05 21:30:03 | INFO | pid=5880 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-05-05 21:30:03 | INFO | pid=5880 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-05-05 21:30:31 | INFO | pid=5880 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-05-05 21:30:31 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-05-05 21:30:39 | INFO | pid=5880 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=7135
+2026-05-05 21:32:16 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-05 21:32:16 | INFO | pid=5880 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-05-05 21:32:16 | INFO | pid=5880 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-05-05 21:32:16 | INFO | pid=5880 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-05-05 21:32:16 | INFO | pid=5880 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-05-05 21:32:17 | INFO | pid=5880 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-05-13 14:42:40 | INFO | pid=22204 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-13 14:42:40 | INFO | pid=22204 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-13 14:42:40 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-05-13 14:42:40 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-05-13 14:42:43 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-05-13 14:42:44 | INFO | pid=22204 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-05-13 14:42:44 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-05-13 14:42:44 | INFO | pid=22204 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-05-13 14:42:45 | INFO | pid=22204 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-05-13 14:43:13 | INFO | pid=22204 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-05-13 14:43:13 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-05-13 14:43:20 | INFO | pid=22204 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=6529
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-05-13 14:44:25 | INFO | pid=22204 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-05-13 14:48:08 | ERROR | pid=22204 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 176, in _rag_rebuild_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 213, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 202, in run_once
+    job = claim_next_rag_rebuild_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_ops.py", line 149, in claim_next_rag_rebuild_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_RAG_REBUILD)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-05-13 14:48:11 | ERROR | pid=22204 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 158, in _train_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 68, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 27, in run_once
+    job = claim_next_model_train_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 176, in claim_next_model_train_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_TRAIN)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-05-13 14:53:18 | INFO | pid=28736 | thread=MainThread | app.common.logging_setup | Logging initialized. log_file=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-13 14:53:18 | INFO | pid=28736 | thread=MainThread | app | 应用初始化开始，日志文件=D:\project\Python\RecommendationService\logs\app1.log
+2026-05-13 14:53:18 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Startup warmup begins
+2026-05-13 14:53:18 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Starting two-tower full rebuild
+2026-05-13 14:53:22 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Two-tower rebuild finished, items=140518, index_path=data/two_tower_items.hnsw
+2026-05-13 14:53:22 | INFO | pid=28736 | thread=MainThread | app.reco.recall.two_tower.runtime | Two-tower runtime loaded, model_path=data/models/two_tower_latest.pt, index_path=data/two_tower_items.hnsw
+2026-05-13 14:53:22 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Global recommendation pipeline initialized
+2026-05-13 14:53:22 | INFO | pid=28736 | thread=MainThread | faiss.loader | Loading faiss with AVX2 support.
+2026-05-13 14:53:23 | INFO | pid=28736 | thread=MainThread | faiss.loader | Successfully loaded faiss with AVX2 support.
+2026-05-13 14:53:50 | INFO | pid=28736 | thread=MainThread | app.reco.rag_service | RAG index loaded from MySQL, state=ready, source_rows=140518, indexed_rows=140518
+2026-05-13 14:53:50 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Global RAG service initialized
+2026-05-13 14:53:56 | INFO | pid=28736 | thread=MainThread | app.ops.cache_ops | Search stats refresh completed, rows_written=140519, global_avg=6.3394, min_votes=100, elapsed_ms=5451
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Startup cache precompute finished, summary={'search_stats': {'skipped': 0, 'rows_written': 140519, 'columns_created': 0, 'indexes_created': 0}, 'features': {'movie_features': 140519, 'user_features': 639127}, 'trending': {'daily': 200, 'weekly': 200, 'monthly': 200, 'half_year': 200, 'one_year': 200, 'all_time': 200}, 'tag_recall': {'enabled': 1, 'skipped': 0, 'genre_keys': 29084, 'director_keys': 10427, 'keys_written': 39511, 'members_written': 353858}}
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=MainThread | app.reco.startup | Startup warmup completed
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-two-tower-refresh-worker | app.reco.startup | Two-tower refresh worker begins, interval_seconds=86400
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-cache-precompute-worker | app.reco.startup | Cache precompute worker begins, interval_seconds=600
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=MainThread | app | 应用初始化完成，接口前缀=/api/v1
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker begins
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-rag-rebuild-worker | app.ops.rag_embedding_worker | RAG rebuild worker started, polling_interval_seconds=3.0
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker begins
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=reco-train-queue-worker | app.ops.train_worker | Train worker started, polling_interval_seconds=3.0
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=MainThread | werkzeug | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://49.140.125.102:5000
+2026-05-13 14:54:52 | INFO | pid=28736 | thread=MainThread | werkzeug | Press CTRL+C to quit
+2026-05-13 14:56:10 | INFO | pid=28736 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=20
+2026-05-13 14:56:10 | INFO | pid=28736 | thread=Thread-1 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=20
+2026-05-13 14:56:10 | INFO | pid=28736 | thread=Thread-1 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:56:10] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-05-13 14:56:13 | INFO | pid=28736 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=20
+2026-05-13 14:56:13 | INFO | pid=28736 | thread=Thread-2 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=20
+2026-05-13 14:56:13 | INFO | pid=28736 | thread=Thread-2 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:56:13] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-05-13 14:56:19 | INFO | pid=28736 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=20
+2026-05-13 14:56:19 | INFO | pid=28736 | thread=Thread-3 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=20
+2026-05-13 14:56:19 | INFO | pid=28736 | thread=Thread-3 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:56:19] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-05-13 14:56:50 | INFO | pid=28736 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Trending cache hit, window=all_time, returned=20
+2026-05-13 14:56:50 | INFO | pid=28736 | thread=Thread-4 (process_request_thread) | app.services.recommendation_service | Trending completed, window=all_time, returned=20
+2026-05-13 14:56:50 | INFO | pid=28736 | thread=Thread-4 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:56:50] "GET /api/v1/recommend/trending?window=all_time&n=20 HTTP/1.1" 200 -
+2026-05-13 14:57:16 | WARNING | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | Pop cache miss, acquire lock to build cache, user_id=649125, n=20, build_target=500, action=acquire_build_lock
+2026-05-13 14:57:16 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.common.redis_cache | User recommendation lock acquire, user_id=649125, key=reco:recommend:user:649125:build_lock, ttl=10, acquired=True, token_tail=884c283b, elapsed_ms=0.44
+2026-05-13 14:57:16 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop build lock acquired, user_id=649125, n=20
+2026-05-13 14:57:16 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop cache build required, user_id=649125, n=20, build_target=500, reason=double_check_empty
+2026-05-13 14:57:16 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation cache build started, user_id=649125, build_target=500
+2026-05-13 14:57:17 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=two_tower, 返回候选=998, 新增候选=998, 累计候选=998, elapsed_ms=256.79
+2026-05-13 14:57:17 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.recall.tag_inverted | tag倒排召回完成，user_id=649125, requested_n=500, requested_tags=16, genre_tags=5, director_tags=11, redis_hit_tags=15, redis_rows=928, excluded_count=19, filtered_excluded=18, merged_candidates=775, returned_count=775, out_limit=2000, preference_fetch_ms=8.11, redis_fetch_ms=9.50, excluded_fetch_ms=2.22, elapsed_ms=20.34
+2026-05-13 14:57:17 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.pipeline | 召回器执行完成，recaller=tag_inverted, 返回候选=775, 新增候选=748, 累计候选=1746, elapsed_ms=21.41
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.aux_query_summary | user_id=649125 | candidate_movie_count=1746 | movie_stats_rows=1746 | item_static_tag_rows=10017 | user_profile_found=True | short_hist_len=10 | long_interest_len=4 | movie_stats_ms=1426.23 | item_static_tags_ms=324.39 | user_profile_ms=1.47 | short_hist_ms=2.92 | long_interest_ms=2.78 | user_click_tag_ms=2.38 | user_click_total_ms=0.37 | elapsed_ms=1764.74
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.ranking.mmoe.ranker | event=reco.rank.mmoe.done | user_id=649125 | candidate_count=1746 | model_version=mmoe_latest.pt | tensor_build_ms=1798.33 | infer_ms=50.40 | sort_ms=0.29 | elapsed_ms=1850.56
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.reco.pipeline | 推荐流水线完成，user_id=649125, movie_id=None, recaller_count=2, ranker=mmoe, reranker=random_shuffle, candidate_count=1746, ranked_count=1746, returned_count=500, recall_ms=278.64, rank_ms=1850.76, rerank_ms=0.52, elapsed_ms=2129.93
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation cache pipeline result, user_id=649125, build_target=500, built_count=500, item_preview=[1305197, 3821067, 1308767, 26754325, 1291579]
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.common.redis_cache | User recommendation store, user_id=649125, key=reco:recommend:user:649125, stored_count=500, ttl=86400, item_preview=[1305197, 3821067, 1308767, 26754325, 1291579], elapsed_ms=3.50
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation cache stored, user_id=649125, build_target=500, stored_count=500
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation cache build completed, user_id=649125, build_target=500, built_count=500, stored_count=500, elapsed_ms=2134.07
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.common.redis_cache | User recommendation lock release, user_id=649125, key=reco:recommend:user:649125:build_lock, released=True, token_tail=884c283b, elapsed_ms=4.80
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=480, total_before_pop=500, has_next=True, cache_state=build_under_lock, build_reason=double_check_empty, wait_attempts=0, wait_elapsed_ms=0.00
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=False, elapsed_ms=2142.56
+2026-05-13 14:57:18 | INFO | pid=28736 | thread=Thread-5 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:57:18] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-05-13 14:57:19 | INFO | pid=28736 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=460, total_before_pop=480, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-05-13 14:57:19 | INFO | pid=28736 | thread=Thread-6 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.76
+2026-05-13 14:57:19 | INFO | pid=28736 | thread=Thread-6 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:57:19] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-05-13 14:57:29 | INFO | pid=28736 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=440, total_before_pop=460, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-05-13 14:57:29 | INFO | pid=28736 | thread=Thread-7 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.55
+2026-05-13 14:57:29 | INFO | pid=28736 | thread=Thread-7 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:57:29] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-05-13 14:57:36 | INFO | pid=28736 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation pop return, user_id=649125, n=20, returned=20, remaining=420, total_before_pop=440, has_next=True, cache_state=initial_hit, build_reason=none, wait_attempts=0, wait_elapsed_ms=0.00
+2026-05-13 14:57:36 | INFO | pid=28736 | thread=Thread-8 (process_request_thread) | app.services.recommendation_service | User recommendation request completed, user_id=649125, mode=pop, initial_cache_hit=True, elapsed_ms=0.49
+2026-05-13 14:57:36 | INFO | pid=28736 | thread=Thread-8 (process_request_thread) | werkzeug | 127.0.0.1 - - [13/May/2026 14:57:36] "GET /api/v1/recommend/user?user_id=649125&n=20 HTTP/1.1" 200 -
+2026-05-13 14:58:18 | ERROR | pid=28736 | thread=reco-train-queue-worker | app.reco.startup | Train queue worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 158, in _train_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 68, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\train_worker.py", line 27, in run_once
+    job = claim_next_model_train_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\model_ops.py", line 176, in claim_next_model_train_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_TRAIN)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-05-13 14:58:18 | ERROR | pid=28736 | thread=reco-rag-rebuild-worker | app.reco.startup | RAG rebuild worker crashed
+Traceback (most recent call last):
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1040, 'Too many connections')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 339, in claim_next_task
+    with engine.begin() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3257, in begin
+    with self.connect() as conn:
+         ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3293, in connect
+    return self._connection_cls(self)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 145, in __init__
+    Connection._handle_dbapi_exception_noconnection(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        err, dialect, engine
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 2448, in _handle_dbapi_exception_noconnection
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\base.py", line 3317, in raw_connection
+    return self.pool.connect()
+           ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 448, in connect
+    return _ConnectionFairy._checkout(self)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 1272, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 712, in checkout
+    rec = pool._do_get()
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\impl.py", line 175, in _do_get
+    return self._create_connection()
+           ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 389, in _create_connection
+    return _ConnectionRecord(self)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 674, in __init__
+    self.__connect()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 900, in __connect
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 121, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\pool\base.py", line 896, in __connect
+    self.dbapi_connection = connection = pool._invoke_creator(self)
+                                         ~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\create.py", line 667, in connect
+    return dialect.connect(*cargs_tup, **cparams)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\sqlalchemy\engine\default.py", line 630, in connect
+    return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 365, in __init__
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 680, in connect
+    self._get_server_information()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 1099, in _get_server_information
+    packet = self._read_packet()
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Program Files\Python\Lib\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "d:\project\Python\RecommendationService\app\reco\startup.py", line 176, in _rag_rebuild_queue_worker
+    run_loop(interval_seconds=3.0)
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 213, in run_loop
+    handled = run_once()
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_worker.py", line 202, in run_once
+    job = claim_next_rag_rebuild_job(mysql_dsn=settings.core.mysql_dsn)
+  File "d:\project\Python\RecommendationService\app\ops\rag_embedding_ops.py", line 149, in claim_next_rag_rebuild_job
+    task = claim_next_task(mysql_dsn=mysql_dsn, task_type=TASK_TYPE_RAG_REBUILD)
+  File "d:\project\Python\RecommendationService\app\ops\task_ops.py", line 346, in claim_next_task
+    raise RuntimeError(f"claim_next_task_failed: {type(exc).__name__}: {exc}") from exc
+RuntimeError: claim_next_task_failed: OperationalError: (pymysql.err.OperationalError) (1040, 'Too many connections')
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

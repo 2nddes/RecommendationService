@@ -3,16 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
-import threading
 from time import perf_counter
 from typing import Any, Dict, List, Sequence
 
 import torch
-from sqlalchemy import bindparam, create_engine, text
-from sqlalchemy.engine import Engine
+from sqlalchemy import bindparam, text
 from sqlalchemy.exc import SQLAlchemyError
 from torch import Tensor
 
+from app.common.mysql_engine import get_shared_mysql_engine
 from app.reco.ranking.base import Ranker
 from app.reco.types import Candidate, RankedItem, RequestContext
 
@@ -31,18 +30,13 @@ from .model import MMoENet
 
 
 logger = logging.getLogger(__name__)
-_engine_cache_lock = threading.RLock()
-_engine_cache: dict[str, Engine] = {}
 
 
-def _get_mysql_engine(dsn: str) -> Engine:
-    with _engine_cache_lock:
-        cached = _engine_cache.get(dsn)
-        if cached is not None:
-            return cached
-        engine = create_engine(dsn, pool_pre_ping=True)
-        _engine_cache[dsn] = engine
-        return engine
+def _get_mysql_engine(dsn: str):
+    engine = get_shared_mysql_engine(dsn)
+    if engine is None:
+        raise RuntimeError("mysql_dsn_invalid")
+    return engine
 
 
 def _calc_age_from_birth(birth: Any) -> int | None:

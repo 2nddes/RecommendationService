@@ -9,8 +9,9 @@ from time import perf_counter
 from typing import Any, Dict, Iterable, Iterator, Sequence
 
 import numpy as np
-from sqlalchemy import Engine, bindparam, create_engine, text
+from sqlalchemy import Engine, bindparam, text
 
+from app.common.mysql_engine import get_shared_mysql_engine
 from app.common.redis_cache import get_redis_client
 from app.common.runtime_health import mark_component_error, mark_component_success
 from app.common.settings import Settings
@@ -206,7 +207,10 @@ class MovieRagService:
         mysql_dsn = self._settings.core.mysql_dsn
         if not mysql_dsn:
             raise RuntimeError("MYSQL_DSN is required for rag retrieval")
-        self._engine = create_engine(mysql_dsn, pool_pre_ping=True)
+        engine = get_shared_mysql_engine(mysql_dsn)
+        if engine is None:
+            raise RuntimeError("MYSQL_DSN is required for rag retrieval")
+        self._engine = engine
         return self._engine
 
     def _ensure_faiss_module(self):
