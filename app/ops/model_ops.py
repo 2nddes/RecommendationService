@@ -45,15 +45,19 @@ def _map_train_job(task: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _rebuild_global_pipeline_singleton(*, settings: Settings, reason: str, rebuild_two_tower_index: bool) -> None:
+def _rebuild_global_pipeline_singleton(*, settings: Settings, rebuild_two_tower_index: bool) -> None:
     from app.reco.startup import refresh_recommendation_runtime
 
     refresh_recommendation_runtime(
         settings,
-        reason=reason,
         rebuild_two_tower_index=rebuild_two_tower_index,
     )
-    log_event(logger, "info", "train.runtime.pipeline_rebuilt", reason=reason)
+    log_event(
+        logger,
+        "info",
+        "train.runtime.pipeline_rebuilt",
+        rebuild_two_tower_index=rebuild_two_tower_index,
+    )
 
 
 def train_current_models(
@@ -140,7 +144,6 @@ def train_current_models(
     )
     _rebuild_global_pipeline_singleton(
         settings=settings,
-        reason=f"train_current_models:{component}.{model}",
         rebuild_two_tower_index=component == "recall" and model == "two_tower",
     )
     return result
@@ -150,7 +153,6 @@ def refresh_current_models(settings: Settings) -> Dict[str, Any]:
     try:
         _rebuild_global_pipeline_singleton(
             settings=settings,
-            reason="refresh_current_models",
             rebuild_two_tower_index=True,
         )
     except Exception as exc:
